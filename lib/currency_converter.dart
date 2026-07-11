@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart'; // ✅ បន្ថែម
 
 class CurrencyScreen extends StatefulWidget {
   const CurrencyScreen({super.key});
@@ -35,6 +36,10 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
 
   bool isLoading = false;
 
+  // ✅ ទ្រង់ទ្រាយសម្រាប់កាត់ខ្ទង់
+  final NumberFormat _fmtWhole = NumberFormat('#,###');       // សម្រាប់ចំនួនគត់ (គ្មានទសភាគ)
+  final NumberFormat _fmtDecimal = NumberFormat('#,###.00'); // សម្រាប់ចំនួនទសភាគ ២ខ្ទង់
+
   @override
   void initState() {
     super.initState();
@@ -43,6 +48,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
 
   // 🌐 ទាញទិន្នន័យពី API អន្តរជាតិ
   Future<void> _fetchOnlineRates() async {
+    if (!mounted) return;
     setState(() => isLoading = true);
     try {
       final response = await http.get(
@@ -57,79 +63,58 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
           rateUsdToCny = rates['CNY'].toDouble();
           rateUsdToEur = rates['EUR'].toDouble();
           rateUsdToJpy = rates['JPY'].toDouble();
-          rateUsdToLak = rates['LAK'].toDouble(); // Update ឡាវ
-          rateUsdToKrw = rates['KRW'].toDouble(); // Update កូរ៉េ
-          rateUsdToInr = rates['INR'].toDouble(); // Update ឥណ្ឌា
+          rateUsdToLak = rates['LAK'].toDouble();
+          rateUsdToKrw = rates['KRW'].toDouble();
+          rateUsdToInr = rates['INR'].toDouble();
           isLoading = false;
         });
       }
     } catch (e) {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
+  // ✅ កែប្រែ _updatePrices ឲ្យកាត់ខ្ទង់
   void _updatePrices(String value, String type) {
-    if (value.isEmpty) {
+    // លុបសញ្ញាក្បៀសចេញមុនគណនា
+    String cleanValue = value.replaceAll(',', '');
+    if (cleanValue.isEmpty) {
       _clearAllFields();
       return;
     }
-    double input = double.tryParse(value) ?? 0;
+    double input = double.tryParse(cleanValue) ?? 0;
     double usdAmount = 0;
 
-    // គណនាដំបូងទៅជា USD ជាមុន
     switch (type) {
-      case 'USD':
-        usdAmount = input;
-        break;
-      case 'KHR':
-        usdAmount = input / rateUsdToKhr;
-        break;
-      case 'THB':
-        usdAmount = input / rateUsdToThb;
-        break;
-      case 'VND':
-        usdAmount = input / rateUsdToVnd;
-        break;
-      case 'CNY':
-        usdAmount = input / rateUsdToCny;
-        break;
-      case 'EUR':
-        usdAmount = input / rateUsdToEur;
-        break;
-      case 'JPY':
-        usdAmount = input / rateUsdToJpy;
-        break;
-      case 'LAK':
-        usdAmount = input / rateUsdToLak;
-        break;
-      case 'KRW':
-        usdAmount = input / rateUsdToKrw;
-        break;
-      case 'INR':
-        usdAmount = input / rateUsdToInr;
-        break;
+      case 'USD': usdAmount = input; break;
+      case 'KHR': usdAmount = input / rateUsdToKhr; break;
+      case 'THB': usdAmount = input / rateUsdToThb; break;
+      case 'VND': usdAmount = input / rateUsdToVnd; break;
+      case 'CNY': usdAmount = input / rateUsdToCny; break;
+      case 'EUR': usdAmount = input / rateUsdToEur; break;
+      case 'JPY': usdAmount = input / rateUsdToJpy; break;
+      case 'LAK': usdAmount = input / rateUsdToLak; break;
+      case 'KRW': usdAmount = input / rateUsdToKrw; break;
+      case 'INR': usdAmount = input / rateUsdToInr; break;
     }
 
-    setState(() {
-      if (type != 'USD') _usdCtrl.text = usdAmount.toStringAsFixed(2);
-      if (type != 'KHR')
-        _khrCtrl.text = (usdAmount * rateUsdToKhr).toStringAsFixed(0);
-      if (type != 'THB')
-        _thbCtrl.text = (usdAmount * rateUsdToThb).toStringAsFixed(2);
-      if (type != 'VND')
-        _vndCtrl.text = (usdAmount * rateUsdToVnd).toStringAsFixed(0);
-      if (type != 'CNY')
-        _cnyCtrl.text = (usdAmount * rateUsdToCny).toStringAsFixed(2);
-      if (type != 'EUR')
-        _eurCtrl.text = (usdAmount * rateUsdToEur).toStringAsFixed(2);
-      if (type != 'JPY')
-        _jpyCtrl.text = (usdAmount * rateUsdToJpy).toStringAsFixed(0);
-      if (type != 'LAK')
-        _lakCtrl.text = (usdAmount * rateUsdToLak).toStringAsFixed(0);
-      if (type != 'KRW')
-        _krwCtrl.text = (usdAmount * rateUsdToKrw).toStringAsFixed(0);
-      if (type != 'INR')
-        _inrCtrl.text = (usdAmount * rateUsdToInr).toStringAsFixed(2);
+    // ជំនួយសម្រាប់កំណត់តម្លៃកាត់ខ្ទង់
+    void _setFormatted(TextEditingController ctrl, double val, {bool hasDecimal = false}) {
+      final String formatted = hasDecimal ? _fmtDecimal.format(val) : _fmtWhole.format(val);
+      ctrl.text = formatted;
+      // ដាក់ cursor នៅចុងក្រោយ
+      ctrl.selection = TextSelection.collapsed(offset: formatted.length);
+    }setState(() {
+      if (type != 'USD') _setFormatted(_usdCtrl, usdAmount, hasDecimal: true);
+      if (type != 'KHR') _setFormatted(_khrCtrl, usdAmount * rateUsdToKhr);
+      if (type != 'THB') _setFormatted(_thbCtrl, usdAmount * rateUsdToThb, hasDecimal: true);
+      if (type != 'VND') _setFormatted(_vndCtrl, usdAmount * rateUsdToVnd);
+      if (type != 'CNY') _setFormatted(_cnyCtrl, usdAmount * rateUsdToCny, hasDecimal: true);
+      if (type != 'EUR') _setFormatted(_eurCtrl, usdAmount * rateUsdToEur, hasDecimal: true);
+      if (type != 'JPY') _setFormatted(_jpyCtrl, usdAmount * rateUsdToJpy);
+      if (type != 'LAK') _setFormatted(_lakCtrl, usdAmount * rateUsdToLak);
+      if (type != 'KRW') _setFormatted(_krwCtrl, usdAmount * rateUsdToKrw);
+      if (type != 'INR') _setFormatted(_inrCtrl, usdAmount * rateUsdToInr, hasDecimal: true);
     });
   }
 
@@ -165,110 +150,113 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
             onPressed: _fetchOnlineRates,
             icon: isLoading
                 ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
                 : const Icon(Icons.sync),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildRateInfo(), // 🎯 ផ្នែកបង្ហាញប្រភពទិន្នន័យ
-            const SizedBox(height: 20),
-            _buildField("ដុល្លារ (USD)", "🇺🇸", _usdCtrl, 'USD'),
-            _buildField("រៀល (KHR)", "🇰🇭", _khrCtrl, 'KHR'),
-            _buildField("បាត (THB)", "🇹🇭", _thbCtrl, 'THB'),
-            _buildField("គីបឡាវ (LAK)", "🇱🇦", _lakCtrl, 'LAK'), // ថែមថ្មី
-            _buildField("វ៉ុនកូរ៉េ (KRW)", "🇰🇷", _krwCtrl, 'KRW'), // ថែមថ្មី
-            _buildField("រូពីឥណ្ឌា (INR)", "🇮🇳", _inrCtrl, 'INR'), // ថែមថ្មី
-            _buildField("ដុង (VND)", "🇻🇳", _vndCtrl, 'VND'),
-            _buildField("យ័ន (CNY)", "🇨🇳", _cnyCtrl, 'CNY'),
-            _buildField("អឺរ៉ូ (EUR)", "🇪🇺", _eurCtrl, 'EUR'),
-            _buildField("យេន (JPY)", "🇯🇵", _jpyCtrl, 'JPY'),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _clearAllFields,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildRateInfo(),
+              const SizedBox(height: 20),
+              _buildField("ដុល្លារ (USD)", "🇺🇸", _usdCtrl, 'USD'),
+              _buildField("រៀល (KHR)", "🇰🇭", _khrCtrl, 'KHR'),
+              _buildField("បាត (THB)", "🇹🇭", _thbCtrl, 'THB'),
+              _buildField("គីបឡាវ (LAK)", "🇱🇦", _lakCtrl, 'LAK'),
+              _buildField("វ៉ុនកូរ៉េ (KRW)", "🇰🇷", _krwCtrl, 'KRW'),
+              _buildField("រូពីឥណ្ឌា (INR)", "🇮🇳", _inrCtrl, 'INR'),
+              _buildField("ដុង (VND)", "🇻🇳", _vndCtrl, 'VND'),
+              _buildField("យ័ន (CNY)", "🇨🇳", _cnyCtrl, 'CNY'),
+              _buildField("អឺរ៉ូ (EUR)", "🇪🇺", _eurCtrl, 'EUR'),
+              _buildField("យេន (JPY)", "🇯🇵", _jpyCtrl, 'JPY'),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _clearAllFields,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  minimumSize: const Size(double.infinity, 55),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+                child: const Text(
+                  "សម្អាតទិន្នន័យទាំងអស់",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontFamily: 'Siemreap',
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              child: const Text(
-                "សម្អាតទិន្នន័យទាំងអស់",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontFamily: 'Siemreap',
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildRateInfo() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade400, Colors.blue.shade700],
+  Widget _buildRateInfo() {return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [Colors.blue.shade400, Colors.blue.shade700],
+      ),
+      borderRadius: BorderRadius.circular(15),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.blue.withOpacity(0.3),
+          blurRadius: 8,
+          offset: const Offset(0, 4),
         ),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+      ],
+    ),
+    child: Column(
+      children: [
+        const Text(
+          "⚠️ បញ្ជាក់៖ អត្រាប្តូរប្រាក់នេះទាញចេញពីទីផ្សារអន្តរជាតិ (API)",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontFamily: 'Siemreap',
+            fontWeight: FontWeight.bold,
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const Text(
-            "⚠️ បញ្ជាក់៖ អត្រាប្តូរប្រាក់នេះទាញចេញពីទីផ្សារអន្តរជាតិ (API)",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontFamily: 'Siemreap',
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 5),
+        Text(
+          isLoading
+              ? "កំពុងអាប់ដេត..."
+              : "តម្លៃអាចនឹងខុសគ្នាពីធនាគារក្នុងស្រុកបន្តិចបន្តួច",
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 11,
+            fontFamily: 'Siemreap',
           ),
-          const SizedBox(height: 5),
-          Text(
-            isLoading
-                ? "កំពុងអាប់ដេត..."
-                : "តម្លៃអាចនឹងខុសគ្នាពីធនាគារក្នុងស្រុកបន្តិចបន្តួច",
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 11,
-              fontFamily: 'Siemreap',
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
+          textAlign: TextAlign.center,
+        ),
+      ],
+    ),
+  );
   }
 
   Widget _buildField(
-    String label,
-    String flag,
-    TextEditingController ctrl,
-    String type,
-  ) {
+      String label,
+      String flag,
+      TextEditingController ctrl,
+      String type,
+      ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(

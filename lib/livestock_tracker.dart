@@ -114,7 +114,10 @@ class _LivestockTrackerPageState extends State<LivestockTrackerPage> {
           ),
         ],
       ),
-      body: Column(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: Column(
         children: [
           _buildSummaryHeader(),
           Expanded(
@@ -138,6 +141,7 @@ class _LivestockTrackerPageState extends State<LivestockTrackerPage> {
           ),
         ],
       ),
+        ),
     );
   }
 

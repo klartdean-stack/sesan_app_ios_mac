@@ -3,11 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-
+import 'package:url_launcher/url_launcher.dart'; // នាំចូល package ថ្មី
 
 class AuctionAdminScreen extends StatelessWidget {
   const AuctionAdminScreen({super.key});
-
 
   static const _bg = Color(0xFF0D1117);
   static const _card = Color(0xFF161B22);
@@ -19,10 +18,7 @@ class AuctionAdminScreen extends StatelessWidget {
   static const _red = Color(0xFFDA3633);
   static const _gold = Color(0xFFFFB300);
 
-
-  // ── Zoom Image ────────────────────────────────────────────────
-  void _showZoomImage(BuildContext context, String url) {
-    if (url.isEmpty) return;
+  void _showZoomImage(BuildContext context, List images, {String? videoUrl}) {
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -30,40 +26,76 @@ class AuctionAdminScreen extends StatelessWidget {
         insetPadding: EdgeInsets.zero,
         child: Stack(
           children: [
-            InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 4.0,
-              child: SizedBox(
-                width: double.infinity,
-                height: double.infinity,
-                child: CachedNetworkImage(
-                  imageUrl: url,
-                  fit: BoxFit.contain,
-                  placeholder: (_, __) => const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+            // ផ្នែកអូសមើលរូបភាព
+            PageView.builder(
+              itemCount: images.length,
+              itemBuilder: (context, index) {
+                return InteractiveViewer(
+                  child: CachedNetworkImage(
+                    imageUrl: images[index],
+                    fit: BoxFit.contain,
                   ),
-                  errorWidget: (_, __, ___) =>
-                  const Icon(Icons.broken_image, color: Colors.white54),
+                );
+              },
+            ),
+
+            // ── ប៊ូតុងសម្រាប់មើលវីដេអូ (បង្ហាញតែពេលមាន Link វីដេអូ) ──
+            if (videoUrl != null && videoUrl.isNotEmpty)
+              Positioned(
+                bottom: 60,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _red, // ប្រើពណ៌ក្រហមឱ្យដូច YouTube
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final Uri url = Uri.parse(videoUrl);
+                      if (!await launchUrl(
+                        url,
+                        mode: LaunchMode.externalApplication,
+                      )) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('មិនអាចបើកវីដេអូបានទេ')),
+                        );
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.play_circle_fill_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    label: const Text(
+                      'ចុចដើម្បីមើលវីដេអូ',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Siemreap',
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
+
+            // ប៊ូតុងបិទ
             Positioned(
               top: 40,
               right: 16,
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.close_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: Colors.white,
+                  size: 30,
                 ),
+                onPressed: () => Navigator.pop(context),
               ),
             ),
           ],
@@ -71,7 +103,6 @@ class AuctionAdminScreen extends StatelessWidget {
       ),
     );
   }
-
 
   // ── Approve Auction ───────────────────────────────────────────
   Future<void> _approveAuction(
@@ -87,41 +118,33 @@ class AuctionAdminScreen extends StatelessWidget {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-
+      // 🎯 ១. គណនាពេលវេលាបញ្ចប់ដេញថ្លៃ (ផ្អែកលើម៉ោងដែល Admin ចុច Approve)
       final hours =
           int.tryParse(data['duration_hours']?.toString() ?? '24') ?? 24;
       final endTime = DateTime.now().add(Duration(hours: hours));
 
-
-      // ១. បញ្ចូលទៅក្នុង collection products
-      await FirebaseFirestore.instance.collection('products').add({
-        'product_name': data['product_name'],
-        'description': data['description'] ?? '',
-        'image_urls': data['image_urls'] ?? [],
-        'status': 'auction',
-        'start_price': data['start_price'],
-        'current_price': data['start_price'],
-        'bid_step': data['bid_step'],
-        'end_time': Timestamp.fromDate(endTime),
-        'owner_id': data['owner_id'] ?? '',
-        'owner_name': data['owner_name'] ?? '',
+      // 🎯 ២. ធ្វើការ Update ស្ថានភាពទៅជា 'auction' នៅក្នុង Collection ថ្មីដាច់ដោយឡែក
+      await FirebaseFirestore.instance
+          .collection('auction_products') // 🚀 ប្តូរទៅកាន់ Collection ថ្មី
+          .doc(requestId) // 🚀 ប្រើ Document ID ដដែលដើម្បី Update
+          .update({
+        'status':
+        'auction', // 🚀 ប្តូរពី 'pending' ទៅជា 'auction' ដើម្បីឱ្យ Users ឃើញ
+        'current_price':
+        data['start_price'], // កំណត់តម្លៃដំបូងស្មើនឹងតម្លៃចាប់ផ្តើម
+        'end_time': Timestamp.fromDate(endTime), // ពេលវេលាបញ្ចប់ពិតប្រាកដ
         'last_bidder': null,
         'last_bidder_id': null,
-        'created_at': FieldValue.serverTimestamp(),
+        'approved_at':
+        FieldValue.serverTimestamp(), // កត់ត្រាថ្ងៃដែល Admin បានអនុម័ត
       });
 
-
-      // ២. លុបសំណើចេញពី auction_requests
-      await FirebaseFirestore.instance
-          .collection('auction_requests')
-          .doc(requestId)
-          .delete();
-
+      // 💡 ចំណាំ៖ កូដចាស់ដែលវាតែងតែហៅទៅលុបសំណើចេញពី 'auction_requests' (ត្រង់ផ្នែកខាងក្រោម)
+      // គឺបងត្រូវលុបវាចោលផងដែរ (លុបចោលការ delete()) ព្រោះយើងមិនបាច់លុបវាទៀតទេ គឺយើងគ្រាន់តែ Update status នៅក្នុង Collection តែមួយហ្នឹងហ្មង។
 
       // ៣. បិទ Loading Dialog
       if (!context.mounted) return;
       Navigator.pop(context);
-
 
       // ៤. បង្ហាញសារជោគជ័យ
       ScaffoldMessenger.of(context).showSnackBar(
@@ -137,13 +160,11 @@ class AuctionAdminScreen extends StatelessWidget {
       // ប្រសិនបើមាន Error ត្រូវបិទ Loading ដែរ
       if (context.mounted) Navigator.pop(context);
 
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Error: $e'), backgroundColor: _red),
       );
     }
   }
-
 
   // ── Delete Dialog ─────────────────────────────────────────────
   void _showDeleteDialog(BuildContext context, String docId) {
@@ -221,8 +242,9 @@ class AuctionAdminScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: () {
+                        // 🎯 លុបចេញពី Collection ថ្មី
                         FirebaseFirestore.instance
-                            .collection('auction_requests')
+                            .collection('auction_products')
                             .doc(docId)
                             .delete();
                         Navigator.pop(ctx);
@@ -245,7 +267,6 @@ class AuctionAdminScreen extends StatelessWidget {
       ),
     );
   } // ══════════════════════════════════════════════════════════════
-
 
   // BUILD
   // ══════════════════════════════════════════════════════════════
@@ -274,7 +295,11 @@ class AuctionAdminScreen extends StatelessWidget {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('auction_requests')
+            .collection('auction_products') // 🎯 ចូលទៅយកក្នុង Collection ថ្មី
+            .where(
+          'status',
+          isEqualTo: 'pending',
+        ) // 🎯 យកតែសំណើណាដែលរង់ចាំ Admin ពិនិត្យ
             .orderBy('created_at', descending: true)
             .snapshots(),
         builder: (context, snap) {
@@ -283,9 +308,7 @@ class AuctionAdminScreen extends StatelessWidget {
               child: CircularProgressIndicator(color: _accentBlue),
             );
 
-
           final docs = snap.data!.docs;
-
 
           if (docs.isEmpty) {
             return Center(
@@ -319,7 +342,6 @@ class AuctionAdminScreen extends StatelessWidget {
             );
           }
 
-
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: docs.length,
@@ -334,6 +356,89 @@ class AuctionAdminScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildImagePreview(
+      BuildContext context,
+      String label,
+      List images, { // ប្តូរមកជាទទួល List images វិញ
+        String? videoUrl,
+      }) {
+    // បង្កើត firstImg និង imageCount នៅខាងក្នុងនេះតែម្តង ដើម្បីបាត់ក្រហមខាងក្រៅ
+    final String firstImg = images.isNotEmpty ? images[0].toString() : '';
+    final int imageCount = images.length;
+
+    return GestureDetector(
+      onTap: () => _showZoomImage(context, images, videoUrl: videoUrl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: _textMuted,
+                  fontSize: 11,
+                  fontFamily: 'Siemreap',
+                ),
+              ),
+              if (videoUrl != null && videoUrl.isNotEmpty) ...[
+                const SizedBox(width: 4),
+                const Icon(Icons.videocam_rounded, color: _red, size: 14),
+              ],
+            ],
+          ),
+          const SizedBox(height: 6),
+          Stack(
+            children: [
+              Container(
+                width: double.infinity,
+                height: 110,
+                decoration: BoxDecoration(
+                  color: _bg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _border),
+                ),
+                child: firstImg.isEmpty
+                    ? const Icon(
+                  Icons.image_not_supported_outlined,
+                  color: _textMuted,
+                )
+                    : ClipRRect(
+                  borderRadius: BorderRadius.circular(11),
+                  child: CachedNetworkImage(
+                    imageUrl: firstImg,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(color: _bg),
+                    errorWidget: (_, __, ___) =>
+                    const Icon(Icons.broken_image, color: _textMuted),
+                  ),
+                ),
+              ),
+              if (imageCount > 1)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '+$imageCount',
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   // ── Request Card ──────────────────────────────────────────────
   Widget _buildRequestCard(
@@ -348,7 +453,6 @@ class AuctionAdminScreen extends StatelessWidget {
     final createdAt = data['created_at'] != null
         ? (data['created_at'] as Timestamp).toDate()
         : null;
-
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -395,25 +499,27 @@ class AuctionAdminScreen extends StatelessWidget {
             ),
           ),
 
-
-          // ស្វែងរក Row ក្នុងផ្នែក Image Previews ហើយប្រើ Expanded ស្រោបពីលើ
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Expanded(
-                  // 🎯 បន្ថែម Expanded ដើម្បីឱ្យរូបភាពទី១ បត់បែនតាមអេក្រង់
                   child: _buildImagePreview(
                     context,
                     'រូបទំនិញ',
-                    firstImg,
-                    imageCount: images.length,
+                    images, // បញ្ជូន List ទៅផ្ទាល់ (បាត់ក្រហម)
+                    videoUrl: data['video_url'],
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  // 🎯 បន្ថែម Expanded ដើម្បីឱ្យរូបភាពទី២ បត់បែនតាមអេក្រង់
-                  child: _buildImagePreview(context, 'វិក្កយបត្រ', payImg),
+                  child: _buildImagePreview(
+                    context,
+                    'វិក្កយបត្រ',
+                    payImg.isNotEmpty
+                        ? [payImg]
+                        : [], // បញ្ជូនជា List (បាត់ក្រហម)
+                  ),
                 ),
               ],
             ),
@@ -433,7 +539,6 @@ class AuctionAdminScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-
 
                 // Price info row
                 Wrap(
@@ -457,7 +562,6 @@ class AuctionAdminScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
 
-
                 // End time
                 if (data['end_time'] != null)
                   _infoChip(
@@ -468,7 +572,6 @@ class AuctionAdminScreen extends StatelessWidget {
                     ).format((data['end_time'] as Timestamp).toDate()),
                     _accentBlue,
                   ),
-
 
                 // Package
                 if (data['selected_package'] != null) ...[
@@ -481,7 +584,6 @@ class AuctionAdminScreen extends StatelessWidget {
                   ),
                 ],
 
-
                 // Phone
                 if (data['customer_phone'] != null) ...[
                   const SizedBox(height: 8),
@@ -492,7 +594,6 @@ class AuctionAdminScreen extends StatelessWidget {
                     _textMuted,
                   ),
                 ],
-
 
                 // Description
                 if ((data['description'] ?? '').toString().isNotEmpty) ...[
@@ -515,11 +616,9 @@ class AuctionAdminScreen extends StatelessWidget {
                   ),
                 ],
 
-
                 const SizedBox(height: 16),
                 const Divider(color: _border, height: 1),
                 const SizedBox(height: 16),
-
 
                 // Action Buttons
                 Row(
@@ -576,101 +675,6 @@ class AuctionAdminScreen extends StatelessWidget {
     );
   }
 
-
-  // ── Image Preview ─────────────────────────────────────────────
-  Widget _buildImagePreview(
-      BuildContext context,
-      String label,
-      String url, {
-        int imageCount = 1,
-      }) {
-    return GestureDetector(
-      onTap: () => _showZoomImage(context, url),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: _textMuted,
-              fontSize: 11,
-              fontFamily: 'Siemreap',
-            ),
-          ),
-          const SizedBox(height: 6),
-          Stack(
-            children: [
-              Container(
-                width: double.infinity,
-                height: 110,
-                decoration: BoxDecoration(
-                  color: _bg,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _border),
-                ),
-                child: url.isEmpty
-                    ? const Center(
-                  child: Icon(
-                    Icons.image_not_supported_outlined,
-                    color: _textMuted,
-                    size: 28,
-                  ),
-                )
-                    : ClipRRect(
-                  borderRadius: BorderRadius.circular(11),
-                  child: CachedNetworkImage(
-                    imageUrl: url,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(color: _bg),
-                    errorWidget: (_, __, ___) =>
-                    const Icon(Icons.broken_image, color: _textMuted),
-                  ),
-                ),
-              ),
-              if (url.isNotEmpty)
-                Positioned(
-                  bottom: 6,
-                  right: 6,
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(
-                      Icons.zoom_in_rounded,
-                      color: Colors.white,
-                      size: 14,
-                    ),
-                  ),
-                ),
-              if (imageCount > 1)
-                Positioned(
-                  top: 6,
-                  left: 6,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '+$imageCount រូប',
-                      style: const TextStyle(color: Colors.white, fontSize: 10),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-
   // ── Info Chip ─────────────────────────────────────────────────
   Widget _infoChip(IconData icon, String label, String value, Color color) {
     return Container(
@@ -707,6 +711,5 @@ class AuctionAdminScreen extends StatelessWidget {
     );
   }
 }
-
 
 

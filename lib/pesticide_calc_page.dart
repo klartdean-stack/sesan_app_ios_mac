@@ -34,7 +34,10 @@ class _PesticideCalcPageState extends State<PesticideCalcPage> {
         backgroundColor: Colors.purple[700],
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: SingleChildScrollView(
         padding: const EdgeInsets.all(25),
         child: Column(
           children: [
@@ -65,6 +68,7 @@ class _PesticideCalcPageState extends State<PesticideCalcPage> {
           ],
         ),
       ),
+        ),
     );
   }
 

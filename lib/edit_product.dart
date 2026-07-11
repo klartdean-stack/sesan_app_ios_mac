@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app/map_picker_screen.dart';
 import 'package:my_app/product_list.dart';
-import 'location_data.dart';
+import 'package:my_app/location_picker.dart';
 
 
 class EditProductScreen extends StatefulWidget {
@@ -48,69 +48,60 @@ class _EditProductScreenState extends State<EditProductScreen> {
   bool _isLoading = false;
   double? selectedLat;
   double? selectedLng;
-  List<String> districtList = [];
-  String? selectedProvince;
-  String? selectedDistrict;
   bool _isOwner = false; // ✅ បន្ថែមនេះ
 
 
   @override
   void initState() {
     super.initState();
-    _checkOwnership(); // ✅ ហៅពិនិត្យសិទ្ធិ
+
+
+    // ✅ បន្ថែមបន្ទាត់នេះ (ដូច AddPreOrderScreen)
+    CambodiaLocationService.load();
+
+
+    _checkOwnership();
+
+
     final data = widget.productData;
     final formatter = NumberFormat('#,###');
+
+
+    // ✅ កំណត់តម្លៃដំបូងសម្រាប់ _priceController
     String initialPrice = data['price']?.toString() ?? '';
     if (initialPrice.isNotEmpty) {
       try {
-        // បើវាជាលេខសុទ្ធ យើង Format វាឱ្យមានក្បៀស
         initialPrice = formatter.format(
           int.parse(initialPrice.replaceAll(',', '')),
         );
       } catch (e) {
-        initialPrice = initialPrice;
+        // ទុកតម្លៃដើមបើ Format មិនបាន
       }
     }
-
-
     _priceController = TextEditingController(text: initialPrice);
 
 
+    // ✅ កំណត់តម្លៃដំបូងសម្រាប់ Controllers ផ្សេងទៀត
     _nameController = TextEditingController(
       text: data['product_name']?.toString() ?? '',
     );
-
-
-    text:
-    NumberFormat(
-      '#,###',
-    ).format(int.parse(data['price']?.toString().replaceAll(',', '') ?? '0'));
-
-
     _descController = TextEditingController(
       text: data['description']?.toString() ?? '',
     );
     _phoneController = TextEditingController(
-      text: data['phone']?.toString() ?? '',
+      text: widget.productData['phone1']?.toString() ?? '',
     );
     _locationController = TextEditingController(
       text: data['location']?.toString() ?? '',
     );
-    if (_locationController.text.contains(',')) {
-      var parts = _locationController.text.split(',');
-      selectedProvince = parts[0].trim();
-      selectedDistrict = parts[1].trim();
-      // ដូរមកប្រើឈ្មោះ cambodiaProvinceData ឱ្យត្រូវតាម File មេ
-      districtList = cambodiaProvinceData[selectedProvince] ?? [];
-    } else {
-      selectedProvince = _locationController.text.trim();
-      districtList = cambodiaProvinceData[selectedProvince] ?? [];
-    }
+
+
+    // ✅ កំណត់ Lat/Lng
     selectedLat = data['lat'] != null ? (data['lat'] as num).toDouble() : null;
     selectedLng = data['lng'] != null ? (data['lng'] as num).toDouble() : null;
 
 
-    // ✅ ទាញយកបញ្ជីរូបភាពដែលមានស្រាប់ (List)
+    // ✅ ទាញយកបញ្ជីរូបភាពដែលមានស្រាប់
     if (data['image_urls'] != null) {
       _existingImageUrls = List<String>.from(data['image_urls']);
     } else if (data['image_url'] != null) {
@@ -139,52 +130,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
     print("Current User: $currentUserId");
     print("Product Owner: $productOwnerId");
     print("Is Owner: $_isOwner");
-  }
-
-
-  // មុខងារ Master Lock: បិទ/បើកសោរទំនិញទាំងអស់របស់ Seller នេះ
-  Future<void> _toggleAllProductsLock(bool shouldLock) async {
-    setState(() => _isLoading = true);
-    try {
-      String? sellerId = widget.productData['seller_id'];
-      if (sellerId == null) return;
-
-
-      var collection = FirebaseFirestore.instance.collection('products');
-      // ទាញយកតែទំនិញណាដែលជារបស់ Seller ហ្នឹង
-      var query = await collection
-          .where('seller_id', isEqualTo: sellerId)
-          .get();
-
-
-      WriteBatch batch = FirebaseFirestore.instance.batch();
-
-
-      for (var doc in query.docs) {
-        batch.update(doc.reference, {'is_locked': shouldLock});
-      }
-
-
-      await batch.commit();
-
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              shouldLock
-                  ? "🔒 បានចាក់សោរទំនិញទាំងអស់"
-                  : "🔓 បានបើកសោរទំនិញទាំងអស់",
-            ),
-            backgroundColor: shouldLock ? Colors.orange : Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint("Master Lock Error: $e");
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
 
@@ -233,10 +178,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
             .doc(widget.productId)
             .update({
           'product_name': _nameController.text.trim(),
+          // ✅ ថែម " ៛" នៅខាងក្រោយតម្លៃ ដើម្បីឱ្យដូចកូដចាស់មេ
           'price': _priceController.text
-              .replaceAll(' ៛', '')
-              .replaceAll(',', '')
-              .trim(), // រក្សាទុកជា String តាមទម្រង់ដើមមេ
+              .trim(), // រក្សាទុកត្រឹម 1,000 (មានក្បៀស តែអត់មាន ៛)
           'description': _descController.text.trim(),
           'phone1': _phoneController.text
               .trim(), // ប្តូរឱ្យត្រូវជាមួយ AddProductPage
@@ -303,19 +247,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
         ),
         backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,
-        actions: [
-          // ប៊ូតុង Master Switch លើ AppBar
-          Row(
-            children: [
-              const Icon(Icons.lock_outline, size: 18),
-              Switch(
-                activeColor: Colors.orange,
-                value: widget.productData['is_locked'] ?? false,
-                onChanged: (val) => _toggleAllProductsLock(val),
-              ),
-            ],
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -445,58 +376,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 Icons.phone,
                 isNumber: true,
               ),
-              // --- ១. កន្លែងចុចរើសខេត្ត (ដូចក្នុងរូប Add Product របស់មេ) ---
-              // ✅ ទីតាំង — fix locationController
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: InkWell(
-                  onTap: () {
-                    showLocationPicker(context, (value) {
-                      setState(() => _locationController.text = value);
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 15,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.location_city,
-                          color: Colors.green,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _locationController.text.isEmpty
-                                ? 'ជ្រើសរើសខេត្ត *'
-                                : _locationController.text,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontFamily: 'Siemreap',
-                              color: _locationController.text.isEmpty
-                                  ? Colors.grey
-                                  : Colors.black,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.grey[400],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
               const SizedBox(height: 10),
               _buildInput(
                 _descController,
@@ -506,6 +385,112 @@ class _EditProductScreenState extends State<EditProductScreen> {
               ),
 
 
+              /// ROW ទីតាំង និង MAP
+              Row(
+                children: [
+                  /// =========================
+                  /// LOCATION PICKER (កែឱ្យត្រូវជាមួយ _locationController)
+                  /// =========================
+                  Expanded(
+                    flex: 3,
+                    child: InkWell(
+                      onTap: () {
+                        showLocationPicker(
+                          context,
+                          onSelected: (location) {
+                            setState(() {
+                              // ✅ កែឈ្មោះទៅជា _locationController ឱ្យត្រូវតាម Variable ខាងលើ
+                              _locationController.text = location
+                                  .toString();
+                            });
+                          },
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 15,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors
+                                .grey
+                                .shade300, // ពណ៌ឱ្យស៊ីជាមួយ TextField ផ្សេងទៀត
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons
+                                  .location_on_outlined, // ប្រើ Icon បែប Outlined ឱ្យស៊ីជាមួយស្ទាយថ្មី
+                              color: Colors
+                                  .orange
+                                  .shade800, // ប្រើពណ៌ទឹកក្រូចឱ្យស៊ីជាមួយ AppBar
+                              size: 22,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _locationController.text.isEmpty
+                                    ? "ជ្រើសរើសទីតាំង *"
+                                    : _locationController.text,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontFamily: 'Siemreap',
+                                  color: _locationController.text.isEmpty
+                                      ? Colors.grey.shade600
+                                      : Colors.black87,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+
+                  const SizedBox(width: 10),
+
+
+                  /// =========================
+                  /// MAP BUTTON (Disabled)
+                  /// =========================
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.map_outlined,
+                            color: Colors.grey.shade400,
+                            size: 20,
+                          ),
+                          const Text(
+                            "Map",
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 30),
               SizedBox(
                 width: double.infinity,
@@ -560,51 +545,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
         ),
         validator: (value) => value!.isEmpty ? "សូមបំពេញ $label" : null,
       ),
-    );
-  }
-
-
-  void _showLocationPicker() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          height:
-          MediaQuery.of(context).size.height * 0.7, // បង្ហាញ ៧០% នៃអេក្រង់
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              const Text(
-                "ជ្រើសរើសខេត្ត/ក្រុង",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const Divider(),
-              // បញ្ជីខេត្ត (ទាញពី cambodiaProvinceData)
-              Expanded(
-                child: ListView(
-                  children: cambodiaProvinceData.keys.map((province) {
-                    return ListTile(
-                      title: Text(province),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                      onTap: () {
-                        setState(() {
-                          selectedProvince = province;
-                          _locationController.text = province;
-                        });
-                        Navigator.pop(context); // បិទផ្ទាំងខេត្ត
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }

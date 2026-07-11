@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,15 +7,12 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 
-
 class EditShopScreen extends StatefulWidget {
   const EditShopScreen({super.key});
-
 
   @override
   State<EditShopScreen> createState() => _EditShopScreenState();
 }
-
 
 class _EditShopScreenState extends State<EditShopScreen> {
   final _formKey = GlobalKey<FormState>();
@@ -25,11 +21,9 @@ class _EditShopScreenState extends State<EditShopScreen> {
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
 
-
   String _userId = '';
   bool _isLoading = false;
   bool _isDataLoading = true;
-
 
   // រូបភាព
   File? _profileImage;
@@ -37,9 +31,7 @@ class _EditShopScreenState extends State<EditShopScreen> {
   String? _profileImageUrl;
   String? _coverImageUrl;
 
-
   final ImagePicker _picker = ImagePicker();
-
 
   @override
   void initState() {
@@ -47,32 +39,32 @@ class _EditShopScreenState extends State<EditShopScreen> {
     _loadUserId();
   }
 
-
   Future<void> _loadUserId() async {
     try {
-      // 🎯 ប្រើ FirebaseAuth វិញ ច្បាស់ជាង SharedPreferences
-      final user = FirebaseAuth.instance.currentUser;
-
+      // ✅ ប្រើ SharedPreferences ជំនួស FirebaseAuth
+      final prefs = await SharedPreferences.getInstance();
+      final uid = prefs.getString('user_uid');
 
       if (mounted) {
-        if (user != null) {
+        if (uid != null && uid.isNotEmpty) {
           setState(() {
-            _userId = user.uid; // ទាញ UID ផ្ទាល់ពី Firebase
+            _userId = uid;
           });
-          await _loadCurrentData();
+          await _loadCurrentData(); // ✅ ទាញទិន្នន័យចាស់មកបង្ហាញ
         } else {
           setState(() => _isDataLoading = false);
           _showError("រកមិនឃើញ User ឡើយ សូម Login ម្តងទៀត");
         }
       }
     } catch (e) {
-      setState(() => _isDataLoading = false);
-      _showError("Error: $e");
+      if (mounted) {
+        setState(() => _isDataLoading = false);
+        _showError("Error: $e");
+      }
     }
   }
 
-
-  // ✅ ទាញទិន្នន័យចាស់មកបង្ហាញ
+  // ✅ ទាញទិន្នន័យចាស់មកបង្ហាញ (មិន clear)
   Future<void> _loadCurrentData() async {
     try {
       var doc = await FirebaseFirestore.instance
@@ -80,20 +72,22 @@ class _EditShopScreenState extends State<EditShopScreen> {
           .doc(_userId)
           .get();
 
-
       if (doc.exists && mounted) {
         var data = doc.data() as Map<String, dynamic>;
         setState(() {
-          _nameController.text = data['name'] ?? '';
+          // ✅ ប្រើ key ត្រឹមត្រូវ
+          _nameController.text = data['name'] ?? '';           // ✅ name
           _bioController.text = data['bio'] ?? '';
-          _phoneController.text = data['phone'] ?? '';
+          _phoneController.text = data['phone'] ?? '';         // ✅ phone
           _addressController.text = data['address'] ?? '';
-          _profileImageUrl = data['photoUrl'];
-          _coverImageUrl = data['cover_image'];
+          _profileImageUrl = data['photoUrl'];                 // ✅ photoUrl
+          _coverImageUrl = data['coverUrl'];                   // ✅ coverUrl (ជំនួស cover_image)
           _isDataLoading = false;
         });
       } else {
-        setState(() => _isDataLoading = false);
+        if (mounted) {
+          setState(() => _isDataLoading = false);
+        }
       }
     } catch (e) {
       debugPrint("Load Data Error: $e");
@@ -104,7 +98,6 @@ class _EditShopScreenState extends State<EditShopScreen> {
     }
   }
 
-
   // ✅ រើសរូបភាព
   Future<void> _pickImage(bool isProfile) async {
     try {
@@ -114,7 +107,6 @@ class _EditShopScreenState extends State<EditShopScreen> {
         maxHeight: isProfile ? 400 : 400,
         imageQuality: 80,
       );
-
 
       if (pickedFile != null && mounted) {
         setState(() {
@@ -130,15 +122,12 @@ class _EditShopScreenState extends State<EditShopScreen> {
     }
   }
 
-
   // ✅ បង្រួមរូបភាព
   Future<File?> _compressImage(File file, bool isProfile) async {
     try {
       final tempDir = await getTemporaryDirectory();
       final targetPath =
           "${tempDir.path}/${isProfile ? 'profile' : 'cover'}_${DateTime.now().millisecondsSinceEpoch}.jpg";
-
-
       final result = await FlutterImageCompress.compressAndGetFile(
         file.absolute.path,
         targetPath,
@@ -147,7 +136,6 @@ class _EditShopScreenState extends State<EditShopScreen> {
         minHeight: isProfile ? 300 : 400,
       );
 
-
       return result != null ? File(result.path) : null;
     } catch (e) {
       debugPrint("Compress Error: $e");
@@ -155,20 +143,17 @@ class _EditShopScreenState extends State<EditShopScreen> {
     }
   }
 
-
   // ✅ បង្ហោះរូបភាព
   Future<String?> _uploadImage(File file, bool isProfile) async {
     try {
       File? compressedFile = await _compressImage(file, isProfile);
       if (compressedFile == null) return null;
 
-
       String fileName =
           "${isProfile ? 'profile' : 'cover'}_${_userId}_${DateTime.now().millisecondsSinceEpoch}.jpg";
       Reference ref = FirebaseStorage.instance.ref().child(
         'shop_images/$fileName',
       );
-
 
       await ref.putFile(compressedFile);
       String downloadUrl = await ref.getDownloadURL();
@@ -179,7 +164,6 @@ class _EditShopScreenState extends State<EditShopScreen> {
     }
   }
 
-
   // ✅ រក្សាទុកការផ្លាស់ប្តូរ
   Future<void> _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
@@ -188,14 +172,11 @@ class _EditShopScreenState extends State<EditShopScreen> {
       return;
     }
 
-
     setState(() => _isLoading = true);
-
 
     try {
       String? newProfileUrl;
       String? newCoverUrl;
-
 
       if (_profileImage != null) {
         newProfileUrl = await _uploadImage(_profileImage!, true);
@@ -204,40 +185,41 @@ class _EditShopScreenState extends State<EditShopScreen> {
         newCoverUrl = await _uploadImage(_coverImage!, false);
       }
 
-
+      // ✅ ប្រើ key ត្រឹមត្រូវតាម collection users
       Map<String, dynamic> updateData = {
-        'name': _nameController.text.trim(),
+        'name': _nameController.text.trim(),      // ✅ name
         'bio': _bioController.text.trim(),
-        'phone': _phoneController.text.trim(),
+        'phone': _phoneController.text.trim(),    // ✅ phone
         'address': _addressController.text.trim(),
         'updated_at': FieldValue.serverTimestamp(),
       };
 
-
-      // ✅ កែឈ្មោះ field ឱ្យត្រូវគ្នា
+      // ✅ កែ key ឱ្យត្រឹមត្រូវ
       if (newProfileUrl != null) {
-        updateData['photoUrl'] = newProfileUrl; // ✅ ជំនួស 'profile_image'
-        setState(() => _profileImageUrl = newProfileUrl);
+        updateData['photoUrl'] = newProfileUrl;  // ✅ photoUrl (ជំនួស profile_image)
       }
       if (newCoverUrl != null) {
-        updateData['cover_image'] = newCoverUrl; // ✅ field ត្រឹមត្រូវ
-        setState(() => _coverImageUrl = newCoverUrl);
+        updateData['coverUrl'] = newCoverUrl;    // ✅ coverUrl (ជំនួស cover_image)
       }
-
 
       await FirebaseFirestore.instance
           .collection('users')
           .doc(_userId)
           .set(updateData, SetOptions(merge: true));
 
-
-      // ✅ Clear local file cache បន្ទាប់ save
+      // ✅ រក្សាទិន្នន័យដែលបានបញ្ចូល (មិន clear)
       if (mounted) {
+        // ធ្វើបច្ចុប្បន្នភាព URL ថ្មី
         setState(() {
-          _profileImage = null;
-          _coverImage = null;
+          if (newProfileUrl != null) {
+            _profileImageUrl = newProfileUrl;
+            _profileImage = null; // លុបតែ file ក្នុងមូលដ្ឋាន
+          }
+          if (newCoverUrl != null) {
+            _coverImageUrl = newCoverUrl;
+            _coverImage = null; // លុបតែ file ក្នុងមូលដ្ឋាន
+          }
         });
-
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -245,6 +227,8 @@ class _EditShopScreenState extends State<EditShopScreen> {
             backgroundColor: Colors.green,
           ),
         );
+
+        // ✅ ត្រឡប់ទៅទំព័រមុនវិញ (ដោយមិន pop ទិន្នន័យ)
         Navigator.pop(context, true);
       }
     } catch (e) {
@@ -255,7 +239,6 @@ class _EditShopScreenState extends State<EditShopScreen> {
     }
   }
 
-
   // ✅ បង្ហាញកំហុស
   void _showError(String message) {
     if (mounted) {
@@ -265,7 +248,6 @@ class _EditShopScreenState extends State<EditShopScreen> {
     }
   }
 
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -274,7 +256,6 @@ class _EditShopScreenState extends State<EditShopScreen> {
     _addressController.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -322,15 +303,12 @@ class _EditShopScreenState extends State<EditShopScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             // Cover Image
-            // Cover Image
-            _buildCoverImageSection(), // ✅ ត្រឹមត្រូវ
+            _buildCoverImageSection(),
             const SizedBox(height: 16),
-
 
             // Profile Image
             _buildProfileImageSection(),
             const SizedBox(height: 24),
-
 
             // Shop Name
             _buildTextField(
@@ -341,7 +319,6 @@ class _EditShopScreenState extends State<EditShopScreen> {
               validator: (v) => v!.isEmpty ? "សូមបញ្ចូលឈ្មោះហាង" : null,
             ),
             const SizedBox(height: 16),
-
 
             // Phone
             _buildTextField(
@@ -355,7 +332,6 @@ class _EditShopScreenState extends State<EditShopScreen> {
             ),
             const SizedBox(height: 16),
 
-
             // Address
             _buildTextField(
               controller: _addressController,
@@ -366,7 +342,6 @@ class _EditShopScreenState extends State<EditShopScreen> {
             ),
             const SizedBox(height: 16),
 
-
             // Bio
             _buildTextField(
               controller: _bioController,
@@ -376,7 +351,6 @@ class _EditShopScreenState extends State<EditShopScreen> {
               maxLines: 4,
             ),
             const SizedBox(height: 32),
-
 
             // Save Button
             SizedBox(
@@ -419,87 +393,86 @@ class _EditShopScreenState extends State<EditShopScreen> {
       ),
     );
   }
-
-
-  // Cover Image Section
+  // ✅ Cover Image Section (មិន clear ទិន្នន័យចាស់)
   Widget _buildCoverImageSection() {
     return GestureDetector(
-      onTap: () => _pickImage(false),
-      child: Container(
-        height: 150,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(16),
-          // ❌ លុប image: ... ចេញទាំងស្រុង
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (_coverImage != null)
+        onTap: () => _pickImage(false),
+        child: Container(
+            height: 150,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                    // ✅ បង្ហាញរូបដែលបានជ្រើសរើសថ្មី ឬរូបចាស់
+                    if (_coverImage != null)
                 Image.file(_coverImage!, fit: BoxFit.cover)
-              else if (_coverImageUrl != null)
-                Image.network(
-                  _coverImageUrl!,
-                  fit: BoxFit.cover,
-                  key: ValueKey(_coverImageUrl),
-                  errorBuilder: (_, __, ___) => Icon(
-                    Icons.broken_image,
-                    color: Colors.grey[400],
-                    size: 40,
-                  ),
-                )
-              else
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.add_photo_alternate,
-                      size: 40,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "ដាក់រូប Cover",
-                      style: TextStyle(color: Colors.grey[500]),
-                    ),
-                  ],
-                ),
-              if (_coverImage != null || _coverImageUrl != null)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
+            else if (_coverImageUrl != null && _coverImageUrl!.isNotEmpty)
+        Image.network(
+        _coverImageUrl!,
+        fit: BoxFit.cover,
+        key: ValueKey(_coverImageUrl), // ជួយ refresh
+        errorBuilder: (_, __, ___) => _buildPlaceholder(),
+    )
+    else
+    _buildPlaceholder(),
+
+    // ✅ ប៊ូតុង Edit overlay
+    Positioned(
+    top: 8,
+    right: 8,
+    child: Container(
+    padding: const EdgeInsets.all(6),
+    decoration: BoxDecoration(
+    color: Colors.black.withOpacity(0.6),
+    borderRadius: BorderRadius.circular(20),
+    ),
+    child: const Icon(
+    Icons.edit,
+    color: Colors.white,
+    size: 16,
+    ),
+    ),
+    ),
+    ],
+    ),
+    ),
+    ),
     );
   }
 
+  // ✅ Placeholder សម្រាប់ពេលគ្មានរូប
+  Widget _buildPlaceholder() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.add_photo_alternate,
+          size: 40,
+          color: Colors.grey[400],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "ដាក់រូប Cover",
+          style: TextStyle(color: Colors.grey[500]),
+        ),
+      ],
+    );
+  }
 
-  // Profile Image Section
+  // ✅ Profile Image Section (មិន clear ទិន្នន័យចាស់)
   Widget _buildProfileImageSection() {
     return Center(
-      child: GestureDetector(
-        onTap: () => _pickImage(true),
-        child: Stack(
-          children: [
-            Container(
+        child: GestureDetector(
+            onTap: () => _pickImage(true),
+            child: Stack(
+              children: [
+              Container(
               width: 100,
               height: 100,
               decoration: BoxDecoration(
@@ -512,45 +485,48 @@ class _EditShopScreenState extends State<EditShopScreen> {
                     blurRadius: 10,
                   ),
                 ],
+                // ✅ បង្ហាញរូបថ្មី ឬរូបចាស់
                 image: _profileImage != null
                     ? DecorationImage(
                   image: FileImage(_profileImage!),
                   fit: BoxFit.cover,
                 )
-                    : _profileImageUrl != null
+                    : _profileImageUrl != null && _profileImageUrl!.isNotEmpty
                     ? DecorationImage(
                   image: NetworkImage(_profileImageUrl!),
                   fit: BoxFit.cover,
                 )
                     : null,
               ),
-              child: _profileImage == null && _profileImageUrl == null
+              // ✅ បង្ហាញ icon ពេលគ្មានរូប
+              child: _profileImage == null &&
+                  (_profileImageUrl == null || _profileImageUrl!.isEmpty)
                   ? Icon(Icons.person, size: 50, color: Colors.grey[400])
                   : null,
             ),
+            // ✅ ប៊ូតុងកាមេរ៉ា
             Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.green[700],
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.green[700],
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.camera_alt,
-                  color: Colors.white,
-                  size: 16,
-                ),
-              ),
             ),
-          ],
+              ],
+            ),
         ),
-      ),
     );
   }
-
 
   // Custom TextField
   Widget _buildTextField({
@@ -590,6 +566,3 @@ class _EditShopScreenState extends State<EditShopScreen> {
     );
   }
 }
-
-
-

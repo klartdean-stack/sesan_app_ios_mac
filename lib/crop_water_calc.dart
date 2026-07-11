@@ -49,7 +49,10 @@ class _CropWaterCalcPageState extends State<CropWaterCalcPage> {
         ),
         backgroundColor: Colors.blueAccent.shade700,
       ),
-      body: SingleChildScrollView(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
@@ -90,7 +93,10 @@ class _CropWaterCalcPageState extends State<CropWaterCalcPage> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _calculate,
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                _calculate();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blueAccent.shade700,
                 foregroundColor: Colors.white,
@@ -108,6 +114,7 @@ class _CropWaterCalcPageState extends State<CropWaterCalcPage> {
           ],
         ),
       ),
+        ),
     );
   }
 

@@ -803,21 +803,39 @@ class _PolicyScreenState extends State<PolicyScreen> {
 
   Future<void> _acceptPolicy() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('មិនមានអ្នកប្រើប្រាស់');
+      // ✅ ទាញ UID ពី SharedPreferences ជាមុនសិន
+      final prefs = await SharedPreferences.getInstance();
+      String? uid = prefs.getString('user_uid');
+
+      // ✅ ប្រសិនបើគ្មានក្នុង SharedPreferences ទើបប្រើ FirebaseAuth
+      if (uid == null || uid.isEmpty) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          uid = user.uid;
+        }
+      }
+
+      // ✅ ប្រសិនបើនៅតែគ្មាន UID ទេ បង្ហាញ Error
+      if (uid == null || uid.isEmpty) {
+        throw Exception('មិនអាចកំណត់អត្តសញ្ញាណអ្នកប្រើប្រាស់បានទេ។ សូមចូលប្រើប្រាស់គណនីឡើងវិញ។');
+      }
+
       final now = DateTime.now();
+
+      // ✅ ប្រើ UID ដែលទាញបាន
       await FirebaseFirestore.instance
           .collection('users')
-          .doc(user.uid)
+          .doc(uid)
           .update({
         'has_accepted_terms': true,
         'accepted_date': Timestamp.fromDate(now),
         'policy_version': _currentVersion,
       });
-      final prefs = await SharedPreferences.getInstance();
+
       await prefs.setBool('policy_accepted', true);
       await prefs.setString('policy_accepted_date', now.toIso8601String());
       await prefs.setString('policy_version', _currentVersion);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -835,7 +853,10 @@ class _PolicyScreenState extends State<PolicyScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.redAccent,
-            content: Text('❌ មានបញ្ហា: $e'),
+            content: Text(
+              '❌ មានបញ្ហា: $e',
+              style: const TextStyle(fontFamily: 'Siemreap'),
+            ),
           ),
         );
       }

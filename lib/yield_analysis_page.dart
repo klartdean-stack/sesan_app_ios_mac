@@ -20,12 +20,11 @@ class _YieldAnalysisPageState extends State<YieldAnalysisPage> {
   final _dCtrl = TextEditingController(); // ជ្រុង D
 
   // --- Controllers សម្រាប់ Tab ទី២ (ដំណាំអចិន្ត្រៃយ៍) ---
-  final _perenManualCountCtrl = TextEditingController(); // បញ្ចូលចំនួនដើមផ្ទាល់
-  final _perenDailyWeightCtrl = TextEditingController(); // ទិន្នផល/ដើម/ថ្ងៃ
-  final _perenHarvestDaysCtrl =
-      TextEditingController(); // រយៈពេលប្រមូលផល (ថ្ងៃ)
-  final _perenRowSpaceCtrl = TextEditingController(); // ចន្លោះជួរ (m)
-  final _perenPlantSpaceCtrl = TextEditingController(); // ចន្លោះដើម (m)
+  final _perenManualCountCtrl = TextEditingController();
+  final _perenDailyWeightCtrl = TextEditingController();
+  final _perenHarvestDaysCtrl = TextEditingController();
+  final _perenRowSpaceCtrl = TextEditingController();
+  final _perenPlantSpaceCtrl = TextEditingController();
 
   // លទ្ធផលបង្ហាញ
   String _resPlants = "0";
@@ -34,13 +33,13 @@ class _YieldAnalysisPageState extends State<YieldAnalysisPage> {
 
   // Logic គណនាផ្ទៃដី ៤ ជ្រុងមិនស្មើ (Bretschneider's formula approximation)
   double _getArea() {
-    double areaHectare = double.tryParse(_annualAreaCtrl.text) ?? 0;
+    double areaHectare = double.tryParse(_annualAreaCtrl.text.replaceAll(',', '.')) ?? 0;
     if (areaHectare > 0) return areaHectare * 10000;
 
-    double a = double.tryParse(_aCtrl.text) ?? 0;
-    double b = double.tryParse(_bCtrl.text) ?? 0;
-    double c = double.tryParse(_cCtrl.text) ?? 0;
-    double d = double.tryParse(_dCtrl.text) ?? 0;
+    double a = double.tryParse(_aCtrl.text.replaceAll(',', '.')) ?? 0;
+    double b = double.tryParse(_bCtrl.text.replaceAll(',', '.')) ?? 0;
+    double c = double.tryParse(_cCtrl.text.replaceAll(',', '.')) ?? 0;
+    double d = double.tryParse(_dCtrl.text.replaceAll(',', '.')) ?? 0;
     if (a > 0 && b > 0 && c > 0 && d > 0) {
       double s = (a + b + c + d) / 2;
       return sqrt((s - a) * (s - b) * (s - c) * (s - d));
@@ -51,45 +50,36 @@ class _YieldAnalysisPageState extends State<YieldAnalysisPage> {
   // ១. គណនាដំណាំប្រចាំឆ្នាំ (ដំឡូងមី, ពោត...)
   void _calcAnnual() {
     double area = _getArea();
-    double row = (double.tryParse(_annualRowCtrl.text) ?? 1) / 100;
-    double plant = (double.tryParse(_annualPlantCtrl.text) ?? 1) / 100;
-    double avgW = double.tryParse(_annualWeightCtrl.text) ?? 0;
+    double row = (double.tryParse(_annualRowCtrl.text.replaceAll(',', '.')) ?? 1) / 100;
+    double plant = (double.tryParse(_annualPlantCtrl.text.replaceAll(',', '.')) ?? 1) / 100;
+    double avgW = double.tryParse(_annualWeightCtrl.text.replaceAll(',', '.')) ?? 0;
 
     setState(() {
       double count = area / (row * plant);
       _resPlants = count.toInt().toString();
-      _resTotal = ((count * avgW) / 1000).toStringAsFixed(2); // តោន
+      _resTotal = ((count * avgW) / 1000).toStringAsFixed(2);
     });
   }
 
   // ២. គណនាដំណាំអចិន្ត្រៃយ៍ (ចន្ទី, ស្វាយ...)
   void _calcPerennial() {
-    // ១. ទាញយកផ្ទៃដីជា ម៉ែត្រការ៉េ
     double areaM2 = _getArea();
 
-    // ២. ទាញយកចន្លោះដាំដុះ (គិតជាម៉ែត្រ)
-    double rowS = double.tryParse(_perenRowSpaceCtrl.text) ?? 1;
-    double plantS = double.tryParse(_perenPlantSpaceCtrl.text) ?? 1;
+    double rowS = double.tryParse(_perenRowSpaceCtrl.text.replaceAll(',', '.')) ?? 1;
+    double plantS = double.tryParse(_perenPlantSpaceCtrl.text.replaceAll(',', '.')) ?? 1;
 
-    // ៣. រកចំនួនដើម៖ បើមានវាយបញ្ចូល "ចំនួនដើមសរុប" គឺយកតាមហ្នឹង
-    // បើអត់ទេ គឺ App រកឱ្យតាមរយៈ (ផ្ទៃដី / (ចន្លោះជួរ * ចន្លោះដើម))
-    double totalPlants = double.tryParse(_perenManualCountCtrl.text) ?? 0;
+    double totalPlants = double.tryParse(_perenManualCountCtrl.text.replaceAll(',', '.')) ?? 0;
     if (totalPlants == 0 && areaM2 > 0) {
       totalPlants = areaM2 / (rowS * plantS);
     }
 
-    // ៤. ទាញយកទិន្នផលមធ្យម និងចំនួនថ្ងៃ
-    double dailyW = double.tryParse(_perenDailyWeightCtrl.text) ?? 0;
-    double days = double.tryParse(_perenHarvestDaysCtrl.text) ?? 0;
+    double dailyW = double.tryParse(_perenDailyWeightCtrl.text.replaceAll(',', '.')) ?? 0;
+    double days = double.tryParse(_perenHarvestDaysCtrl.text.replaceAll(',', '.')) ?? 0;
 
     setState(() {
-      _resPlants = totalPlants.toInt().toString(); // លទ្ធផល ១៖ ចំនួនដើមសរុប
-      _resDaily = (totalPlants * dailyW).toStringAsFixed(
-        2,
-      ); // លទ្ធផល ២៖ គីឡូ/ថ្ងៃ
-      _resTotal = ((totalPlants * dailyW * days) / 1000).toStringAsFixed(
-        2,
-      ); // លទ្ធផល ៣៖ តោន/រដូវ
+      _resPlants = totalPlants.toInt().toString();
+      _resDaily = (totalPlants * dailyW).toStringAsFixed(2);
+      _resTotal = ((totalPlants * dailyW * days) / 1000).toStringAsFixed(2);
     });
   }
 
@@ -110,87 +100,93 @@ class _YieldAnalysisPageState extends State<YieldAnalysisPage> {
         body: TabBarView(children: [_buildAnnualPage(), _buildPerennialPage()]),
       ),
     );
-  }
-
-  // --- UI ផ្នែកដំណាំប្រចាំឆ្នាំ ---
+  }// --- UI ផ្នែកដំណាំប្រចាំឆ្នាំ ---
   Widget _buildAnnualPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _inputCard("១. ទិន្នផលមធ្យម", [
-            _field(_annualWeightCtrl, "ទម្ងន់មធ្យមក្នុង ១ គុម្ភ (kg)"),
-          ]),
-          _inputCard("២. បច្ចេកទេសដាំដុះ", [
-            Row(
-              children: [
-                Expanded(child: _field(_annualRowCtrl, "ចន្លោះជួរ (cm)")),
-                const SizedBox(width: 10),
-                Expanded(child: _field(_annualPlantCtrl, "ចន្លោះដើម (cm)")),
-              ],
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.opaque,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            _inputCard("១. ទិន្នផលមធ្យម", [
+              _field(_annualWeightCtrl, "ទម្ងន់មធ្យមក្នុង ១ គុម្ភ (kg)"),
+            ]),
+            _inputCard("២. បច្ចេកទេសដាំដុះ", [
+              Row(
+                children: [
+                  Expanded(child: _field(_annualRowCtrl, "ចន្លោះជួរ (cm)")),
+                  const SizedBox(width: 10),
+                  Expanded(child: _field(_annualPlantCtrl, "ចន្លោះដើម (cm)")),
+                ],
+              ),
+            ]),
+            _areaInput(),
+            const SizedBox(height: 20),
+            _btn("គណនាទិន្នផល", _calcAnnual),
+            _resultBox(
+              "ចំនួនដើមសរុប",
+              _resPlants,
+              "ដើម",
+              "ទិន្នផលសរុប",
+              _resTotal,
+              "តោន",
+              "",
+              "",
+              "",
             ),
-          ]),
-          _areaInput(),
-          const SizedBox(height: 20),
-          _btn("គណនាទិន្នផល", _calcAnnual),
-          _resultBox(
-            "ចំនួនដើមសរុប",
-            _resPlants,
-            "ដើម",
-            "ទិន្នផលសរុប",
-            _resTotal,
-            "តោន",
-            "",
-            "",
-            "", // ជួរទី៣ ទុកទំនេរ បើមេមិនចង់បង្ហាញ
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   // --- UI ផ្នែកដំណាំអចិន្ត្រៃយ៍ ---
   Widget _buildPerennialPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _inputCard("១. ចំនួនដើម", [
-            _field(_perenManualCountCtrl, "បញ្ចូលចំនួនដើមសរុប (បើស្គាល់)"),
-            const Text("ឬ បញ្ចូលទំហំដី និងចន្លោះដាំនៅផ្នែកខាងក្រោម"),
-            _inputCard("បច្ចេកទេសដាំដុះ (សម្រាប់រកចំនួនដើម)", [
-              Row(
-                children: [
-                  Expanded(
-                    child: _field(_perenRowSpaceCtrl, "ចន្លោះជួរ (ម៉ែត្រ)"),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _field(_perenPlantSpaceCtrl, "ចន្លោះដើម (ម៉ែត្រ)"),
-                  ),
-                ],
-              ),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.opaque,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            _inputCard("១. ចំនួនដើម", [
+              _field(_perenManualCountCtrl, "បញ្ចូលចំនួនដើមសរុប (បើស្គាល់)"),
+              const Text("ឬ បញ្ចូលទំហំដី និងចន្លោះដាំនៅផ្នែកខាងក្រោម"),
+              _inputCard("បច្ចេកទេសដាំដុះ (សម្រាប់រកចំនួនដើម)", [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _field(_perenRowSpaceCtrl, "ចន្លោះជួរ (ម៉ែត្រ)"),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _field(_perenPlantSpaceCtrl, "ចន្លោះដើម (ម៉ែត្រ)"),
+                    ),
+                  ],
+                ),
+              ]),
             ]),
-          ]),
-          _inputCard("២. ទិន្នផល និងរយៈពេល", [
-            _field(_perenDailyWeightCtrl, "ទិន្នផលមធ្យម/ដើម/ថ្ងៃ (kg)"),
-            _field(_perenHarvestDaysCtrl, "រយៈពេលប្រមូលផលសរុប (ថ្ងៃ)"),
-          ]),
-          _areaInput(), // ប្រើសម្រាប់ករណីកសិករមិនដឹងចំនួនដើម
-          const SizedBox(height: 20),
-          _btn("គណនាទិន្នផល", _calcPerennial),
-          _resultBox(
-            "១. ចំនួនដើមសរុប",
-            _resPlants,
-            "ដើម",
-            "២. ទិន្នផលសរុប/ថ្ងៃ",
-            _resDaily,
-            "kg",
-            "៣. ទិន្នផលសរុប/រដូវ",
-            _resTotal,
-            "តោន",
-          ),
-        ],
+            _inputCard("២. ទិន្នផល និងរយៈពេល", [
+              _field(_perenDailyWeightCtrl, "ទិន្នផលមធ្យម/ដើម/ថ្ងៃ (kg)"),
+              _field(_perenHarvestDaysCtrl, "រយៈពេលប្រមូលផលសរុប (ថ្ងៃ)"),
+            ]),
+            _areaInput(),
+            const SizedBox(height: 20),
+            _btn("គណនាទិន្នផល", _calcPerennial),
+            _resultBox(
+              "១. ចំនួនដើមសរុប",
+              _resPlants,
+              "ដើម",
+              "២. ទិន្នផលសរុប/ថ្ងៃ",
+              _resDaily,
+              "kg",
+              "៣. ទិន្នផលសរុប/រដូវ",
+              _resTotal,
+              "តោន",
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -221,15 +217,14 @@ class _YieldAnalysisPageState extends State<YieldAnalysisPage> {
   Widget _field(TextEditingController ctrl, String label) {
     return TextField(
       controller: ctrl,
-      keyboardType: TextInputType.number,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
       decoration: InputDecoration(labelText: label),
     );
   }
 
   Widget _areaInput() {
     return _inputCard("៣. ផ្ទៃដី", [
-      _field(_annualAreaCtrl, "ផ្ទៃដី (ហិតតា)"),
-      const Padding(
+        _field(_annualAreaCtrl, "ផ្ទៃដី (ហិតតា)"),const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
         child: Text("ឬ បញ្ចូលជ្រុងទាំង ៤ (ម៉ែត្រ)"),
       ),
@@ -249,7 +244,10 @@ class _YieldAnalysisPageState extends State<YieldAnalysisPage> {
 
   Widget _btn(String txt, VoidCallback press) {
     return ElevatedButton(
-      onPressed: press,
+      onPressed: () {
+        FocusScope.of(context).unfocus();
+        press();
+      },
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 50),
         backgroundColor: Colors.green,
@@ -258,18 +256,17 @@ class _YieldAnalysisPageState extends State<YieldAnalysisPage> {
     );
   }
 
-  // កូដថ្មីដែលរក្សា String ច្រើនដូចកូដចាស់មេ (String 6)
   Widget _resultBox(
-    String t1,
-    String v1,
-    String u1, // ជួរទី១ (ចំណងជើង, តម្លៃ, ឯកតា)
-    String t2,
-    String v2,
-    String u2, // ជួរទី២
-    String t3,
-    String v3,
-    String u3, // ជួរទី៣
-  ) {
+      String t1,
+      String v1,
+      String u1,
+      String t2,
+      String v2,
+      String u2,
+      String t3,
+      String v3,
+      String u3,
+      ) {
     return Container(
       margin: const EdgeInsets.only(top: 15),
       padding: const EdgeInsets.all(15),
@@ -280,9 +277,9 @@ class _YieldAnalysisPageState extends State<YieldAnalysisPage> {
       ),
       child: Column(
         children: [
-          _resRow(t1, v1, u1), // បង្ហាញជួរទី១
+          _resRow(t1, v1, u1),
           const Divider(),
-          _resRow(t2, v2, u2), // បង្ហាញជួរទី២
+          _resRow(t2, v2, u2),
           const Divider(),
           if (t3.isNotEmpty) ...[
             const Divider(),
@@ -293,13 +290,12 @@ class _YieldAnalysisPageState extends State<YieldAnalysisPage> {
     );
   }
 
-  // Widget បង្ហាញជួរនីមួយៗ
   Widget _resRow(
-    String label,
-    String val,
-    String unit, {
-    bool isHighlight = false,
-  }) {
+      String label,
+      String val,
+      String unit, {
+        bool isHighlight = false,
+      }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

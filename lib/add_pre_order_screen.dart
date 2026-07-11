@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:my_app/location_picker.dart';
@@ -33,7 +34,7 @@ class _AddPreOrderScreenState extends State<AddPreOrderScreen> {
 
 
   List<File> _images = [];
-  String _selectedUnit = 'គីឡូក្រាម (Kg)';
+  String? _selectedUnit;
   String? currentUid;
   bool _isUploading = false;
 
@@ -41,13 +42,21 @@ class _AddPreOrderScreenState extends State<AddPreOrderScreen> {
   final List<String> _units = [
     'គីឡូក្រាម (Kg)',
     'តោន (Ton)',
-    'ហិតា (Ha)',
-    'គ្រឿង/ផ្លែ',
-    'កាន/ធុង',
-    'ដើម/បាច់',
-    'បាវ/ស្រះ',
-    'កញ្ចប់/ឡូ',
-    '...',
+    'ហិកតា (Ha)',
+    'គ្រឿង',
+    'ផ្លែ',
+    'កាន',
+    'ធុង',
+    'ដើម',
+    'បាច់',
+    'បាវ',
+    'ស្រះ',
+    'កញ្ចប់',
+    'ឡូ',
+    'ដុំ',
+    'ម៉ែត្រ',
+    'លីត្រ',
+    'ផ្សេងៗ',
   ];
 
 
@@ -142,13 +151,16 @@ class _AddPreOrderScreenState extends State<AddPreOrderScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.translucent,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               // ── រូបភាព ─────────────────────────────────────
               _buildSectionTitle('រូបភាពផលិតផល (យ៉ាងតិច ១ សន្លឹក)'),
               const SizedBox(height: 10),
@@ -180,6 +192,7 @@ class _AddPreOrderScreenState extends State<AddPreOrderScreen> {
                       '0.00',
                       Icons.sell_outlined,
                       isNumber: true,
+                      isPrice: true,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -330,6 +343,7 @@ class _AddPreOrderScreenState extends State<AddPreOrderScreen> {
           ),
         ),
       ),
+        ),
     );
   }
 
@@ -424,6 +438,7 @@ class _AddPreOrderScreenState extends State<AddPreOrderScreen> {
       String hint,
       IconData icon, {
         bool isNumber = false,
+        bool isPrice = false, // ✅ បន្ថែមសម្រាប់ប្រអប់តម្លៃ
         int maxLines = 1,
       }) {
     return Padding(
@@ -432,6 +447,9 @@ class _AddPreOrderScreenState extends State<AddPreOrderScreen> {
         controller: controller,
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
         maxLines: maxLines,
+        inputFormatters: isPrice
+            ? [ThousandsSeparatorInputFormatter()]
+            : null, // ✅ បន្ថែម
         style: const TextStyle(fontFamily: 'Siemreap', fontSize: 14),
         decoration: InputDecoration(
           labelText: label,
@@ -470,7 +488,8 @@ class _AddPreOrderScreenState extends State<AddPreOrderScreen> {
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
+        child: DropdownButtonFormField<String>(
+          // ✅ ប្ដូរជា DropdownButtonFormField
           value: _selectedUnit,
           isExpanded: true,
           style: const TextStyle(
@@ -478,10 +497,20 @@ class _AddPreOrderScreenState extends State<AddPreOrderScreen> {
             color: Colors.black,
             fontSize: 13,
           ),
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+          ),
+          hint: const Text(
+            'ជ្រើសរើសឯកតា *',
+            style: TextStyle(fontSize: 13),
+          ), // ✅ បន្ថែម hint
           items: _units
               .map((e) => DropdownMenuItem(value: e, child: Text(e)))
               .toList(),
           onChanged: (val) => setState(() => _selectedUnit = val!),
+          validator: (value) =>
+          value == null ? 'សូមជ្រើសរើសឯកតា' : null, // ✅ បន្ថែម validator
         ),
       ),
     );
@@ -571,8 +600,9 @@ class _AddPreOrderScreenState extends State<AddPreOrderScreen> {
       await FirebaseFirestore.instance.collection('pre_orders').add({
         'owner_id': currentUid,
         'product_name': _nameController.text.trim(),
-        'price': double.tryParse(_priceController.text) ?? 0.0,
-        'unit': _selectedUnit,
+        'price':
+        double.tryParse(_priceController.text.replaceAll(',', '')) ?? 0.0,
+        'unit': _selectedUnit ?? 'មិនបានជ្រើសរើស',
         'harvest_date': Timestamp.fromDate(harvestDate),
         'location': _locationController.text.trim(),
         'phone': _phoneController.text.trim(),
@@ -603,6 +633,26 @@ class _AddPreOrderScreenState extends State<AddPreOrderScreen> {
         );
       }
     }
+  }
+}
+
+
+class ThousandsSeparatorInputFormatter extends TextInputFormatter {
+  static final NumberFormat _formatter = NumberFormat('#,###');
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue,
+      TextEditingValue newValue,
+      ) {
+    if (newValue.text.isEmpty) return newValue;
+    String baseText = newValue.text.replaceAll(',', '');
+    int? value = int.tryParse(baseText);
+    if (value == null) return oldValue;
+    String newText = _formatter.format(value);
+    return newValue.copyWith(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
   }
 }
 

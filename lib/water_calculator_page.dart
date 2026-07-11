@@ -28,10 +28,10 @@ class _WaterCalculatorPageState extends State<WaterCalculatorPage> {
 
   // --- Logic គណនាអាងមូល ---
   void _calcCircle() {
-    double R = (double.tryParse(_diaTopCtrl.text) ?? 0) / 2;
-    double h = double.tryParse(_depthCircleCtrl.text) ?? 0;
+    double R = (double.tryParse(_diaTopCtrl.text.replaceAll(',', '.')) ?? 0) / 2;
+    double h = double.tryParse(_depthCircleCtrl.text.replaceAll(',', '.')) ?? 0;
     double r = _isCircleSloped
-        ? (double.tryParse(_diaBottomCtrl.text) ?? 0) / 2
+        ? (double.tryParse(_diaBottomCtrl.text.replaceAll(',', '.')) ?? 0) / 2
         : R;
 
     double vol = (pi * h / 3) * (pow(R, 2) + pow(r, 2) + (R * r));
@@ -40,14 +40,14 @@ class _WaterCalculatorPageState extends State<WaterCalculatorPage> {
 
   // --- Logic គណនាអាងជ្រុង ---
   void _calcRect() {
-    double L = double.tryParse(_lengthTopCtrl.text) ?? 0;
-    double W = double.tryParse(_widthTopCtrl.text) ?? 0;
-    double h = double.tryParse(_depthRectCtrl.text) ?? 0;
+    double L = double.tryParse(_lengthTopCtrl.text.replaceAll(',', '.')) ?? 0;
+    double W = double.tryParse(_widthTopCtrl.text.replaceAll(',', '.')) ?? 0;
+    double h = double.tryParse(_depthRectCtrl.text.replaceAll(',', '.')) ?? 0;
     double l = _isRectSloped
-        ? (double.tryParse(_lengthBottomCtrl.text) ?? 0)
+        ? (double.tryParse(_lengthBottomCtrl.text.replaceAll(',', '.')) ?? 0)
         : L;
     double w = _isRectSloped
-        ? (double.tryParse(_widthBottomCtrl.text) ?? 0)
+        ? (double.tryParse(_widthBottomCtrl.text.replaceAll(',', '.')) ?? 0)
         : W;
 
     double areaTop = L * W;
@@ -55,7 +55,6 @@ class _WaterCalculatorPageState extends State<WaterCalculatorPage> {
     double vol = (h / 3) * (areaTop + areaBottom + sqrt(areaTop * areaBottom));
     _updateResult(vol);
   }
-
   void _updateResult(double volM3) {
     setState(() {
       _resM3 = volM3.toStringAsFixed(2);
@@ -103,11 +102,14 @@ class _WaterCalculatorPageState extends State<WaterCalculatorPage> {
   }
 
   Widget _buildCirclePage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _inputCard("ទំហំអាង/ស្រះមូល", [
+    return GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _inputCard("ទំហំអាង/ស្រះមូល", [
             // ថែម Argument ទី៣ ជាអក្សរពន្យល់ (Hint)
             _field(
               _diaTopCtrl,
@@ -136,15 +138,19 @@ class _WaterCalculatorPageState extends State<WaterCalculatorPage> {
           _resultBox(),
         ],
       ),
+        ),
     );
   }
 
   Widget _buildRectPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _inputCard("ទំហំអាង/ស្រះជ្រុង", [
+    return GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _inputCard("ទំហំអាង/ស្រះជ្រុង", [
             Row(
               children: [
                 // បន្ថែម Argument ទី៣ ជាអក្សរពន្យល់ (Hint)
@@ -201,6 +207,7 @@ class _WaterCalculatorPageState extends State<WaterCalculatorPage> {
           _resultBox(),
         ],
       ),
+        ),
     );
   }
 
@@ -249,7 +256,10 @@ class _WaterCalculatorPageState extends State<WaterCalculatorPage> {
 
   Widget _btn(String txt, VoidCallback press) {
     return ElevatedButton(
-      onPressed: press,
+      onPressed: () {
+        FocusScope.of(context).unfocus();
+        press();
+      },
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 50),
         backgroundColor: Colors.blue.shade800,

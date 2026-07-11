@@ -76,7 +76,10 @@ class _AnimalFeedCalcPageState extends State<AnimalFeedCalcPage> {
         title: const Text("ជំនួយការផ្សំចំណីសត្វ"),
         backgroundColor: Colors.orange.shade700,
       ),
-      body: SingleChildScrollView(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
@@ -109,6 +112,7 @@ class _AnimalFeedCalcPageState extends State<AnimalFeedCalcPage> {
           ],
         ),
       ),
+        ),
     );
   }
 

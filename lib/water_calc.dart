@@ -49,14 +49,20 @@ class _IrrigationCalcPageState extends State<IrrigationCalcPage> {
         backgroundColor: Colors.blue[800],
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             _buildInputSection(),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _calculate,
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                _calculate();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue[800],
                 minimumSize: const Size(double.infinity, 50),
@@ -71,6 +77,7 @@ class _IrrigationCalcPageState extends State<IrrigationCalcPage> {
           ],
         ),
       ),
+        ),
     );
   }
 

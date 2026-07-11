@@ -6,17 +6,21 @@ import 'package:my_app/order_scanner_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 
+
 class OrderManagementScreen extends StatefulWidget {
   final String sellerId;
   const OrderManagementScreen({super.key, required this.sellerId});
+
 
   @override
   _OrderManagementScreenState createState() => _OrderManagementScreenState();
 }
 
+
 class _OrderManagementScreenState extends State<OrderManagementScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
 
   @override
   void initState() {
@@ -24,10 +28,12 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
     _tabController = TabController(length: 2, vsync: this);
   }
 
+
   Future<void> _makePhoneCall(String phoneNumber) async {
     final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
     if (await canLaunchUrl(launchUri)) await launchUrl(launchUri);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +80,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
     );
   }
 
+
   Widget _buildOrderList(List<String> statuses) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -96,6 +103,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
             ),
           );
 
+
         return ListView.builder(
           itemCount: docs.length,
           itemBuilder: (context, index) {
@@ -106,6 +114,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
       },
     );
   }
+
 
   Widget _buildOrderCard(Map<String, dynamic> data, String docId) {
     DateTime orderDate =
@@ -120,6 +129,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
     final String address = data['shipping_address'] ?? 'គ្មានអាសយដ្ឋាន'; //
     final String status = data['status'] ?? 'pending';
 
+
     // មុខងារគណនាតម្លៃសរុបក្នុងបុង
     double totalPrice = 0;
     for (var item in items) {
@@ -127,6 +137,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
       int qty = int.tryParse(item['quantity']?.toString() ?? '1') ?? 1;
       totalPrice += (price * qty);
     }
+
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -149,7 +160,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
           // --- ផ្នែកព័ត៌មានអតិថិជន (ឈ្មោះ, ទីតាំង, លេខទូរស័ព្ទ) ---
           Row(
             crossAxisAlignment:
-                CrossAxisAlignment.start, // ឱ្យវាផ្ដើមពីលើស្មើគ្នា
+            CrossAxisAlignment.start, // ឱ្យវាផ្ដើមពីលើស្មើគ្នា
             children: [
               Expanded(
                 child: Column(
@@ -243,6 +254,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                       ],
                     ),
 
+
                     // 🎯 ៥. អក្សរព្រមាន (រុញមកដាក់ក្រោមនេះវិញ ទើបលែង Overflow)
                     if (isExpired)
                       Padding(
@@ -270,6 +282,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                 ),
               ),
 
+
               const SizedBox(width: 10), // ឃ្លាតពី Column ឆ្វេងបន្តិច
               // --- ផ្នែកតម្លៃសរុប (នៅខាងស្ដាំដដែល តែលែងមានអីបុកវាហើយ) ---
               Column(
@@ -296,6 +309,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
             child: Divider(color: Colors.white10, thickness: 1),
           ),
 
+
           // --- បង្ហាញបញ្ជីទំនិញ (Unlimited Items) ---
           ListView.builder(
             shrinkWrap: true,
@@ -304,6 +318,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
             itemBuilder: (context, i) {
               final item = items[i] as Map<String, dynamic>;
               final String imgUrl = item['image_url'] ?? ''; //
+
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -314,30 +329,30 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                       borderRadius: BorderRadius.circular(10),
                       child: imgUrl.isNotEmpty
                           ? Image.network(
-                              imgUrl,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                    width: 60,
-                                    height: 60,
-                                    color: Colors.white10,
-                                    child: const Icon(
-                                      Icons.broken_image,
-                                      color: Colors.white24,
-                                    ),
-                                  ),
-                            )
-                          : Container(
+                        imgUrl,
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Container(
                               width: 60,
                               height: 60,
                               color: Colors.white10,
                               child: const Icon(
-                                Icons.image,
+                                Icons.broken_image,
                                 color: Colors.white24,
                               ),
                             ),
+                      )
+                          : Container(
+                        width: 60,
+                        height: 60,
+                        color: Colors.white10,
+                        child: const Icon(
+                          Icons.image,
+                          color: Colors.white24,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -360,6 +375,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                               fontSize: 12,
                             ),
                           ),
+
 
                           // --- កែមកដាក់ក្នុង Row បែបនេះវិញមេ ទើបនាឡិកានិងម៉ោងនៅជួរជាមួយគ្នា ---
                           if (data['order_date'] !=
@@ -396,6 +412,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
             },
           ),
 
+
           const SizedBox(height: 10),
           // ប៊ូតុងបញ្ជាស្ថានភាព
           _buildActionButtons(docId, status, isExpired),
@@ -403,6 +420,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
       ),
     );
   }
+
 
   Widget _buildActionButtons(String docId, String status, bool isExpired) {
     if (status == 'confirmed') {
@@ -451,6 +469,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
       );
     }
 
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -482,13 +501,14 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
     );
   }
 
+
   Widget _statusChip(
-    String docId,
-    String val,
-    String label,
-    bool active,
-    bool isExpired,
-  ) {
+      String docId,
+      String val,
+      String label,
+      bool active,
+      bool isExpired,
+      ) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ActionChip(
@@ -513,37 +533,54 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
     );
   }
 
+
   void _updateStatus(String docId, String newStatus) async {
     final orderDoc = await FirebaseFirestore.instance
         .collection('orders')
         .doc(docId)
         .get();
 
+
     if (!orderDoc.exists) return;
+
 
     final orderData = orderDoc.data() as Map<String, dynamic>;
     final String sellerId = orderData['seller_id'] ?? '';
+
 
     // ទាញយកលុយដែលត្រូវឱ្យអ្នកលក់ (៩៣%) ដែលមេបានគណនាទុកតាំងពីពេលបង្កើតបុង
     double sellerEarnings =
         double.tryParse(orderData['seller_earnings']?.toString() ?? '0') ?? 0;
 
+
     WriteBatch batch = FirebaseFirestore.instance.batch();
 
-    // ១. Update Status Order
-    Map<String, dynamic> updateData = {'status': newStatus};
 
+    // ១. រៀបចំទិន្នន័យសម្រាប់ Update
+    Map<String, dynamic> updateData = {
+      'status': newStatus,
+      'last_update':
+      FieldValue.serverTimestamp(), // ថែមនេះដើម្បីឱ្យ Cloud ដឹងថាមានការប្រែប្រួលថ្មី
+    };
+
+
+    // 🎯 បន្ថែមលក្ខខណ្ឌពិសេសសម្រាប់ Status នីមួយៗ
     if (newStatus == 'packing') {
-      updateData['packing_date'] =
-          FieldValue.serverTimestamp(); // 🎯 ចាប់ផ្ដើមរាប់ ៥ ថ្ងៃ
-      updateData['is_settled'] =
-          false; // 🎯 ប្រាប់ Cloud Function ឱ្យមកជួយរុញលុយក្រោយ ៥ ថ្ងៃ
+      updateData['packing_date'] = FieldValue.serverTimestamp();
+      updateData['is_settled'] = false;
+    } else if (newStatus == 'on_delivery') {
+      updateData['delivery_started_at'] = FieldValue.serverTimestamp();
+    } else if (newStatus == 'delivered') {
+      updateData['delivered_at'] = FieldValue.serverTimestamp();
     }
 
+
+    // 🚀 Update ចូល Firestore
     batch.update(
       FirebaseFirestore.instance.collection('orders').doc(docId),
       updateData,
     );
+
 
     // ២. Logic បាញ់លុយចូលកាបូប (Wallet) ពេលដូរទៅ Packing
     // 🎯 នេះជាកន្លែងដែលធ្វើឱ្យលុយមេដើរត្រូវតាម UI កាបូបលុយថ្មី
@@ -552,12 +589,14 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
           .collection('users')
           .doc(sellerId);
 
+
       batch.update(userRef, {
         'balance': FieldValue.increment(sellerEarnings), // បូកចូលកញ្ចប់សរុប
         'wallet_balance': FieldValue.increment(
           sellerEarnings,
         ), // បូកចូលកញ្ចប់រង់ចាំ
       });
+
 
       // បើមានបូកលុយចូល System Settings (របាយការណ៍ Admin) មេអាចទុកកូដចាស់មេនៅទីនេះបាន
       var appWalletRef = FirebaseFirestore.instance
@@ -568,7 +607,9 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
       });
     }
 
+
     await batch.commit();
+
 
     // បង្ហាញដំណឹងប្រាប់អ្នកលក់
     if (mounted) {
@@ -580,3 +621,6 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
     }
   }
 }
+
+
+

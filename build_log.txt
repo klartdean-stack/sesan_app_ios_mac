@@ -1,0 +1,942 @@
+
+Archiving com.sesan.app...
+Automatically signing iOS for device deployment using specified development team in Xcode project: UXDJ7CB5B2
+Running Xcode build...                                          
+ └─Compiling, linking and signing...                        14.8s
+Xcode archive done.                                         1478.6s
+Failed to build iOS app
+Error output from Xcode build:
+↳
+    ** ARCHIVE FAILED **
+
+
+Xcode's output:
+↳
+    Writing result bundle at path:
+    	/var/folders/y6/k961x2wd527175fgqmltvhyr0000gn/T/flutter_tools.VtUqgB/flutter_ios_build_temp_dirml5EtZ/temporary_xcresult_bundle
+
+    /Users/soknov/.pub-cache/hosted/pub.dev/url_launcher_ios-6.3.2/ios/url_launcher_ios/Sources/url_launcher_ios/URLLauncherPlugin.swift:22:26: warning: 'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+        UIApplication.shared.keyWindow?.rootViewController?.topViewController
+                             ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/share_plus-10.0.0/ios/Classes/FPPSharePlusPlugin.m:25:46: warning: 'keyWindow' is deprecated: first deprecated in iOS 13.0 - Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes [-Wdeprecated-declarations]
+        return [UIApplication sharedApplication].keyWindow.rootViewController;
+                                                 ^
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/share_plus/share_plus-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIApplication.h:135:51: note: 'keyWindow' has been explicitly marked deprecated here
+    @property(nullable, nonatomic,readonly) UIWindow *keyWindow API_DEPRECATED("Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes", ios(2.0, 13.0));
+                                                      ^
+    1 warning generated.
+    /Users/soknov/.pub-cache/hosted/pub.dev/permission_handler_apple-9.4.7/ios/Classes/strategies/PhonePermissionStrategy.m:49:35: warning: 'subscriberCellularProvider' is deprecated: first deprecated in iOS 12.0 [-Wdeprecated-declarations]
+        CTCarrier *carrier = [netInfo subscriberCellularProvider];
+                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~
+                                      serviceSubscriberCellularProviders
+    In module 'CoreTelephony' imported from /Users/soknov/.pub-cache/hosted/pub.dev/permission_handler_apple-9.4.7/ios/Classes/strategies/PhonePermissionStrategy.m:8:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CoreTelephony.framework/Headers/CTTelephonyNetworkInfo.h:114:50: note: property 'subscriberCellularProvider' is declared deprecated here
+    @property(readonly, retain, nullable) CTCarrier *subscriberCellularProvider API_DEPRECATED_WITH_REPLACEMENT("serviceSubscriberCellularProviders", ios(4.0, 12.0)) API_UNAVAILABLE(macos);
+                                                     ^
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CoreTelephony.framework/Headers/CTTelephonyNetworkInfo.h:114:50: note: 'subscriberCellularProvider' has been explicitly marked deprecated here
+    1 warning generated.
+    4 warnings generated.
+    1 warning generated.
+    /Users/soknov/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9/ios/Classes/Handlers/PermissionHandler.m:40:31: warning: 'authorizationStatus' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+        return [CLLocationManager authorizationStatus];
+                                  ^~~~~~~~~~~~~~~~~~~
+                                  authorizationStatus
+    In module 'CoreLocation' imported from /Users/soknov/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9/ios/Classes/Handlers/PermissionHandler.h:11:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CLLocationManager.h:218:1: note: 'authorizationStatus' has been explicitly marked deprecated here
+    + (CLAuthorizationStatus)authorizationStatus API_DEPRECATED_WITH_REPLACEMENT("-authorizationStatus", ios(4.2, 14.0), macos(10.7, 11.0), watchos(1.0, 7.0), tvos(9.0, 14.0));
+    ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9/ios/Classes/Handlers/PermissionHandler.m:47:65: warning: 'authorizationStatus' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+      CLAuthorizationStatus authorizationStatus = CLLocationManager.authorizationStatus;
+                                                                    ^~~~~~~~~~~~~~~~~~~
+                                                                    authorizationStatus
+    In module 'CoreLocation' imported from /Users/soknov/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9/ios/Classes/Handlers/PermissionHandler.h:11:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CLLocationManager.h:218:1: note: 'authorizationStatus' has been explicitly marked deprecated here
+    + (CLAuthorizationStatus)authorizationStatus API_DEPRECATED_WITH_REPLACEMENT("-authorizationStatus", ios(4.2, 14.0), macos(10.7, 11.0), watchos(1.0, 7.0), tvos(9.0, 14.0));
+    ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9/ios/Classes/Handlers/PermissionHandler.m:47:65: warning: 'authorizationStatus' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+      CLAuthorizationStatus authorizationStatus = CLLocationManager.authorizationStatus;
+                                                                    ^~~~~~~~~~~~~~~~~~~
+                                                                    authorizationStatus
+    In module 'CoreLocation' imported from /Users/soknov/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9/ios/Classes/Handlers/PermissionHandler.h:11:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CLLocationManager.h:218:1: note: 'authorizationStatus' has been explicitly marked deprecated here
+    + (CLAuthorizationStatus)authorizationStatus API_DEPRECATED_WITH_REPLACEMENT("-authorizationStatus", ios(4.2, 14.0), macos(10.7, 11.0), watchos(1.0, 7.0), tvos(9.0, 14.0));
+    ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9/ios/Classes/Handlers/PermissionHandler.m:107:1: warning: implementing deprecated method [-Wdeprecated-implementations]
+    - (void) locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
+    ^
+    In module 'CoreLocation' imported from /Users/soknov/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9/ios/Classes/Handlers/PermissionHandler.h:11:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CLLocationManagerDelegate.h:164:1: note: method 'locationManager:didChangeAuthorizationStatus:' declared here
+    - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status API_DEPRECATED_WITH_REPLACEMENT("-locationManagerDidChangeAuthorization:", ios(4.2, 14.0), macos(10.7, 11.0), watchos(1.0, 7.0), tvos(9.0, 14.0));
+    ^
+    4 warnings generated.
+    /Users/soknov/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9/ios/Classes/Handlers/LocationServiceStreamHandler.m:36:1: warning: implementing deprecated method [-Wdeprecated-implementations]
+    - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status{
+    ^
+    In module 'CoreLocation' imported from /Users/soknov/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9/ios/Classes/Handlers/LocationServiceStreamHandler.m:9:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/CoreLocation.framework/Headers/CLLocationManagerDelegate.h:164:1: note: method 'locationManager:didChangeAuthorizationStatus:' declared here
+    - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status API_DEPRECATED_WITH_REPLACEMENT("-locationManagerDidChangeAuthorization:", ios(4.2, 14.0), macos(10.7, 11.0), watchos(1.0, 7.0), tvos(9.0, 14.0));
+    ^
+    1 warning generated.
+    /Users/soknov/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9/ios/Classes/GeolocatorPlugin.m:187:21: warning: 'openURL:' is deprecated: first deprecated in iOS 10.0 [-Wdeprecated-declarations]
+                        openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+                        ^~~~~~~
+                        openURL:options:completionHandler:
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/geolocator_apple/geolocator_apple-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIApplication.h:124:1: note: 'openURL:' has been explicitly marked deprecated here
+    - (BOOL)openURL:(NSURL*)url API_DEPRECATED_WITH_REPLACEMENT("openURL:options:completionHandler:", ios(2.0, 10.0)) NS_EXTENSION_UNAVAILABLE_IOS("");
+    ^
+    1 warning generated.
+    /Users/soknov/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/ios/Classes/AudioContext.swift:72:15: warning: 'audioProcessing' was deprecated in iOS 10.0: No longer supported
+          return .audioProcessing
+                  ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_local_notifications-18.0.1/ios/Classes/FlutterLocalNotificationsPlugin.m:913:30: warning: 'UNNotificationPresentationOptionAlert' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+          presentationOptions |= UNNotificationPresentationOptionAlert;
+                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                 UNNotificationPresentationOptionList | UNNotificationPresentationOptionBanner
+    In module 'UserNotifications' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_local_notifications-18.0.1/ios/Classes/FlutterLocalNotificationsPlugin.h:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UserNotifications.framework/Headers/UNUserNotificationCenter.h:84:5: note: 'UNNotificationPresentationOptionAlert' has been explicitly marked deprecated here
+        UNNotificationPresentationOptionAlert API_DEPRECATED_WITH_REPLACEMENT("UNNotificationPresentationOptionList | UNNotificationPresentationOptionBanner", macos(10.14, 11.0), ios(10.0, 14.0), watchos(3.0, 7.0), tvos(10.0, 14.0)) = (1 << 2),
+        ^
+    1 warning generated.
+    1 warning generated.
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadataExif.m:41:65: warning: 'kCGImagePropertyExifSubsecTimeOrginal' is deprecated: first deprecated in iOS 10.0 - No longer supported [-Wdeprecated-declarations]
+                 SYStringSel(subsecTimeOriginal):       (NSString *)kCGImagePropertyExifSubsecTimeOrginal,
+                                                                    ^
+    In module 'ImageIO' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadataExif.m:10:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/ImageIO.framework/Headers/CGImageProperties.h:249:34: note: 'kCGImagePropertyExifSubsecTimeOrginal' has been explicitly marked deprecated here
+    IMAGEIO_EXTERN const CFStringRef kCGImagePropertyExifSubsecTimeOrginal IMAGEIO_AVAILABLE_BUT_DEPRECATED(10.4, 10.11, 4.0, 10.0);
+                                     ^
+    1 warning generated.
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:49:36: warning: 'ALAsset' is deprecated: first deprecated in iOS 9 - Use PHAsset from the Photos framework instead [-Wdeprecated-declarations]
+    + (instancetype)metadataWithAsset:(ALAsset *)asset
+                                       ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAsset.h:40:12: note: 'ALAsset' has been explicitly marked deprecated here
+    @interface ALAsset : NSObject {
+               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:52:5: warning: 'ALAssetRepresentation' is deprecated: first deprecated in iOS 9 - Use PHImageRequestOptions with the PHImageManager from the Photos framework instead [-Wdeprecated-declarations]
+        ALAssetRepresentation *representation = [asset defaultRepresentation];
+        ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAssetRepresentation.h:20:12: note: 'ALAssetRepresentation' has been explicitly marked deprecated here
+    @interface ALAssetRepresentation : NSObject {
+               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:52:52: warning: 'defaultRepresentation' is deprecated: first deprecated in iOS 9 - Use PHImageRequestOptions with the PHImageManager from the Photos framework instead [-Wdeprecated-declarations]
+        ALAssetRepresentation *representation = [asset defaultRepresentation];
+                                                       ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAsset.h:49:1: note: 'defaultRepresentation' has been explicitly marked deprecated here
+    - (ALAssetRepresentation *)defaultRepresentation AL_DEPRECATED(4, "Use PHImageRequestOptions with the PHImageManager from the Photos framework instead");
+    ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:53:57: warning: 'metadata' is deprecated: first deprecated in iOS 9 - Use CGImageSourceCopyPropertiesAtIndex() to retrieve metadata from an image returned by the PHImageManager from the Photos framework instead [-Wdeprecated-declarations]
+        return [self metadataWithDictionary:[representation metadata]];
+                                                            ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAssetRepresentation.h:56:1: note: 'metadata' has been explicitly marked deprecated here
+    - (NSDictionary *)metadata AL_DEPRECATED(4, "Use CGImageSourceCopyPropertiesAtIndex() to retrieve metadata from an image returned by the PHImageManager from the Photos framework instead");
+    ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:152:13: warning: 'ALAsset' is deprecated: first deprecated in iOS 9 - Use PHAsset from the Photos framework instead [-Wdeprecated-declarations]
+        __block ALAsset *assetAtUrl = nil;
+                ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAsset.h:40:12: note: 'ALAsset' has been explicitly marked deprecated here
+    @interface ALAsset : NSObject {
+               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:153:5: warning: 'ALAssetsLibrary' is deprecated: first deprecated in iOS 9 - Use PHPhotoLibrary from the Photos framework instead [-Wdeprecated-declarations]
+        ALAssetsLibrary* library = [[ALAssetsLibrary alloc] init];
+        ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAssetsLibrary.h:78:12: note: 'ALAssetsLibrary' has been explicitly marked deprecated here
+    @interface ALAssetsLibrary : NSObject {
+               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:153:50: warning: 'ALAssetsLibrary' is deprecated: first deprecated in iOS 9 - Use PHPhotoLibrary from the Photos framework instead [-Wdeprecated-declarations]
+        ALAssetsLibrary* library = [[ALAssetsLibrary alloc] init];
+                                                     ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAssetsLibrary.h:78:12: note: 'ALAssetsLibrary' has been explicitly marked deprecated here
+    @interface ALAssetsLibrary : NSObject {
+               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:156:49: warning: 'ALAsset' is deprecated: first deprecated in iOS 9 - Use PHAsset from the Photos framework instead [-Wdeprecated-declarations]
+        [library assetForURL:assetURL resultBlock:^(ALAsset *asset) {
+                                                    ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAsset.h:40:12: note: 'ALAsset' has been explicitly marked deprecated here
+    @interface ALAsset : NSObject {
+               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:156:14: warning: 'assetForURL:resultBlock:failureBlock:' is deprecated: first deprecated in iOS 9 - Use fetchAssetsWithLocalIdentifiers:options: on PHAsset to fetch assets by local identifier (or to lookup PHAssets by a previously known ALAssetPropertyAssetURL use fetchAssetsWithALAssetURLs:options:) from the Photos framework instead [-Wdeprecated-declarations]
+        [library assetForURL:assetURL resultBlock:^(ALAsset *asset) {
+                 ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAssetsLibrary.h:93:1: note: 'assetForURL:resultBlock:failureBlock:' has been explicitly marked deprecated here
+    - (void)assetForURL:(NSURL *)assetURL resultBlock:(ALAssetsLibraryAssetForURLResultBlock)resultBlock failureBlock:(ALAssetsLibraryAccessFailureBlock)failureBlock AL_DEPRECATED(4, "Use fetchAssetsWithLocalIdentifiers:options: on PHAsset to fetch assets by local identifier (or to lookup PHAssets by a previously known ALAssetPropertyAssetURL use fetchAssetsWithALAssetURLs:options:) from the Photos framework instead");
+    ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:167:5: warning: 'ALAssetRepresentation' is deprecated: first deprecated in iOS 9 - Use PHImageRequestOptions with the PHImageManager from the Photos framework instead [-Wdeprecated-declarations]
+        ALAssetRepresentation *representation = [assetAtUrl defaultRepresentation];
+        ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAssetRepresentation.h:20:12: note: 'ALAssetRepresentation' has been explicitly marked deprecated here
+    @interface ALAssetRepresentation : NSObject {
+               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:167:57: warning: 'defaultRepresentation' is deprecated: first deprecated in iOS 9 - Use PHImageRequestOptions with the PHImageManager from the Photos framework instead [-Wdeprecated-declarations]
+        ALAssetRepresentation *representation = [assetAtUrl defaultRepresentation];
+                                                            ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAsset.h:49:1: note: 'defaultRepresentation' has been explicitly marked deprecated here
+    - (ALAssetRepresentation *)defaultRepresentation AL_DEPRECATED(4, "Use PHImageRequestOptions with the PHImageManager from the Photos framework instead");
+    ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:168:28: warning: 'metadata' is deprecated: first deprecated in iOS 9 - Use CGImageSourceCopyPropertiesAtIndex() to retrieve metadata from an image returned by the PHImageManager from the Photos framework instead [-Wdeprecated-declarations]
+        return [representation metadata];
+                               ^
+    In module 'AssetsLibrary' imported from /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/SYPictureMetadata/SYMetadata.m:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AssetsLibrary.framework/Headers/ALAssetRepresentation.h:56:1: note: 'metadata' has been explicitly marked deprecated here
+    - (NSDictionary *)metadata AL_DEPRECATED(4, "Use CGImageSourceCopyPropertiesAtIndex() to retrieve metadata from an image returned by the PHImageManager from the Photos framework instead");
+    ^
+    12 warnings generated.
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/CompressFileHandler.m:109:16: warning: unused variable 'swf' [-Wunused-variable]
+        const char swf[3] = {'F', 'W', 'S'};
+                   ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.6/ios/Classes/CompressFileHandler.m:110:16: warning: unused variable 'swc' [-Wunused-variable]
+        const char swc[3] = {'C', 'W', 'S'};
+                   ^
+    2 warnings generated.
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/google_mlkit_commons-0.6.1/ios/Classes/MLKVisionImage+FlutterPlugin.m:1:
+    /Users/soknov/.pub-cache/hosted/pub.dev/google_mlkit_commons-0.6.1/ios/Classes/GoogleMlKitCommonsPlugin.h:12:22: warning: unused function 'getFlutterError' [-Wunused-function]
+    static FlutterError *getFlutterError(NSError *error) {
+                         ^
+    1 warning generated.
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/google_mlkit_commons-0.6.1/ios/Classes/GoogleMlKitCommonsPlugin.m:1:
+    /Users/soknov/.pub-cache/hosted/pub.dev/google_mlkit_commons-0.6.1/ios/Classes/GoogleMlKitCommonsPlugin.h:12:22: warning: unused function 'getFlutterError' [-Wunused-function]
+    static FlutterError *getFlutterError(NSError *error) {
+                         ^
+    1 warning generated.
+    /Users/soknov/Desktop/my_app_full/ios/Pods/FirebaseAuth/FirebaseAuth/Sources/AuthProvider/GameCenter/FIRGameCenterAuthProvider.m:76:79: warning: 'playerID' is deprecated: first deprecated in iOS 13.0 - use the teamPlayerID property to identify a player [-Wdeprecated-declarations]
+                [[FIRGameCenterAuthCredential alloc] initWithPlayerID:localPlayer.playerID
+                                                                                  ^
+    In module 'GameKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/FirebaseAuth/FirebaseAuth/Sources/AuthProvider/GameCenter/FIRGameCenterAuthProvider.m:18:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/GameKit.framework/Headers/GKPlayer.h:75:71: note: 'playerID' has been explicitly marked deprecated here
+    @property(readonly, nonnull, retain, NS_NONATOMIC_IOSONLY)  NSString *playerID API_DEPRECATED( "use the teamPlayerID property to identify a player",ios(4.1,13.0),tvos(9.0,13.0),macosx(10.8,10.15));
+                                                                          ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/FirebaseAuth/FirebaseAuth/Sources/AuthProvider/GameCenter/FIRGameCenterAuthProvider.m:88:18: warning: 'generateIdentityVerificationSignatureWithCompletionHandler:' is deprecated: first deprecated in iOS 13.5 - API deprecated. Use fetchItemsForIdentityVerificationSignature: and the teamPlayerID value to verify a user identity. [-Wdeprecated-declarations]
+        [localPlayer generateIdentityVerificationSignatureWithCompletionHandler:^(
+                     ^
+    In module 'GameKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/FirebaseAuth/FirebaseAuth/Sources/AuthProvider/GameCenter/FIRGameCenterAuthProvider.m:18:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/GameKit.framework/Headers/GKLocalPlayer.h:133:1: note: 'generateIdentityVerificationSignatureWithCompletionHandler:' has been explicitly marked deprecated here
+    - (void)generateIdentityVerificationSignatureWithCompletionHandler:(void (^__nullable)(NSURL * __nullable publicKeyUrl, NSData * __nullable signature, NSData * __nullable salt, uint64_t timestamp, NSError * __nullable error))completionHandler  API_DEPRECATED("API deprecated. Use fetchItemsForIdentityVerificationSignature: and the teamPlayerID value to verify a user identity.", ios(7.0, 13.5), tvos(9.0, 13.4.8), macosx(10.10, 10.15.5), watchos(3.0,6.5));
+    ^
+    2 warnings generated.
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKPhotoGallery/DKPhotoGallery/Preview/PDFPreview/DKPDFView.swift:50:48: warning: 'gray' was deprecated in iOS 13.0: renamed to 'UIActivityIndicatorView.Style.medium'
+            return UIActivityIndicatorView(style: .gray)
+                                                   ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKPhotoGallery/DKPhotoGallery/Preview/PDFPreview/DKPDFView.swift:50:48: note: use 'UIActivityIndicatorView.Style.medium' instead
+            return UIActivityIndicatorView(style: .gray)
+                                                   ^~~~
+                                                   UIActivityIndicatorView.Style.medium
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKPhotoGallery/DKPhotoGallery/DKPhotoGallery.swift:144:62: warning: 'statusBarStyle' was deprecated in iOS 13.0: Use the statusBarManager property of the window scene instead.
+        private let defaultStatusBarStyle = UIApplication.shared.statusBarStyle
+                                                                 ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKPhotoGallery/DKPhotoGallery/DKPhotoGalleryContentVC.swift:39:52: warning: using 'class' keyword to define a class-constrained protocol is deprecated; use 'AnyObject' instead
+    internal protocol DKPhotoGalleryContentDataSource: class {
+                                                       ^~~~~
+                                                       AnyObject
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKPhotoGallery/DKPhotoGallery/DKPhotoGalleryContentVC.swift:55:50: warning: using 'class' keyword to define a class-constrained protocol is deprecated; use 'AnyObject' instead
+    internal protocol DKPhotoGalleryContentDelegate: class {
+                                                     ^~~~~
+                                                     AnyObject
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKPhotoGallery/DKPhotoGallery/DKPhotoGalleryContentVC.swift:107:14: warning: 'automaticallyAdjustsScrollViewInsets' was deprecated in iOS 11.0: Use UIScrollView's contentInsetAdjustmentBehavior instead
+            self.automaticallyAdjustsScrollViewInsets = false
+                 ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKPhotoGallery/DKPhotoGallery/Preview/ImagePreview/DKPhotoImageDownloader.swift:94:42: warning: 'requestImageData(for:options:resultHandler:)' was deprecated in iOS 13
+                    PHImageManager.default().requestImageData(for: asset,
+                                             ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKPhotoGallery/DKPhotoGallery/Preview/QRCode/DKPhotoWebVC.swift:46:56: warning: 'gray' was deprecated in iOS 13.0: renamed to 'UIActivityIndicatorView.Style.medium'
+            self.spinner = UIActivityIndicatorView(style: .gray)
+                                                           ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKPhotoGallery/DKPhotoGallery/Preview/QRCode/DKPhotoWebVC.swift:46:56: note: use 'UIActivityIndicatorView.Style.medium' instead
+            self.spinner = UIActivityIndicatorView(style: .gray)
+                                                           ^~~~
+                                                           UIActivityIndicatorView.Style.medium
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKPhotoGallery/DKPhotoGallery/Preview/PlayerPreview/DKPlayerView.swift:152:48: warning: 'gray' was deprecated in iOS 13.0: renamed to 'UIActivityIndicatorView.Style.medium'
+            return UIActivityIndicatorView(style: .gray)
+                                                   ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKPhotoGallery/DKPhotoGallery/Preview/PlayerPreview/DKPlayerView.swift:152:48: note: use 'UIActivityIndicatorView.Style.medium' instead
+            return UIActivityIndicatorView(style: .gray)
+                                                   ^~~~
+                                                   UIActivityIndicatorView.Style.medium
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKImagePickerController/Sources/DKImagePickerController/View/DKAssetGroupDetailVC.swift:344:14: warning: 'frameInterval' was deprecated in iOS 10.0: preferredFramesPerSecond
+            link.frameInterval = 1
+                 ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKImagePickerController/Sources/DKImageDataManager/DKImageDataManager.swift:154:43: warning: 'requestImageData(for:options:resultHandler:)' was deprecated in iOS 13
+            let imageRequestID = self.manager.requestImageData(
+                                              ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKImagePickerController/Sources/Extensions/DKImageExtensionGallery.swift:35:38: warning: 'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+                    UIApplication.shared.keyWindow!.rootViewController!.present(photoGallery: gallery)
+                                         ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKImagePickerController/Sources/DKImagePickerController/DKImagePickerController.swift:265:45: warning: 'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+                targetVC = UIApplication.shared.keyWindow!.rootViewController!
+                                                ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKImagePickerController/Sources/DKImagePickerController/DKImagePickerController.swift:281:34: warning: 'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+                UIApplication.shared.keyWindow!.rootViewController!.dismiss(animated: true,
+                                     ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKImagePickerController/Sources/DKImagePickerController/DKPopoverViewController.swift:30:43: warning: 'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+            let window = UIApplication.shared.keyWindow!
+                                              ^
+    /Users/soknov/Desktop/my_app_full/ios/Pods/DKImagePickerController/Sources/DKImagePickerController/DKPopoverViewController.swift:43:43: warning: 'keyWindow' was deprecated in iOS 13.0: Should not be used for applications that support multiple scenes as it returns a key window across all connected scenes
+            let window = UIApplication.shared.keyWindow!
+                                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FileUtils.m:133:30: warning: unused variable 'exportError' [-Wunused-variable]
+                        NSError *exportError = exporter.error;
+                                 ^
+    1 warning generated.
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:197:112: warning: 'UIDocumentPickerModeExportToService' is deprecated: first deprecated in iOS 14.0 - Use appropriate initializers instead [-Wdeprecated-declarations]
+        self.documentPickerController = [[UIDocumentPickerViewController alloc] initWithURL:destinationPath inMode:UIDocumentPickerModeExportToService];
+                                                                                          ^
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIDocumentPickerViewController.h:30:29: note: 'UIDocumentPickerMode' has been explicitly marked deprecated here
+    typedef NS_ENUM(NSUInteger, UIDocumentPickerMode) {
+                                ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:197:77: warning: 'initWithURL:inMode:' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+        self.documentPickerController = [[UIDocumentPickerViewController alloc] initWithURL:destinationPath inMode:UIDocumentPickerModeExportToService];
+                                                                                ^~~~~~~~~~~
+                                                                                use initForExportingURLs:asCopy: or initForExportingURLs: instead
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIDocumentPickerViewController.h:53:1: note: 'initWithURL:inMode:' has been explicitly marked deprecated here
+    - (instancetype)initWithURL:(NSURL *)url inMode:(UIDocumentPickerMode)mode NS_DESIGNATED_INITIALIZER API_DEPRECATED_WITH_REPLACEMENT("use initForExportingURLs:asCopy: or initForExportingURLs: instead", ios(8.0, 14.0)) API_UNAVAILABLE(tvos);
+    ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:215:64: warning: 'UIDocumentPickerModeOpen' is deprecated: first deprecated in iOS 14.0 - Use appropriate initializers instead [-Wdeprecated-declarations]
+                                             inMode: isDirectory ? UIDocumentPickerModeOpen : UIDocumentPickerModeImport];
+                                                                   ^
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIDocumentPickerViewController.h:30:29: note: 'UIDocumentPickerMode' has been explicitly marked deprecated here
+    typedef NS_ENUM(NSUInteger, UIDocumentPickerMode) {
+                                ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:215:91: warning: 'UIDocumentPickerModeImport' is deprecated: first deprecated in iOS 14.0 - Use appropriate initializers instead [-Wdeprecated-declarations]
+                                             inMode: isDirectory ? UIDocumentPickerModeOpen : UIDocumentPickerModeImport];
+                                                                                          ^
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIDocumentPickerViewController.h:30:29: note: 'UIDocumentPickerMode' has been explicitly marked deprecated here
+    typedef NS_ENUM(NSUInteger, UIDocumentPickerMode) {
+                                ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:214:42: warning: 'initWithDocumentTypes:inMode:' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+                                             initWithDocumentTypes: isDirectory ? @[@"public.folder"] : self.allowedExtensions
+                                             ^~~~~~~~~~~~~~~~~~~~~
+                                             use initForOpeningContentTypes:asCopy: or initForOpeningContentTypes: instead
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIDocumentPickerViewController.h:41:1: note: 'initWithDocumentTypes:inMode:' has been explicitly marked deprecated here
+    - (instancetype)initWithDocumentTypes:(NSArray <NSString *>*)allowedUTIs inMode:(UIDocumentPickerMode)mode NS_DESIGNATED_INITIALIZER API_DEPRECATED_WITH_REPLACEMENT("use initForOpeningContentTypes:asCopy: or initForOpeningContentTypes: instead", ios(8.0, 14.0)) API_UNAVAILABLE(tvos);
+    ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:289:106: warning: 'UIActivityIndicatorViewStyleWhite' is deprecated: first deprecated in iOS 13.0 [-Wdeprecated-declarations]
+        UIActivityIndicatorView* indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+                                                                                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                                                                          UIActivityIndicatorViewStyleMedium
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIActivityIndicatorView.h:19:5: note: 'UIActivityIndicatorViewStyleWhite' has been explicitly marked deprecated here
+        UIActivityIndicatorViewStyleWhite API_DEPRECATED_WITH_REPLACEMENT("UIActivityIndicatorViewStyleMedium", ios(2.0, 13.0), tvos(9.0, 13.0)) = 1,
+        ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:404:19: warning: 'documentPickerMode' is deprecated: first deprecated in iOS 14.0 - Use appropriate initializers instead [-Wdeprecated-declarations]
+        if(controller.documentPickerMode == UIDocumentPickerModeOpen) {
+                      ^
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIDocumentPickerViewController.h:66:62: note: 'documentPickerMode' has been explicitly marked deprecated here
+    @property (nonatomic, assign, readonly) UIDocumentPickerMode documentPickerMode API_DEPRECATED("Use appropriate initializers instead",ios(8.0,14.0));
+                                                                 ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:404:41: warning: 'UIDocumentPickerModeOpen' is deprecated: first deprecated in iOS 14.0 - Use appropriate initializers instead [-Wdeprecated-declarations]
+        if(controller.documentPickerMode == UIDocumentPickerModeOpen) {
+                                            ^
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIDocumentPickerViewController.h:30:29: note: 'UIDocumentPickerMode' has been explicitly marked deprecated here
+    typedef NS_ENUM(NSUInteger, UIDocumentPickerMode) {
+                                ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:405:17: warning: incompatible pointer types assigning to 'NSMutableArray<NSURL *> *' from 'NSArray<NSURL *> *' [-Wincompatible-pointer-types]
+            newUrls = urls;
+                    ^ ~~~~
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:407:19: warning: 'documentPickerMode' is deprecated: first deprecated in iOS 14.0 - Use appropriate initializers instead [-Wdeprecated-declarations]
+        if(controller.documentPickerMode == UIDocumentPickerModeImport) {
+                      ^
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIDocumentPickerViewController.h:66:62: note: 'documentPickerMode' has been explicitly marked deprecated here
+    @property (nonatomic, assign, readonly) UIDocumentPickerMode documentPickerMode API_DEPRECATED("Use appropriate initializers instead",ios(8.0,14.0));
+                                                                 ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:407:41: warning: 'UIDocumentPickerModeImport' is deprecated: first deprecated in iOS 14.0 - Use appropriate initializers instead [-Wdeprecated-declarations]
+        if(controller.documentPickerMode == UIDocumentPickerModeImport) {
+                                            ^
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIDocumentPickerViewController.h:30:29: note: 'UIDocumentPickerMode' has been explicitly marked deprecated here
+    typedef NS_ENUM(NSUInteger, UIDocumentPickerMode) {
+                                ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:434:19: warning: 'documentPickerMode' is deprecated: first deprecated in iOS 14.0 - Use appropriate initializers instead [-Wdeprecated-declarations]
+        if(controller.documentPickerMode == UIDocumentPickerModeOpen) {
+                      ^
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIDocumentPickerViewController.h:66:62: note: 'documentPickerMode' has been explicitly marked deprecated here
+    @property (nonatomic, assign, readonly) UIDocumentPickerMode documentPickerMode API_DEPRECATED("Use appropriate initializers instead",ios(8.0,14.0));
+                                                                 ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/file_picker-8.0.5/ios/Classes/FilePickerPlugin.m:434:41: warning: 'UIDocumentPickerModeOpen' is deprecated: first deprecated in iOS 14.0 - Use appropriate initializers instead [-Wdeprecated-declarations]
+        if(controller.documentPickerMode == UIDocumentPickerModeOpen) {
+                                            ^
+    In module 'UIKit' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Target Support Files/file_picker/file_picker-prefix.pch:2:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIDocumentPickerViewController.h:30:29: note: 'UIDocumentPickerMode' has been explicitly marked deprecated here
+    typedef NS_ENUM(NSUInteger, UIDocumentPickerMode) {
+                                ^
+    13 warnings generated.
+    1 warning generated.
+    ld: warning: method '-persistentCacheIndexManager' in category from /Users/soknov/Library/Developer/Xcode/DerivedData/Runner-gkhefcmwmmjublcduqexixgjwrme/Build/Intermediates.noindex/ArchiveIntermediates/Runner/IntermediateBuildFilesPath/Pods.build/Release-iphoneos/FirebaseFirestoreInternal.build/Objects-normal/arm64/FIRFirestore.o overrides method from class in /Users/soknov/Library/Developer/Xcode/DerivedData/Runner-gkhefcmwmmjublcduqexixgjwrme/Build/Intermediates.noindex/ArchiveIntermediates/Runner/IntermediateBuildFilesPath/Pods.build/Release-iphoneos/FirebaseFirestoreInternal.build/Objects-normal/arm64/FIRFirestore.o
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_messaging-14.9.4/ios/Classes/FLTFirebaseMessagingPlugin.m:333:32: warning: 'UNNotificationPresentationOptionAlert' is deprecated: first deprecated in iOS 14.0 [-Wdeprecated-declarations]
+            presentationOptions |= UNNotificationPresentationOptionAlert;
+                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                   UNNotificationPresentationOptionList | UNNotificationPresentationOptionBanner
+    In module 'UserNotifications' imported from /Users/soknov/.pub-cache/hosted/pub.dev/firebase_messaging-14.9.4/ios/Classes/FLTFirebaseMessagingPlugin.h:14:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UserNotifications.framework/Headers/UNUserNotificationCenter.h:84:5: note: 'UNNotificationPresentationOptionAlert' has been explicitly marked deprecated here
+        UNNotificationPresentationOptionAlert API_DEPRECATED_WITH_REPLACEMENT("UNNotificationPresentationOptionList | UNNotificationPresentationOptionBanner", macos(10.14, 11.0), ios(10.0, 14.0), watchos(3.0, 7.0), tvos(10.0, 14.0)) = (1 << 2),
+        ^
+    1 warning generated.
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/PigeonParser.m:5:
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/PigeonParser.h:13:12: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray *)getManualList:(nonnull PigeonUserDetails *)userDetails;
+               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/PigeonParser.h:13:12: note: insert '_Nullable' if the pointer may be null
+    + (NSArray *)getManualList:(nonnull PigeonUserDetails *)userDetails;
+               ^
+                _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/PigeonParser.h:13:12: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray *)getManualList:(nonnull PigeonUserDetails *)userDetails;
+               ^
+                _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/PigeonParser.m:108:51: warning: incompatible pointer to integer conversion sending 'NSNumber *' to parameter of type 'NSInteger' (aka 'long') [-Wint-conversion]
+                                             nativeId:@([authCredential hash])
+                                                      ^~~~~~~~~~~~~~~~~~~~~~~~
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/PigeonParser.m:5:
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/PigeonParser.h:9:
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Public/firebase_auth_messages.g.h:138:47: note: passing argument to parameter 'nativeId' here
+                              nativeId:(NSInteger)nativeId
+                                                  ^
+    2 warnings generated.
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/FLTIdTokenChannelStreamHandler.m:5:
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/FLTIdTokenChannelStreamHandler.h:15:
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/PigeonParser.h:13:12: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray *)getManualList:(nonnull PigeonUserDetails *)userDetails;
+               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/PigeonParser.h:13:12: note: insert '_Nullable' if the pointer may be null
+    + (NSArray *)getManualList:(nonnull PigeonUserDetails *)userDetails;
+               ^
+                _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/PigeonParser.h:13:12: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray *)getManualList:(nonnull PigeonUserDetails *)userDetails;
+               ^
+                _Nonnull
+    1 warning generated.
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/FLTFirebaseAuthPlugin.m:1891:16: warning: 'updateEmail:completion:' is deprecated: This method is deprecated and will be removed in a future release. Use sendEmailVerification(beforeUpdatingEmail email: String) instead. [-Wdeprecated-declarations]
+      [currentUser updateEmail:newEmail
+                   ^
+    In module 'FirebaseAuth' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Headers/Public/Firebase/Firebase.h:34:
+    /Users/soknov/Desktop/my_app_full/ios/Pods/FirebaseAuth/FirebaseAuth/Sources/Public/FirebaseAuth/FIRUser.h:165:48: note: 'updateEmail:completion:' has been explicitly marked deprecated here
+        NS_SWIFT_NAME(updateEmail(to:completion:)) DEPRECATED_MSG_ATTRIBUTE(
+                                                   ^
+    In module 'Darwin' imported from /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/FLTFirebaseAuthPlugin.m:6:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/usr/include/AvailabilityMacros.h:187:64: note: expanded from macro 'DEPRECATED_MSG_ATTRIBUTE'
+                #define DEPRECATED_MSG_ATTRIBUTE(s) __attribute__((deprecated(s)))
+                                                                   ^
+    6 warnings generated.
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/FLTAuthStateChannelStreamHandler.m:5:
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/FLTAuthStateChannelStreamHandler.h:17:
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/PigeonParser.h:13:12: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray *)getManualList:(nonnull PigeonUserDetails *)userDetails;
+               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/PigeonParser.h:13:12: note: insert '_Nullable' if the pointer may be null
+    + (NSArray *)getManualList:(nonnull PigeonUserDetails *)userDetails;
+               ^
+                _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/ios/Classes/Private/PigeonParser.h:13:12: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray *)getManualList:(nonnull PigeonUserDetails *)userDetails;
+               ^
+                _Nonnull
+    1 warning generated.
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/FirestorePigeonParser.m:5:
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:13:13: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (FIRQuery *)parseQueryWithParameters:(nonnull PigeonQueryParameters *)parameters
+                ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:13:13: note: insert '_Nullable' if the pointer may be null
+    + (FIRQuery *)parseQueryWithParameters:(nonnull PigeonQueryParameters *)parameters
+                ^
+                 _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:13:13: note: insert '_Nonnull' if the pointer should never be null
+    + (FIRQuery *)parseQueryWithParameters:(nonnull PigeonQueryParameters *)parameters
+                ^
+                 _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:27: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:27: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                              ^
+                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:27: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                              ^
+                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:75: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                                                                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:75: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                                                                              ^
+                                                                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:75: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                                                                              ^
+                                                                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:24: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                           ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:24: note: insert '_Nullable' if the pointer may be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                           ^
+                            _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:24: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                           ^
+                            _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:66: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                                                                     ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:66: note: insert '_Nullable' if the pointer may be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                                                                     ^
+                                                                      _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:66: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                                                                     ^
+                                                                      _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:27:36: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray<PigeonDocumentChange *> *)
+                                       ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:27:36: note: insert '_Nullable' if the pointer may be null
+    + (NSArray<PigeonDocumentChange *> *)
+                                       ^
+                                        _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:27:36: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray<PigeonDocumentChange *> *)
+                                       ^
+                                        _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:28:59: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+        toPigeonDocumentChanges:(NSArray<FIRDocumentChange *> *)documentChanges
+                                                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:28:59: note: insert '_Nullable' if the pointer may be null
+        toPigeonDocumentChanges:(NSArray<FIRDocumentChange *> *)documentChanges
+                                                              ^
+                                                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:28:59: note: insert '_Nonnull' if the pointer should never be null
+        toPigeonDocumentChanges:(NSArray<FIRDocumentChange *> *)documentChanges
+                                                              ^
+                                                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:25: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                            ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:25: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                            ^
+                             _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:25: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                            ^
+                             _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:69: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                                                                        ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:69: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                                                                        ^
+                                                                         _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:69: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                                                                        ^
+                                                                         _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:27: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:27: note: insert '_Nullable' if the pointer may be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                              ^
+                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:27: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                              ^
+                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:75: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                                                                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:75: note: insert '_Nullable' if the pointer may be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                                                                              ^
+                                                                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:75: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                                                                              ^
+                                                                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:28: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:28: note: insert '_Nullable' if the pointer may be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                               ^
+                                _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:28: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                               ^
+                                _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:77: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                                                                                ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:77: note: insert '_Nullable' if the pointer may be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                                                                                ^
+                                                                                 _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:77: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                                                                                ^
+                                                                                 _Nonnull
+    13 warnings generated.
+    13 warnings generated.
+    13 warnings generated.
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/FLTFirebaseFirestorePlugin.m:16:
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:13:13: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (FIRQuery *)parseQueryWithParameters:(nonnull PigeonQueryParameters *)parameters
+                ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:13:13: note: insert '_Nullable' if the pointer may be null
+    + (FIRQuery *)parseQueryWithParameters:(nonnull PigeonQueryParameters *)parameters
+                ^
+                 _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:13:13: note: insert '_Nonnull' if the pointer should never be null
+    + (FIRQuery *)parseQueryWithParameters:(nonnull PigeonQueryParameters *)parameters
+                ^
+                 _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:27: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:27: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                              ^
+                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:27: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                              ^
+                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:75: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                                                                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:75: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                                                                              ^
+                                                                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:75: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                                                                              ^
+                                                                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:24: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                           ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:24: note: insert '_Nullable' if the pointer may be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                           ^
+                            _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:24: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                           ^
+                            _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:66: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                                                                     ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:66: note: insert '_Nullable' if the pointer may be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                                                                     ^
+                                                                      _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:66: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                                                                     ^
+                                                                      _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:27:36: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray<PigeonDocumentChange *> *)
+                                       ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:27:36: note: insert '_Nullable' if the pointer may be null
+    + (NSArray<PigeonDocumentChange *> *)
+                                       ^
+                                        _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:27:36: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray<PigeonDocumentChange *> *)
+                                       ^
+                                        _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:28:59: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+        toPigeonDocumentChanges:(NSArray<FIRDocumentChange *> *)documentChanges
+                                                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:28:59: note: insert '_Nullable' if the pointer may be null
+        toPigeonDocumentChanges:(NSArray<FIRDocumentChange *> *)documentChanges
+                                                              ^
+                                                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:28:59: note: insert '_Nonnull' if the pointer should never be null
+        toPigeonDocumentChanges:(NSArray<FIRDocumentChange *> *)documentChanges
+                                                              ^
+                                                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:25: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                            ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:25: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                            ^
+                             _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:25: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                            ^
+                             _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:69: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                                                                        ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:69: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                                                                        ^
+                                                                         _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:69: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                                                                        ^
+                                                                         _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:27: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:27: note: insert '_Nullable' if the pointer may be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                              ^
+                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:27: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                              ^
+                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:75: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                                                                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:75: note: insert '_Nullable' if the pointer may be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                                                                              ^
+                                                                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:75: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                                                                              ^
+                                                                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:28: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:28: note: insert '_Nullable' if the pointer may be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                               ^
+                                _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:28: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                               ^
+                                _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:77: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                                                                                ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:77: note: insert '_Nullable' if the pointer may be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                                                                                ^
+                                                                                 _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:77: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                                                                                ^
+                                                                                 _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/FLTFirebaseFirestorePlugin.m:559:14: warning: 'setIndexConfigurationFromJSON:completion:' is deprecated: Instead of creating cache indexes manually, consider using `PersistentCacheIndexManager.enableIndexAutoCreation()` to let the SDK decide whether to create cache indexes for queries running locally. [-Wdeprecated-declarations]
+      [firestore setIndexConfigurationFromJSON:indexConfiguration
+                 ^
+    In module 'FirebaseFirestore' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/Headers/Public/Firebase/Firebase.h:50:
+    In module 'FirebaseFirestoreInternal' imported from /Users/soknov/Desktop/my_app_full/ios/Pods/FirebaseFirestore/FirebaseFirestoreInternal/FirebaseFirestore/FIRAggregateField.h:15:
+    /Users/soknov/Desktop/my_app_full/ios/Pods/FirebaseFirestoreInternal/Firestore/Source/Public/FirebaseFirestore/FIRFirestore.h:134:57: note: 'setIndexConfigurationFromJSON:completion:' has been explicitly marked deprecated here
+        NS_SWIFT_NAME(setIndexConfiguration(_:completion:)) DEPRECATED_MSG_ATTRIBUTE(
+                                                            ^
+    In module 'Darwin' imported from /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/FLTFirebaseFirestorePlugin.m:8:
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/usr/include/AvailabilityMacros.h:187:64: note: expanded from macro 'DEPRECATED_MSG_ATTRIBUTE'
+                #define DEPRECATED_MSG_ATTRIBUTE(s) __attribute__((deprecated(s)))
+                                                                   ^
+    14 warnings generated.
+    In file included from /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/FLTDocumentSnapshotStreamHandler.m:10:
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:13:13: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (FIRQuery *)parseQueryWithParameters:(nonnull PigeonQueryParameters *)parameters
+                ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:13:13: note: insert '_Nullable' if the pointer may be null
+    + (FIRQuery *)parseQueryWithParameters:(nonnull PigeonQueryParameters *)parameters
+                ^
+                 _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:13:13: note: insert '_Nonnull' if the pointer should never be null
+    + (FIRQuery *)parseQueryWithParameters:(nonnull PigeonQueryParameters *)parameters
+                ^
+                 _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:27: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:27: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                              ^
+                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:27: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                              ^
+                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:75: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                                                                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:75: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                                                                              ^
+                                                                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:22:75: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentSnapshot *)toPigeonDocumentSnapshot:(FIRDocumentSnapshot *)documentSnapshot
+                                                                              ^
+                                                                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:24: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                           ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:24: note: insert '_Nullable' if the pointer may be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                           ^
+                            _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:24: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                           ^
+                            _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:66: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                                                                     ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:66: note: insert '_Nullable' if the pointer may be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                                                                     ^
+                                                                      _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:25:66: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonQuerySnapshot *)toPigeonQuerySnapshot:(FIRQuerySnapshot *)querySnaphot
+                                                                     ^
+                                                                      _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:27:36: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray<PigeonDocumentChange *> *)
+                                       ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:27:36: note: insert '_Nullable' if the pointer may be null
+    + (NSArray<PigeonDocumentChange *> *)
+                                       ^
+                                        _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:27:36: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray<PigeonDocumentChange *> *)
+                                       ^
+                                        _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:28:59: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+        toPigeonDocumentChanges:(NSArray<FIRDocumentChange *> *)documentChanges
+                                                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:28:59: note: insert '_Nullable' if the pointer may be null
+        toPigeonDocumentChanges:(NSArray<FIRDocumentChange *> *)documentChanges
+                                                              ^
+                                                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:28:59: note: insert '_Nonnull' if the pointer should never be null
+        toPigeonDocumentChanges:(NSArray<FIRDocumentChange *> *)documentChanges
+                                                              ^
+                                                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:25: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                            ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:25: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                            ^
+                             _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:25: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                            ^
+                             _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:69: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                                                                        ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:69: note: insert '_Nullable' if the pointer may be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                                                                        ^
+                                                                         _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:30:69: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonDocumentChange *)toPigeonDocumentChange:(FIRDocumentChange *)documentChange
+                                                                        ^
+                                                                         _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:27: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:27: note: insert '_Nullable' if the pointer may be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                              ^
+                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:27: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                              ^
+                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:75: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                                                                              ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:75: note: insert '_Nullable' if the pointer may be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                                                                              ^
+                                                                               _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:33:75: note: insert '_Nonnull' if the pointer should never be null
+    + (PigeonSnapshotMetadata *)toPigeonSnapshotMetadata:(FIRSnapshotMetadata *)snapshotMetadata;
+                                                                              ^
+                                                                               _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:28: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                               ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:28: note: insert '_Nullable' if the pointer may be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                               ^
+                                _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:28: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                               ^
+                                _Nonnull
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:77: warning: pointer is missing a nullability type specifier (_Nonnull, _Nullable, or _Null_unspecified) [-Wnullability-completeness]
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                                                                                ^
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:77: note: insert '_Nullable' if the pointer may be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                                                                                ^
+                                                                                 _Nullable
+    /Users/soknov/.pub-cache/hosted/pub.dev/cloud_firestore-4.17.5/ios/Classes/Private/FirestorePigeonParser.h:35:77: note: insert '_Nonnull' if the pointer should never be null
+    + (NSArray<FIRFieldPath *> *)parseFieldPath:(NSArray<NSArray<NSString *> *> *)fieldPaths;
+                                                                                ^
+                                                                                 _Nonnull
+    13 warnings generated.
+    /* com.apple.actool.document.warnings */
+    /Users/soknov/Desktop/my_app_full/ios/Runner/Assets.xcassets:./AppIcon.appiconset/(null)[2d][Icon-App-50x50@1x.png]: warning: The app icon set "AppIcon" has 6 unassigned children.
+    /Users/soknov/Desktop/my_app_full/ios/Runner/Assets.xcassets:./AppIcon.appiconset/(null)[2d][Icon-App-50x50@1x.png]: warning: The app icon set "AppIcon" has 6 unassigned children.
+    /* com.apple.actool.document.notices */
+    /Users/soknov/Desktop/my_app_full/ios/Runner/Assets.xcassets:./AppIcon.appiconset/[][ipad][76x76][][][1x][][][]: notice: 76x76@1x app icons only apply to iPad apps targeting releases of iOS prior to 10.0.
+    /* com.apple.actool.compilation-results */
+    /Users/soknov/Library/Developer/Xcode/DerivedData/Runner-gkhefcmwmmjublcduqexixgjwrme/Build/Intermediates.noindex/ArchiveIntermediates/Runner/InstallationBuildProductsLocation/Applications/Runner.app/AppIcon60x60@2x.png
+    /Users/soknov/Library/Developer/Xcode/DerivedData/Runner-gkhefcmwmmjublcduqexixgjwrme/Build/Intermediates.noindex/ArchiveIntermediates/Runner/InstallationBuildProductsLocation/Applications/Runner.app/AppIcon76x76@2x~ipad.png
+    /Users/soknov/Library/Developer/Xcode/DerivedData/Runner-gkhefcmwmmjublcduqexixgjwrme/Build/Intermediates.noindex/ArchiveIntermediates/Runner/InstallationBuildProductsLocation/Applications/Runner.app/Assets.car
+    /Users/soknov/Library/Developer/Xcode/DerivedData/Runner-gkhefcmwmmjublcduqexixgjwrme/Build/Intermediates.noindex/ArchiveIntermediates/Runner/IntermediateBuildFilesPath/Runner.build/Release-iphoneos/Runner.build/assetcatalog_generated_info.plist
+
+    1 warning generated.
+    While building module 'mobile_scanner' imported from /Users/soknov/Desktop/my_app_full/ios/Runner/GeneratedPluginRegistrant.m:114:
+    In file included from <module-includes>:2:
+    /Users/soknov/Library/Developer/Xcode/DerivedData/Runner-gkhefcmwmmjublcduqexixgjwrme/Build/Intermediates.noindex/ArchiveIntermediates/Runner/BuildProductsPath/Release-iphoneos/mobile_scanner/mobile_scanner.framework/Headers/mobile_scanner-Swift.h:291:31: warning: 'objc_ownership' only applies to Objective-C object or block pointer types; type here is 'CVPixelBufferRef' (aka 'struct __CVBuffer *') [-Wignored-attributes]
+    - (CVPixelBufferRef _Nullable __unsafe_unretained)copyPixelBuffer SWIFT_WARN_UNUSED_RESULT;
+                                  ^
+    1 warning generated.
+    2 warnings generated.
+    Unhandled exception:
+    Null check operator used on a null value
+    #0      Context.embedFlutterFrameworks (file:///Users/soknov/flutter/packages/flutter_tools/bin/xcode_backend.dart:235:68)
+    #1      Context.run (file:///Users/soknov/flutter/packages/flutter_tools/bin/xcode_backend.dart:59:9)
+    #2      main (file:///Users/soknov/flutter/packages/flutter_tools/bin/xcode_backend.dart:17:5)
+    #3      _delayEntrypointInvocation.<anonymous closure> (dart:isolate-patch/isolate_patch.dart:295:33)
+    #4      _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:184:12)
+    Command PhaseScriptExecution failed with a nonzero exit code
+    note: Building targets in dependency order
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this warning, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'abseil' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this warning, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'BoringSSL-GRPC' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this warning, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'gRPC-Core' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this warning, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'gRPC-C++' from project 'Pods')
+    note: Run script build phase 'Run Script' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+    note: Run script build phase 'Thin Binary' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+
+    Result bundle written to path:
+    	/var/folders/y6/k961x2wd527175fgqmltvhyr0000gn/T/flutter_tools.VtUqgB/flutter_ios_build_temp_dirml5EtZ/temporary_xcresult_bundle
+
+
+Encountered error while archiving for device.

@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart' as ms; // ✅ កែត្�
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart'
 as ml; // ✅ កែត្រង់នេះ
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_app/seller_profile_screen.dart';
 import 'product_detail.dart';
 
 
@@ -54,70 +55,88 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   // ── Handle QR Code ─────────────────────────────────────
   Future<void> _handleQrCode(String code) async {
-    setState(() => _statusMsg = 'កំពុងស្វែងរកផលិតផល...');
+    setState(() => _statusMsg = 'កំពុងស្វែងរក...');
 
 
-    if (!code.startsWith('product_id_')) {
+    // 1. ពិនិត្យ Product QR
+    if (code.startsWith('product_id_')) {
+      final String productId = code.replaceAll('product_id_', '');
+
+
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('products')
+            .doc(productId)
+            .get();
+
+
+        if (!mounted) return;
+
+
+        if (doc.exists) {
+          final productData = doc.data()!;
+          productData['id'] = doc.id;
+
+
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ProductDetailScreen(product: productData),
+            ),
+          );
+        } else {
+          _showSnackBar('រកមិនឃើញផលិតផលក្នុងប្រព័ន្ធ!');
+        }
+      } catch (e) {
+        _showSnackBar('Error: $e');
+      }
+    }
+    // 2. ពិនិត្យ Shop QR
+    else if (code.startsWith('shop_id_')) {
+      final String sellerId = code.replaceAll('shop_id_', '');
+
+
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(sellerId)
+            .get();
+
+
+        if (!mounted) return;
+
+
+        if (doc.exists) {
+          final userData = doc.data()!;
+          final String shopName = userData['name'] ?? 'ហាង';
+
+
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  SellerProfileScreen(sellerId: sellerId, sellerName: shopName),
+            ),
+          );
+        } else {
+          _showSnackBar('រកមិនឃើញហាងនេះទេ!');
+        }
+      } catch (e) {
+        _showSnackBar('Error: $e');
+      }
+    }
+    // 3. មិនមែន QR របស់ Sesan App
+    else {
       _showSnackBar('QR Code នេះមិនមែនជារបស់ Sesan App!');
-      // ✅ reset ដើម្បីអាច scan ម្ដងទៀត
-      if (mounted)
-        setState(() {
-          _isProcessing = false;
-          _statusMsg = 'ស្កែន QR Code ផលិតផល';
-        });
-      return;
     }
 
 
-    final String productId = code.replaceAll('product_id_', '');
-
-
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection('products')
-          .doc(productId)
-          .get();
-
-
-      if (!mounted) return;
-
-
-      if (doc.exists) {
-        // ✅ include 'id' ចូល product map
-        final productData = doc.data()!;
-        productData['id'] = doc.id;
-
-
-        // ✅ push មិនមែន pushReplacement — អាច back វិញ
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProductDetailScreen(product: productData),
-          ),
-        );
-
-
-        // ✅ reset ពេល back មកវិញ
-        if (mounted)
-          setState(() {
-            _isProcessing = false;
-            _statusMsg = 'ស្កែន QR Code ផលិតផល';
-          });
-      } else {
-        _showSnackBar('រកមិនឃើញផលិតផលក្នុងប្រព័ន្ធ!');
-        if (mounted)
-          setState(() {
-            _isProcessing = false;
-            _statusMsg = 'ស្កែន QR Code ផលិតផល';
-          });
-      }
-    } catch (e) {
-      _showSnackBar('Error: $e');
-      if (mounted)
-        setState(() {
-          _isProcessing = false;
-          _statusMsg = 'ស្កែន QR Code ផលិតផល';
-        });
+    // កំណត់ស្ថានភាពឡើងវិញ ដើម្បីអាចស្កេនបន្ត
+    if (mounted) {
+      setState(() {
+        _isProcessing = false;
+        _statusMsg = 'ស្កែន QR Code';
+      });
     }
   }
 

@@ -17,6 +17,7 @@ import 'package:my_app/chat_video_player.dart';
 import 'package:my_app/create_invoice_sheet.dart';
 import 'package:my_app/invoice_history_screen.dart';
 import 'package:my_app/order_management_screen.dart';
+import 'package:my_app/seller_profile_screen.dart';
 import 'package:my_app/user_profile_screen.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -49,34 +50,42 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen>
+    with TickerProviderStateMixin { // ✅ បន្ថែម Mixin
   final TextEditingController _msgController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
-  final _audioRecorder = Record();
+  final Record _audioRecorder = Record();
   final ScreenshotController _screenshotController = ScreenshotController();
 
   late final String currentUserId;
-  bool _isLoading = true;
-  String? _errorMessage;
-  double _dragOffset = 0;
+  bool _isLoading = true; // ✅ បាត់មួយនេះ
+  String? _errorMessage; // ✅ បាត់មួយនេះ
+  bool _isRecording = false;
   bool _isLocked = false;
-  bool isCancelling = false;
-  // ✅ រក្សា list of highlighted message IDs
-  Set<String> _highlightedMessages = {};
-  // ✅ បន្ថែម variables
-  bool _isOnline = false;
+  double _dragOffset = 0;
+  Set<String> _highlightedMessages = {}; // ✅ បន្ថែមអង្គនេះផង
+
+  // ✅ បន្ថែម animation controller សម្រាប់ប៊ូតុងថត
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
-    // មេលុបបន្ទាត់ _setOnline(true); ចាស់ចោល
-    _initializeUser(); // ទុកឱ្យវារត់តែមួយនេះបានហើយ
+    _initializeUser();
+    // ✅ បន្ថែម animation
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
   }
 
   @override
   void dispose() {
-    // ការពារកុំឱ្យវា Crash ពេលចាកចេញ បន្ថែម try-catch ឱ្យវា
     try {
       if (currentUserId.isNotEmpty) {
         _setOnline(false);
@@ -84,6 +93,7 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       debugPrint("Dispose error: $e");
     }
+    _pulseController.dispose(); // ✅ កុំភ្លេច dispose
     super.dispose();
   }
 
@@ -190,9 +200,6 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
   }
-
-  bool _isRecording = false;
-
   final List<String> _quickReplies = [
     "តម្លៃប៉ុន្មាន?",
     "ទីតាំងនៅណាដែរ?",
@@ -522,6 +529,36 @@ class _ChatScreenState extends State<ChatScreen> {
       });
     }
   }
+  Future<void> _openSellerShop() async {
+    // ទាញឈ្មោះអ្នកលក់ពី Firestore
+    String sellerName = widget.productName; // fallback
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.seller_id)
+          .get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        sellerName = data['name'] ?? sellerName;
+      }
+    } catch (e) {
+      debugPrint("Error getting seller name: $e");
+    }
+
+
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SellerProfileScreen(
+            sellerId: widget.seller_id,
+            sellerName: sellerName,
+          ),
+        ),
+      );
+    }
+  }
+
 
   Future<File> _compressVideoFast(String inputPath) async {
     try {
@@ -585,44 +622,89 @@ class _ChatScreenState extends State<ChatScreen> {
       debugPrint(stackTrace.toString());
       _showSnack("មានបញ្ហា: $e", Colors.red);
     }
-  }
+  }Future<void> _startRecording() async {
+    if (_isRecording) return;
 
-  Future<void> _startRecording() async {
-    if (await _audioRecorder.hasPermission()) {
-      final directory = await getApplicationDocumentsDirectory();
-      String path =
-          '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-      await _audioRecorder.start(path: path);
-      setState(() => _isRecording = true);
+    // ✅ ញ័រដើម្បីឲ្យដឹងថាចាប់ផ្ដើមថត
+    HapticFeedback.mediumImpact();
+
+    // បង្កើតផ្លូវឯកសារមុន
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+    setState(() => _isRecording = true);  // បង្ហាញ UI ភ្លាម
+
+    try {
+      // ✅ ប្រើ bitrate & sample rate ទាប ដើម្បីឲ្យ Recorder ចាប់ផ្ដើមលឿន (សំឡេងនៅតែគ្រប់គ្រាន់)
+      await _audioRecorder.start(
+        encoder: AudioEncoder.aacLc,
+        bitRate: 48000,
+        samplingRate: 22050,
+        path: path,
+      );
+    } catch (e) {
+      debugPrint("❌ Start recording error: $e");
+      if (mounted) {
+        setState(() => _isRecording = false);
+        _showSnack('មិនអាចចាប់ផ្តើមថតបានទេ', Colors.red);
+      }
     }
   }
 
   Future<void> _stopRecording() async {
-    final path = await _audioRecorder.stop();
-    setState(() => _isRecording = false);
-    if (path != null) {
-      _uploadAndSendBackground(File(path), 'audio');
+    try {
+      if (!_isRecording) return; // ✅ កុំឲ្យ stop ពេលមិនបានថត
+
+      final path = await _audioRecorder.stop();
+
+      if (mounted) {
+        setState(() {
+          _isRecording = false;
+          _isLocked = false;
+          _dragOffset = 0;
+        });
+      }
+
+      if (path != null) {
+        final file = File(path);
+        if (await file.exists()) {
+          _uploadAndSendBackground(file, 'audio');
+        }
+      }
+    } catch (e) {
+      debugPrint("❌ Stop recording error: $e");
+      if (mounted) {
+        setState(() {
+          _isRecording = false;
+          _isLocked = false;
+        });
+      }
     }
   }
-
   // ✅ បង្ហាញ Bottom Sheet ជ្រើសរើសទីតាំង (ដូច ReceiptScreen)
   void _showLocationPickerSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => LocationPickerSheet(
-        // ✅ ឈ្មោះថ្មី (មិនមាន underscore)
-        onLocationSelected: (locationData) {
-          _sendLocationMessage(
-            province: locationData['province'],
-            district: locationData['district'],
-            vireakBranch: locationData['vireakBranch'],
-            address: locationData['address'],
-            isVireakBuntham: locationData['isVireakBuntham'],
-          );
-        },
-      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            // បង្ខំឲ្យ LocationPickerSheet rebuild នៅពេលមានការផ្លាស់ប្តូរ
+            return LocationPickerSheet(
+              onLocationSelected: (locationData) {
+                _sendLocationMessage(
+                  province: locationData['province'],
+                  district: locationData['district'],
+                  vireakBranch: locationData['vireakBranch'],
+                  address: locationData['address'],
+                  isVireakBuntham: locationData['isVireakBuntham'],
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -639,7 +721,12 @@ class _ChatScreenState extends State<ChatScreen> {
           foregroundColor: Colors.white,
           title: const Text('ឆាត'),
         ),
-        body: Center(
+
+        body: GestureDetector(       // <-- បន្ថែមនៅទីនេះ
+          onTap: () {
+            FocusScope.of(context).unfocus(); // បិទ Keyboard
+          },
+          behavior: HitTestBehavior.opaque,   // សំខាន់ ដើម្បីឱ្យ Gesture ចាប់យកការប៉ះលើ ListView
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -751,11 +838,22 @@ class _ChatScreenState extends State<ChatScreen> {
           },
         ),
         actions: [
+          // ✅ ប៊ូតុងមើលហាង
+          IconButton(
+            icon: const Icon(Icons.store, color: Colors.white),
+            tooltip: 'មើលហាង',
+            onPressed: () => _openSellerShop(),
+          ),
+
+
+          // ✅ ប៊ូតុងស្លាកលក់ (Order Management) - កែ Logic ទៅចាប់ ID អ្នកលក់ពិតប្រាកដ
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('orders')
-                .where('sellerId', isEqualTo: currentUserId)
-                .where('status', isEqualTo: 'confirmed')
+                .where(
+              'sellerId',
+              isEqualTo: widget.seller_id,
+            ) // 🎯 ដូរទៅប្រើ widget.seller_id ដើម្បីទាញ Order របស់ហាងនេះ
                 .snapshots(),
             builder: (context, orderSnapshot) {
               int orderCount = 0;
@@ -763,60 +861,248 @@ class _ChatScreenState extends State<ChatScreen> {
                 orderCount = orderSnapshot.data!.docs.length;
               }
 
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.monetization_on,
-                      color: Colors.amber,
-                      size: 32,
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.sell,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                OrderManagementScreen(sellerId: currentUserId),
+                          ),
+                        );
+                      },
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              OrderManagementScreen(sellerId: currentUserId),
-                        ),
-                      );
-                    },
-                  ),
-                  if (orderCount > 0)
-                    Positioned(
-                      right: 5,
-                      top: 5,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 18,
-                          minHeight: 18,
-                        ),
-                        child: Center(
+                    if (orderCount > 0)
+                      Positioned(
+                        right: 4,
+                        top: 4,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
                           child: Text(
                             '$orderCount',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 10,
+                              fontSize: 9,
                               fontWeight: FontWeight.bold,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               );
             },
           ),
         ],
       ),
-      body: Column(
-        children: [
+        body: GestureDetector(       // <-- បន្ថែមនៅទីនេះ
+          onTap: () {
+            FocusScope.of(context).unfocus(); // បិទ Keyboard
+          },
+          behavior: HitTestBehavior.opaque,   // សំខាន់ ដើម្បីឱ្យ Gesture ចាប់យកការប៉ះលើ ListView
+          child: Column(
+            children: [
+      // ✅ បង្ហាញទំនិញដែលបានបោះចូលឆាត (ដាក់ក្នុង body ខាងលើ Expanded)
+      // ✅ បង្ហាញ Chat Items ទាំង customer និង seller មើលឃើញ
+      StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('chat_items')
+          .where(
+        'chat_room_id',
+        isEqualTo: getChatRoomId(currentUserId, widget.seller_id),
+      )
+          .orderBy('created_at', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+
+        var items = snapshot.data!.docs;
+
+
+        return Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.orange[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.orange[200]!),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.shopping_basket,
+                      color: Colors.orange[700],
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'ទំនិញដែលចង់ទិញ (${items.length})',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange[700],
+                        fontSize: 14,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () async {
+                        for (var item in items) {
+                          await item.reference.delete();
+                        }
+                      },
+                      child: const Text(
+                        'លុបទាំងអស់',
+                        style: TextStyle(fontSize: 12, color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // ✅ បង្ហាញបញ្ជីទំនិញដែលបានបោះចូលឆាត (ជាមួយឈ្មោះ និងស៊ុម)
+              // 🎯 រកមើល StreamBuilder<QuerySnapshot> នៃ 'chat_items' រួចដូរដុំ ListView.builder នេះ៖
+              SizedBox(
+                  height: 75, // 🎯 បង្កើនកម្ពស់ពី 60 ទៅ 75 ដើម្បីល្មមនឹងតម្លៃទំនិញ
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      var data = items[index].data() as Map<String, dynamic>;
+                      String imageUrl = data['image_url']?.toString() ?? '';
+                      String productName = data['product_name']?.toString() ?? 'ទំនិញ';
+// 1. ទាញយកទិន្នន័យតម្លៃពី Firestore (ចេញមកជា "35,000")
+                      dynamic priceData = data['price'];
+                      String productPrice = '0';
+
+                      if (priceData != null && priceData.toString().trim().isNotEmpty) {
+                        // 🎯 គន្លឹះសំខាន់៖ លុបសញ្ញាក្បៀស (,) ចេញ ដើម្បីឱ្យសល់តែលេខសុទ្ធ "35000"
+                        String cleanPrice = priceData.toString().replaceAll(',', '').trim();
+
+                        // 2. យកទៅដាក់ចូល productPrice វិញ
+                        productPrice = cleanPrice;
+                      }
+
+
+                      String addedByName = data['customer_name']?.toString() ?? '';
+                      bool addedByMe = data['customer_id'] == currentUserId;
+
+                      return Container(
+                          width: 85, // 🎯 បង្កើនទទឹងបន្តិចពី 80 ទៅ 85
+                          margin: const EdgeInsets.only(right: 6, bottom: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: addedByMe ? Colors.green : Colors.orange,
+                              width: 1,
+                            ),
+                          ),
+                          child: Stack(
+                            children: [
+                            Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // រូបភាពតូច
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
+                                child: imageUrl.isNotEmpty
+                                    ? Image.network(imageUrl, height: 30, width: double.infinity, fit: BoxFit.cover)
+                                    : Container(height: 30, color: Colors.grey[200]),
+                              ),
+                              // ឈ្មោះទំនិញ + តម្លៃ + អ្នកបន្ថែម
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      productName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 7.5, fontWeight: FontWeight.bold),
+                                    ),
+                                    // 🎯 បន្ថែមការបង្ហាញតម្លៃពណ៌ក្រហមនៅត្រង់នេះ
+                                    Text(
+                                      "${NumberFormat('#,###').format(double.tryParse(productPrice) ?? 0)} ៛",
+                                      style: const TextStyle(
+                                        fontSize: 7.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.redAccent,
+                                      ),
+                                    ),
+                                    if (addedByName.isNotEmpty)
+                                      Text(
+                                        addedByMe ? 'ខ្លួនឯង' : addedByName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 6,
+                                          color: addedByMe ? Colors.green[700] : Colors.orange[700],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          // ប៊ូតុងលុបតូច
+                          Positioned(
+                              top: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                  onTap: () => items[index].reference.delete(),
+                                  child: Container(
+                                      padding: const EdgeInsets.all(1),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.7),
+                                        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(4),
+                                          topRight: Radius.circular(5),
+                                        ),
+                                      ),
+                                    child: const Icon(Icons.close, color: Colors.white, size: 8),
+                                  ),
+                              ),
+                          ),
+                            ],
+                          ),
+                      );
+                    },
+                  ),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -982,10 +1268,14 @@ class _ChatScreenState extends State<ChatScreen> {
           _buildInputPanel(),
         ],
       ),
+        ),
     );
   }
 
   Widget _buildChatBubble(Map<String, dynamic> data, bool isMe, String docId) {
+    final messageDate = data['time'] != null
+        ? (data['time'] as Timestamp).toDate()
+        : DateTime.now();
     String status = data['status'] ?? 'sent';
     bool isMedia = data['type'] != 'text' && data['type'] != 'location';
     bool isLocation = data['type'] == 'location';
@@ -1053,20 +1343,26 @@ class _ChatScreenState extends State<ChatScreen> {
               if (isMe)
                 Padding(
                   padding: const EdgeInsets.only(right: 15, top: 4, bottom: 8),
-                  child: status == 'sending'
-                      ? const Icon(
-                    Icons.access_time,
-                    color: Colors.grey,
-                    size: 12,
-                  )
-                      : Icon(
-                    data['status'] == 'seen'
-                        ? Icons.done_all
-                        : Icons.done,
-                    color: data['status'] == 'seen'
-                        ? Colors.blue
-                        : Colors.grey,
-                    size: 14,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ✅ បន្ថែមម៉ោង
+                      Text(
+                        DateFormat('HH:mm').format(messageDate),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 10,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      status == 'sending'
+                          ? const Icon(Icons.access_time, color: Colors.grey, size: 12)
+                          : Icon(
+                        data['status'] == 'seen' ? Icons.done_all : Icons.done,
+                        color: data['status'] == 'seen' ? Colors.blue : Colors.grey,
+                        size: 14,
+                      ),
+                    ],
                   ),
                 ),
             ],
@@ -1431,41 +1727,50 @@ class _ChatScreenState extends State<ChatScreen> {
 
             // ✅ ប៊ូតុង Voice Recorder ដែលដក Lock ចេញ និងទុកតែ Cancel
             _msgController.text.trim().isEmpty
-                ? GestureDetector(
-              onLongPressStart: (_) => _startRecording(),
-              onLongPressMoveUpdate: (details) {
-                setState(() {
-                  // យើងខ្វល់តែការអូសទៅឆ្វេង (Horizontal Drag) ដើម្បី Cancel ប៉ុណ្ណោះ
-                  _dragOffset = details.offsetFromOrigin.dx;
-                });
+                ? Listener(
+              onPointerDown: (_) {
+                if (!_isRecording) {
+                  _startRecording();
+                }
               },
-              onLongPressEnd: (details) {
-                // បើអូសទៅឆ្វេងលើសពី -80px (តម្លៃកាន់តែតូច កាន់តែឆ្ងាយ) គឺលុបចោល
+              onPointerMove: (details) {
+                if (_isRecording) {
+                  setState(() {
+                    _dragOffset = details.localPosition.dx - 80; // ចាប់ផ្ដើមពីប៊ូតុង
+                  });
+                }
+              },
+              onPointerUp: (_) {
+                if (!_isRecording) return;
                 if (_dragOffset < -80) {
                   _cancelRecording();
                 } else {
-                  // បើមិនបានអូសទេ គឺផ្ញើធម្មតា
                   _stopRecording();
                 }
                 setState(() => _dragOffset = 0);
               },
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  // បើអូសជិតដល់ចំណុច Cancel ឱ្យវាប្តូរទៅពណ៌ក្រហមឱ្យអ្នកប្រើដឹងខ្លួន
-                  color: (_isRecording && _dragOffset < -50)
-                      ? Colors.red.shade900
-                      : (_isRecording ? Colors.red : Colors.green),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  _isRecording
-                      ? (_dragOffset < -50
-                      ? Icons.delete_forever_rounded
-                      : Icons.stop_rounded)
-                      : Icons.mic_rounded,
-                  color: Colors.white,
-                  size: 22,
+              child: AnimatedBuilder(
+                animation: _pulseAnimation,
+                builder: (context, child) => Transform.scale(
+                  scale: _isRecording ? _pulseAnimation.value : 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: _isRecording
+                          ? (_dragOffset < -50 ? Colors.red.shade900 : Colors.red)
+                          : Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _isRecording
+                          ? (_dragOffset < -50
+                          ? Icons.delete_forever_rounded
+                          : Icons.stop_rounded)
+                          : Icons.mic_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
                 ),
               ),
             )
@@ -1638,16 +1943,73 @@ class _ChatScreenState extends State<ChatScreen> {
         onAction: (invoiceData) async {
           final String actionType = invoiceData['type'];
 
+
           if (actionType == 'save' || actionType == 'screenshot') {
-            await _captureLongInvoice();
+            // ✅ ទាញព័ត៌មានអ្នកលក់មុន Screenshot
+            String sellerName = 'អ្នកលក់';
+            String sellerPhone = '';
+            String sellerSesanId = '';
+            String sellerLocation = '';
+
+
+            try {
+              // ទាញពី SharedPreferences
+              final prefs = await SharedPreferences.getInstance();
+              final uid = prefs.getString('user_uid');
+
+
+              if (uid != null && uid.isNotEmpty) {
+                // ទាញពី Firestore
+                final userDoc = await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(uid)
+                    .get();
+
+
+                if (userDoc.exists) {
+                  final data = userDoc.data()!;
+                  sellerName = data['name'] ?? 'អ្នកលក់';
+                  sellerPhone = data['phone'] ?? '';
+                  sellerSesanId = data['sesan_id'] ?? '';
+                }
+
+
+                // ទាញទីតាំងពី product ដំបូង
+                final productSnap = await FirebaseFirestore.instance
+                    .collection('products')
+                    .where('seller_id', isEqualTo: uid)
+                    .limit(1)
+                    .get();
+                if (productSnap.docs.isNotEmpty) {
+                  sellerLocation =
+                      productSnap.docs.first.data()['location'] ?? '';
+                }
+              }
+            } catch (_) {}
+
+
+            // ✅ ប្រើតម្លៃសរុបដែលបានគណនាពី CreateInvoiceSheet
+            final double grandTotal = (invoiceData['total'] as num?)?.toDouble() ?? 0;
+
+            await _captureLongInvoice(
+              sellerName: sellerName,
+              sellerPhone: sellerPhone,
+              sellerSesanId: sellerSesanId,
+              sellerLocation: sellerLocation,
+              grandTotal: grandTotal, // ✅ បន្ថែមបន្ទាត់នេះ!
+            );
 
             await FirebaseFirestore.instance.collection('invoices').add({
               'buyer_name': CreateInvoiceSheet.cusName.text,
               'buyer_phone': CreateInvoiceSheet.cusPhone.text,
               'buyer_address': CreateInvoiceSheet.cusAddress.text,
               'total_amount': double.tryParse(_calculateGrandTotal()) ?? 0.0,
+              'seller_name': sellerName,
+              'seller_phone': sellerPhone,
+              'seller_sesan_id': sellerSesanId,
               'created_at': FieldValue.serverTimestamp(),
             });
+
 
             if (mounted) {
               Navigator.pop(context);
@@ -1665,11 +2027,19 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<void> _captureLongInvoice() async {
+
+  Future<void> _captureLongInvoice({
+    String sellerName = 'អ្នកលក់',
+    String sellerPhone = '',
+    String sellerSesanId = '',
+    String sellerLocation = '',
+    double grandTotal = 0, // ✅ បន្ថែម
+  }) async {
     try {
       const int itemsPerPage = 10;
       int totalItems = CreateInvoiceSheet.items.length;
       int totalPages = (totalItems / itemsPerPage).ceil();
+
 
       for (int i = 0; i < totalPages; i++) {
         int start = i * itemsPerPage;
@@ -1678,6 +2048,7 @@ class _ChatScreenState extends State<ChatScreen> {
             : start + itemsPerPage;
         List currentPageItems = CreateInvoiceSheet.items.sublist(start, end);
 
+
         final imageUint8List = await _screenshotController.captureFromWidget(
           Material(
             color: Colors.white,
@@ -1685,36 +2056,59 @@ class _ChatScreenState extends State<ChatScreen> {
               textDirection: ui.TextDirection.ltr,
               child: Container(
                 width: 375,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(
+                  15,
+                ), // បន្ថយ padding ដើម្បីសន្សំផ្ទៃ capture
                 color: Colors.white,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (i == 0) _buildCaptureHeader(),
-                    const SizedBox(height: 10),
+                    // 🎯 ហៅ Header ថ្មីដោយបោះព័ត៌មានអ្នកលក់ចូលទៅបង្ហាញនៅទំព័រទី១
+                    if (i == 0)
+                      _buildCaptureHeader(
+                        sellerName: sellerName,
+                        sellerPhone: sellerPhone,
+                        sellerSesanId: sellerSesanId,
+                        sellerLocation: sellerLocation,
+                      ),
+
+
+                    const SizedBox(height: 6),
                     Text(
                       "បញ្ជីទំនិញ (សន្លឹកទី ${i + 1})",
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 13,
                         color: Colors.black,
                       ),
                     ),
                     const Divider(thickness: 1, color: Colors.black),
-                    ...currentPageItems
-                        .map((item) => _buildCaptureItemRow(item))
-                        .toList(),
-                    if (i == totalPages - 1) ...[
-                      const Divider(thickness: 1, color: Colors.black),
-                      _buildCaptureTotalAndQR(),
-                    ],
-                    const SizedBox(height: 10),
+
+
+                    // 🎯 កែសម្រួលត្រង់នេះ៖ បោះ index សរុបទៅឱ្យ Row នីមួយៗដើម្បីរាប់លេខជួរឈរ
+                    ...currentPageItems.asMap().entries.map((entry) {
+                      int localIndex = entry.key;
+                      dynamic item = entry.value;
+                      int globalIndex =
+                          start +
+                              localIndex; // គណនាគម្លាតលេខរាប់ទៅតាមទំព័រនីមួយៗ (ទំព័រទី២ រាប់បន្តពីទំព័រទី១)
+
+
+                      return _buildCaptureItemRow(item, globalIndex);
+                    }).toList(),
+
+
+              if (i == totalPages - 1) ...[
+            const Divider(thickness: 1, color: Colors.black),
+            _buildCaptureTotalAndQR(grandTotal), // ✅ បញ្ជូន grandTotal
+    ],
+                    const SizedBox(height: 6),
                     Center(
                       child: Text(
                         "--- ${i + 1} / $totalPages ---",
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 10,
                           color: Colors.grey,
                         ),
                       ),
@@ -1726,10 +2120,14 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           pixelRatio: 3.0,
         );
+
+
         if (imageUint8List != null) {
           await Gal.putImageBytes(imageUint8List);
         }
       }
+
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1743,57 +2141,143 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Widget _buildCaptureHeader() {
+
+  Widget _buildCaptureHeader({
+    required String sellerName,
+    required String sellerPhone,
+    required String sellerSesanId,
+    required String sellerLocation,
+  }) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // 🎯 ចំណងជើងវិក្កយបត្រ (បង្រួម Font សន្សំ Space)
         const Center(
           child: Text(
             "វិក្កយបត្រ / INVOICE",
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 16, // 🎯 បន្ថយពី ២២ មក ១៦
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
           ),
         ),
-        const Divider(thickness: 2, color: Colors.black),
-        const SizedBox(height: 10),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            "ឈ្មោះអ្នកទិញ៖ ${CreateInvoiceSheet.cusName.text}",
-            style: const TextStyle(color: Colors.black),
+        const SizedBox(height: 2),
+        const Divider(thickness: 1.5, color: Colors.black),
+        const SizedBox(height: 4),
+
+
+        // 🏪 កែប្រែទី១៖ ព័ត៌មានអ្នកលក់ (Seller Info) ឡើងមកនៅលើគេបង្អស់
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(6), // បង្រួម padding
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: Colors.grey[200]!),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '🏪 អ្នកលក់៖ $sellerName',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11, // 🎯 បង្រួម Font មក ១១
+                  color: Colors.black,
+                ),
+              ),
+              if (sellerPhone.isNotEmpty) ...[
+                const SizedBox(height: 1),
+                Text(
+                  '📞 លេខទូរស័ព្ទ៖ $sellerPhone',
+                  style: const TextStyle(fontSize: 10, color: Colors.black87),
+                ),
+              ],
+              if (sellerSesanId.isNotEmpty) ...[
+                const SizedBox(height: 1),
+                Text(
+                  '🆔 Sesan ID៖ $sellerSesanId',
+                  style: const TextStyle(fontSize: 10, color: Colors.black87),
+                ),
+              ],
+              if (sellerLocation.isNotEmpty) ...[
+                const SizedBox(height: 1),
+                Text(
+                  '📍 ទីតាំង៖ $sellerLocation',
+                  style: const TextStyle(fontSize: 10, color: Colors.black87),
+                ),
+              ],
+            ],
           ),
         ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            "លេខទូរស័ព្ទ៖ ${CreateInvoiceSheet.cusPhone.text}",
-            style: const TextStyle(color: Colors.black),
+
+
+        const SizedBox(height: 6), // គម្លាតតូចរវាងអ្នកលក់ និងអ្នកទិញ
+        // 👤 កែប្រែទី២៖ ព័ត៌មានអ្នកទិញ (Buyer Info) ធ្លាក់មកនៅខាងក្រោម
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "👤 អ្នកទិញ៖ ${CreateInvoiceSheet.cusName.text}",
+                style: const TextStyle(
+                  fontSize: 11, // 🎯 បង្រួម Font
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                "📞 លេខទូរស័ព្ទ៖ ${CreateInvoiceSheet.cusPhone.text}",
+                style: const TextStyle(fontSize: 10, color: Colors.black87),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                "🏠 អាសយដ្ឋាន៖ ${CreateInvoiceSheet.cusAddress.text}",
+                style: const TextStyle(fontSize: 10, color: Colors.black87),
+              ),
+            ],
           ),
         ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            "អាសយដ្ឋាន៖ ${CreateInvoiceSheet.cusAddress.text}",
-            style: const TextStyle(color: Colors.black),
-          ),
-        ),
+        const SizedBox(height: 2),
       ],
     );
   }
 
-  Widget _buildCaptureItemRow(dynamic item) {
+
+  // 🎯 មុខងារបង្ហាញជួរទំនិញ៖ បន្ថែមប៉ារ៉ាម៉ែត្រ index ដើម្បីបង្ហាញលេខរាប់ជួរឈរ (1, 2, 3...)
+  Widget _buildCaptureItemRow(dynamic item, int index) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        crossAxisAlignment:
+        CrossAxisAlignment.start, // ឱ្យអក្សរ និងលេខតម្រឹមស្មើគ្នានៅខាងលើ
         children: [
+          // 🔢 ១. ផ្នែកលេខរាប់លំដាប់ជួរឈរ (1, 2, 3...)
+          SizedBox(
+            width: 24, // កំណត់ប្រវែងទទឹងថេរ ដើម្បីកុំឱ្យរុញឈ្មោះទំនិញខុសជួរគ្នា
+            child: Text(
+              "${index + 1}.", // index ចាប់ពី 0 ដូចនេះត្រូវ + 1
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+
+          // 📦 ២. ផ្នែកឈ្មោះទំនិញ
           Expanded(
             child: Text(
               item['desc']!.text,
               style: const TextStyle(color: Colors.black),
             ),
           ),
+
+
+          // 💰 ៣. ផ្នែកចំនួន និងតម្លៃ
           Text(
             "${item['qty']!.text} x ${item['price']!.text} ៛",
             style: const TextStyle(color: Colors.black),
@@ -1803,46 +2287,31 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildCaptureTotalAndQR() {
+
+  Widget _buildCaptureTotalAndQR(double grandTotal) {
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              "សរុបចុងក្រោយ៖",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
+            const Text("សរុបចុងក្រោយ៖", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
             Text(
-              "${_calculateGrandTotal()} ៛",
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
+              "${NumberFormat('#,###').format(grandTotal)} ៛", // ✅ ប្រើ grandTotal
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
             ),
           ],
         ),
         if (CreateInvoiceSheet.qrFile != null) ...[
           const SizedBox(height: 20),
-          const Center(
-            child: Text(
-              "Scan ដើម្បីបង់ប្រាក់",
-              style: TextStyle(fontSize: 12, color: Colors.black),
-            ),
-          ),
+          const Center(child: Text("Scan ដើម្បីបង់ប្រាក់", style: TextStyle(fontSize: 12, color: Colors.black))),
           const SizedBox(height: 10),
           Center(child: Image.file(CreateInvoiceSheet.qrFile!, width: 160)),
         ],
       ],
     );
   }
-
-  String _calculateGrandTotal() {
+// 🎯 ១. កែមុខងារនេះឱ្យទៅជា double ដើម្បីងាយស្រួល Format ក្បៀស និងយកទៅរក្សាទុកក្នុង Database មិនឱ្យគាំង
+  double _calculateGrandTotalAsDouble() {
     double total = CreateInvoiceSheet.items.fold(
       0,
           (sum, item) =>
@@ -1850,8 +2319,12 @@ class _ChatScreenState extends State<ChatScreen> {
           ((double.tryParse(item['qty']!.text) ?? 0) *
               (double.tryParse(item['price']!.text) ?? 0)),
     );
-    return (total + (double.tryParse(CreateInvoiceSheet.shipPrice.text) ?? 0))
-        .toStringAsFixed(0);
+    return total + (double.tryParse(CreateInvoiceSheet.shipPrice.text) ?? 0);
+  }
+
+  // 🎯 ២. រក្សាទុកមុខងារចាស់នេះដដែល ប៉ុន្តែឱ្យវាហៅពី double មក Format ក្បៀសឱ្យស្រេចតែម្តង
+  String _calculateGrandTotal() {
+    return NumberFormat('#,###').format(_calculateGrandTotalAsDouble());
   }
 
   String _formatLastSeen(dynamic timestamp) {
@@ -1859,11 +2332,13 @@ class _ChatScreenState extends State<ChatScreen> {
     final time = (timestamp as Timestamp).toDate();
     final diff = DateTime.now().difference(time);
 
+
     if (diff.inMinutes < 1) return 'ទើបតែសកម្ម';
     if (diff.inMinutes < 60) return 'សកម្ម ${diff.inMinutes} នាទីមុន';
     if (diff.inHours < 24) return 'សកម្ម ${diff.inHours} ម៉ោងមុន';
     return 'សកម្ម ${diff.inDays} ថ្ងៃមុន';
   }
+
 
   void _showMessageOptions(
       BuildContext context,
@@ -1873,6 +2348,7 @@ class _ChatScreenState extends State<ChatScreen> {
     String type = data['type'] ?? 'text';
     bool isMe = data['sender'] == currentUserId;
     bool isHighlighted = _highlightedMessages.contains(docId);
+
 
     showModalBottomSheet(
       context: context,
@@ -1895,6 +2371,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               const SizedBox(height: 16),
 
+
               // ✅ 1. Copy (text only)
               if (type == 'text')
                 _buildOptionTile(
@@ -1907,6 +2384,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     _showSnack('បានចម្លងហើយ', Colors.blue);
                   },
                 ),
+
 
               // ✅ 2. Highlight
               _buildOptionTile(
@@ -1931,6 +2409,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 },
               ),
 
+
               // ✅ 3. លុបសម្រាប់ខ្លួនឯង
               _buildOptionTile(
                 icon: Icons.delete_outline,
@@ -1946,6 +2425,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   );
                 },
               ),
+
 
               // ✅ 4. លុបសម្រាប់ទាំងអស់គ្នា (isMe only)
               if (isMe)
@@ -1969,6 +2449,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
+
 
   Widget _buildOptionTile({
     required IconData icon,
@@ -1997,6 +2478,7 @@ class _ChatScreenState extends State<ChatScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
+
 
   void _confirmDeleteForEveryone(
       BuildContext context,
@@ -2104,6 +2586,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+
   Future<void> _deleteMessage({
     required String docId,
     required String? fileUrl,
@@ -2122,6 +2605,7 @@ class _ChatScreenState extends State<ChatScreen> {
             .doc(docId)
             .delete();
 
+
         _showSnack('បានលុបសម្រាប់ទាំងអស់គ្នា', Colors.red);
       } else {
         await FirebaseFirestore.instance.collection('chats').doc(docId).update({
@@ -2131,12 +2615,14 @@ class _ChatScreenState extends State<ChatScreen> {
           'deletedFor': FieldValue.arrayUnion([currentUserId]),
         });
 
+
         _showSnack('បានលុបចេញ', Colors.orange);
       }
     } catch (e) {
       _showSnack('❌ លុបមិនបាន: $e', Colors.red);
     }
   }
+
 
   void _showSnack(String msg, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -2158,20 +2644,30 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+
   String _formatDateHeader(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = DateTime(now.year, now.month, now.day - 1);
     final messageDate = DateTime(date.year, date.month, date.day);
 
+
+    // ✅ Format ម៉ោង/នាទី ជាភាសាខ្មែរ
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    final timeStr = '$hour:$minute';
+
+
     if (messageDate == today) {
-      return "ថ្ងៃនេះ";
+      return 'ថ្ងៃនេះ ម៉ោង $timeStr';
     } else if (messageDate == yesterday) {
-      return "ម្សិលមិញ";
+      return 'ម្សិលមិញ ម៉ោង $timeStr';
     } else {
-      return DateFormat('dd MMM yyyy').format(date);
+      return DateFormat('dd MMM yyyy, HH:mm').format(date);
     }
   }
 }
+
+
 
 

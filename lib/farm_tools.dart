@@ -7,9 +7,7 @@ import 'package:my_app/crop_water_calc.dart';
 import 'package:my_app/currency_converter.dart';
 import 'package:my_app/electric_calc.dart';
 import 'package:my_app/farm_shopping_list.dart';
-import 'package:my_app/feed_calc.dart';
 import 'package:my_app/fence_calc.dart';
-import 'package:my_app/fertilizer_calc.dart';
 import 'package:my_app/fish_calc.dart';
 import 'package:my_app/livestock_tracker.dart';
 import 'package:my_app/npk_calc.dart';
@@ -38,10 +36,10 @@ class FarmToolsPage extends StatelessWidget {
     // 📊 បញ្ជីឧបករណ៍ (បានបន្ថែម "ស្ថិតិកូនសត្វ" រួចរាល់)
     final List<Map<String, dynamic>> tools = [
       {
-        'title': 'ថ្លឹងបាវអូតូ',
-        'icon': Icons.scale_outlined, // រូបជញ្ជីងថ្លឹង
-        'color': Colors.green,
-        'desc': 'កត់ទម្ងន់បាវ និងគិតលុយ',
+        'title': 'ប្ដូររូបិយបណ្ណ',
+        'icon': Icons.currency_exchange,
+        'color': Colors.blueAccent,
+        'desc': 'ដុល្លារ, រៀល, បាត, យ័ន',
       },
       {
         'title': 'គ្រប់គ្រងស្តុក',
@@ -49,8 +47,12 @@ class FarmToolsPage extends StatelessWidget {
         'color': Colors.teal.shade700,
         'desc': 'បន្ថែម កាត់ និងតាមដានស្តុកទំនិញ',
       },
-
-
+      {
+        'title': 'ថ្លឹងបាវអូតូ',
+        'icon': Icons.scale_outlined, // រូបជញ្ជីងថ្លឹង
+        'color': Colors.green,
+        'desc': 'កត់ទម្ងន់បាវ និងគិតលុយ',
+      },
       {
         'title': 'បញ្ជីទិញអីវ៉ាន់',
         'icon': Icons.assignment_turned_in_rounded,
@@ -58,22 +60,22 @@ class FarmToolsPage extends StatelessWidget {
         'desc': 'សរុបចំនួនពូជ ជី និងថ្នាំដែលត្រូវទិញ',
       },
       {
-        'title': 'ប្ដូររូបិយបណ្ណ',
-        'icon': Icons.currency_exchange,
-        'color': Colors.blueAccent,
-        'desc': 'ដុល្លារ, រៀល, បាត, យ័ន',
+        'title': 'ជញ្ជីងប៉ាន់ស្មាន',
+        'icon': Icons.scale,
+        'color': Colors.orange[900],
+        'desc': 'ទម្ងន់ គោ, ក្របី, ជ្រូក',
+      },
+      {
+        'title': 'វាស់ផ្ទៃដីកសិកម្ម',
+        'icon': Icons.map_outlined,
+        'color': Colors.green[800],
+        'desc': 'វាស់ដោយដើរ ឬចុចលើផែនទី',
       },
       {
         'title': 'ម៉ាស៊ីនគណនា',
         'icon': Icons.calculate_outlined, // រូបម៉ាស៊ីនគណនាឱ្យចំគោលដៅ
         'color': Colors.orange,
         'desc': 'គណនាជី ថ្នាំ និងខ្នាតដី',
-      },
-      {
-        'title': 'ពិនិត្យមេឃ',
-        'icon': Icons.wb_sunny_rounded,
-        'color': Colors.blue.shade800,
-        'desc': 'ដំបូន្មានបាញ់ថ្នាំ និងដាក់ជីតាមធាតុអាកាស',
       },
       {
         'title': 'វិភាគទិន្នផល',
@@ -88,34 +90,10 @@ class FarmToolsPage extends StatelessWidget {
         'desc': 'បង្គោល, លួសបន្លា, ស៊ីម៉ង់ត៍',
       },
       {
-        'title': 'ប្រព័ន្ធទឹក',
-        'icon': Icons.water_drop,
-        'color': Colors.blue,
-        'desc': 'ទុយោ, ក្បាលបាញ់, ម៉ូទ័រ',
-      },
-      {
-        'title': 'ប្រព័ន្ធភ្លើង',
-        'icon': Icons.flash_on,
-        'color': Colors.orange,
-        'desc': 'ខ្សែភ្លើង, បង្គោល, អំពូល',
-      },
-      {
         'title': 'ចំនួនកូនដាំ',
         'icon': Icons.yard,
         'color': Colors.green,
         'desc': 'ដង់ស៊ីតេដាំដុះ, ចម្ងាយជួរ',
-      },
-      {
-        'title': 'រូបមន្តដាក់ជី',
-        'icon': Icons.science,
-        'color': Colors.purple,
-        'desc': 'ប្រភេទជី, បរិមាណតាមដី',
-      },
-      {
-        'title': 'ចំណីសត្វ',
-        'icon': Icons.pets,
-        'color': Colors.redAccent,
-        'desc': 'មាន់, ទា, ត្រី, គោ',
       },
       {
         'title': 'ស្ថិតិកូនសត្វ',
@@ -130,18 +108,6 @@ class FarmToolsPage extends StatelessWidget {
         'desc': 'អាយុបច្ចុប្បន្ន និងថ្ងៃលក់',
       },
       {
-        'title': 'វាស់ផ្ទៃដីកសិកម្ម',
-        'icon': Icons.map_outlined,
-        'color': Colors.green[800],
-        'desc': 'វាស់ដោយដើរ ឬចុចលើផែនទី',
-      },
-      {
-        'title': 'ជញ្ជីងប៉ាន់ស្មាន',
-        'icon': Icons.scale,
-        'color': Colors.orange[900],
-        'desc': 'ទម្ងន់ គោ, ក្របី, ជ្រូក',
-      },
-      {
         'title': 'គ្រាប់ពូជ',
         'icon': Icons.grass,
         'color': Colors.green.shade800,
@@ -152,12 +118,6 @@ class FarmToolsPage extends StatelessWidget {
         'icon': Icons.analytics,
         'color': Colors.teal.shade700,
         'desc': 'ប៉ាន់ស្មានដើមទុន និងផលចំណេញ',
-      },
-      {
-        'title': 'តម្រូវការទឹក',
-        'icon': Icons.water_drop,
-        'color': Colors.blueAccent.shade700,
-        'desc': 'គណនាទឹកស្រោចតាមប្រភេទដំណាំ',
       },
       {
         'title': 'ចិញ្ចឹមត្រី',
@@ -206,6 +166,30 @@ class FarmToolsPage extends StatelessWidget {
         'icon': Icons.water_drop, // ឬប្រើ Icons.waves
         'color': Colors.blue.shade700,
         'desc': 'គណនាទឹកអាង និងស្រះជម្រាល',
+      },
+      {
+        'title': 'តម្រូវការទឹក',
+        'icon': Icons.water_drop,
+        'color': Colors.blueAccent.shade700,
+        'desc': 'គណនាទឹកស្រោចតាមប្រភេទដំណាំ',
+      },
+      {
+        'title': 'ប្រព័ន្ធទឹក',
+        'icon': Icons.water_drop,
+        'color': Colors.blue,
+        'desc': 'ទុយោ, ក្បាលបាញ់, ម៉ូទ័រ',
+      },
+      {
+        'title': 'ប្រព័ន្ធភ្លើង',
+        'icon': Icons.flash_on,
+        'color': Colors.orange,
+        'desc': 'ខ្សែភ្លើង, បង្គោល, អំពូល',
+      },
+      {
+        'title': 'ពិនិត្យមេឃ',
+        'icon': Icons.wb_sunny_rounded,
+        'color': Colors.blue.shade800,
+        'desc': 'ដំបូន្មានបាញ់ថ្នាំ និងដាក់ជីតាមធាតុអាកាស',
       },
     ];
 
@@ -301,25 +285,11 @@ class FarmToolsPage extends StatelessWidget {
                       builder: (context) => const IrrigationCalcPage(),
                     ),
                   );
-                } else if (tool['title'] == 'រូបមន្តដាក់ជី') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const FertilizerCalcPage(),
-                    ),
-                  );
                 } else if (tool['title'] == 'ប្រព័ន្ធភ្លើង') {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const ElectricCalcPage(),
-                    ),
-                  );
-                } else if (tool['title'] == 'ចំណីសត្វ') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const FeedCalcPage(),
                     ),
                   );
                 } else if (tool['title'] == 'ស្ថិតិកូនសត្វ') {

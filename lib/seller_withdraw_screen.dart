@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'edit_profile_screen.dart';
+
 
 class SellerWithdrawScreen extends StatefulWidget {
   const SellerWithdrawScreen({super.key});
@@ -50,264 +52,129 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
 
 
   void _showWithdrawDialog() {
-    final accountNameController = TextEditingController();
-    final accountNumberController = TextEditingController();
     final pinController = TextEditingController();
-    String selectedBank = 'ABA';
-    File? selectedQR;
     bool isSubmitting = false;
 
-
     showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            "បញ្ជាក់អត្តសញ្ញាណដកប្រាក់",
-            style: TextStyle(
-              fontFamily: 'Siemreap',
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<String>(
-                  value: selectedBank,
-                  decoration: const InputDecoration(labelText: "រើសធនាគារ *"),
-                  items: ['ABA', 'AC', 'Canadia', 'Wing', 'ផ្សេងៗ']
-                      .map(
-                        (bank) =>
-                        DropdownMenuItem(value: bank, child: Text(bank)),
-                  )
-                      .toList(),
-                  onChanged: (val) => setDialogState(() => selectedBank = val!),
-                ),
-                TextField(
-                  controller: accountNameController,
-                  decoration: const InputDecoration(labelText: "ឈ្មោះគណនី *"),
-                ),
-                TextField(
-                  controller: accountNumberController,
-                  decoration: const InputDecoration(
-                    labelText: "លេខគណនីធនាគារ *",
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 15),
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => StreamBuilder<DocumentSnapshot>(
+          // ១. ទាញទិន្នន័យពី Profile មកប្រើផ្ទាល់តែម្តង
+            stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
+              var userData = snapshot.data!.data() as Map<String, dynamic>;
 
-                InkWell(
-                  onTap: () async {
-                    final picker = ImagePicker();
-                    final XFile? image = await picker.pickImage(
-                      source: ImageSource.gallery,
-                    );
-                    if (image != null)
-                      setDialogState(() => selectedQR = File(image.path));
-                  },
-                  child: Container(
-                    height: 100,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(10),
+              // 🛡️ ឆែកមើលថា តើគាត់បានបំពេញព័ត៌មានធនាគារក្នុង Profile ហើយឬនៅ?
+              if (userData['bank_account_number'] == null || userData['password'] == null) {
+                return AlertDialog(
+                  title: const Text("ព័ត៌មានមិនទាន់គ្រប់គ្រាន់", style: TextStyle(fontFamily: 'KHMEROS')),
+                  content: const Text("សូមបំពេញព័ត៌មានធនាគារ និងលេខសម្ងាត់ ៦ ខ្ទង់ ជាមុនសិន ទើបអាចដកប្រាក់បាន។"),
+                  actions: [
+                    // ប៊ូតុងបោះបង់
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("បោះបង់", style: TextStyle(color: Colors.grey)),
                     ),
-                    child: selectedQR == null
-                        ? const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.qr_code),
-                        Text(
-                          "Upload KHQR",
-                          style: TextStyle(fontSize: 12),
+                    // ប៊ូតុងដែលនឹងនាំទៅកាន់ទំព័រ Profile ផ្ទាល់តែម្តង
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                      onPressed: () {
+                        // ១. បិទ Dialog សិន
+                        Navigator.pop(context);
+
+                        // ២. រុញទៅកាន់អេក្រង់ EditProfileScreen ភ្លាមៗ
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditProfileScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text("ទៅបំពេញព័ត៌មាន", style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                );
+              }
+
+              return StatefulBuilder(
+                  builder: (context, setDialogState) => AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      title: const Text("បញ្ជាក់ការដកប្រាក់", style: TextStyle(fontFamily: 'Siemreap', fontWeight: FontWeight.bold)),
+                      content: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // បង្ហាញធនាគារដែលគាត់ setup ទុក (មើលបាន តែអ៊ែឌីតអត់បាន)
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(10)),
+                              child: ListTile(
+                                leading: const Icon(Icons.account_balance, color: Colors.green),
+                                title: Text(userData['bank_name'] ?? "ABA"),
+                                subtitle: Text(userData['bank_account_number'] ?? ""),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            const Text("បញ្ចូលលេខសម្ងាត់ ៦ ខ្ទង់"),
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: pinController,
+                              decoration: const InputDecoration(
+                                hintText: "• • • • • •",
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(vertical: 10),
+                              ),
+                              obscureText: true,
+                              textAlign: TextAlign.center,
+                              keyboardType: TextInputType.number,
+                              maxLength: 6,
+                            ),
+                          ],
                         ),
-                      ],
-                    )
-                        : Image.file(selectedQR!, fit: BoxFit.contain),
-                  ),
-                ),
-                const SizedBox(height: 15),
-
-
-                TextField(
-                  controller: pinController,
-                  decoration: const InputDecoration(
-                    labelText: "លេខសម្ងាត់ ៦ ខ្ទង់ *",
-                    prefixIcon: Icon(Icons.lock_outline, color: Colors.red),
-                    border: OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("បោះបង់"),
-            ),
-            ElevatedButton(
+                      ),
+                      actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text("បោះបង់")),
+              ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              onPressed: isSubmitting
-                  ? null
-                  : () async {
-                if (accountNameController.text.isEmpty ||
-                    selectedQR == null ||
-                    pinController.text.length < 6) {
-                  _showSnackBar(
-                    "⚠️ សូមបំពេញព័ត៌មាន និងលេខសម្ងាត់ឱ្យគ្រប់!",
-                    isError: true,
-                  );
-                  return;
-                }
+              onPressed: isSubmitting ? null : () async {
+              String inputPin = pinController.text.trim();
+              String savedPin = userData['password'].toString();
 
+              if (inputPin == savedPin) {
+              setDialogState(() => isSubmitting = true);
 
-                setDialogState(() => isSubmitting = true);
+              try {
+              // ២. បញ្ជូន Request ទៅ Admin ដោយយកទិន្នន័យពី Profile ទាំងអស់
+              await FirebaseFirestore.instance.collection('withdraw_requests').add({
+              'seller_id': userId,
+              'bank_name': userData['bank_name'],
+                'account_name': userData['full_name_kh'],
+                'account_number': userData['bank_account_number'],
+                'amount': double.tryParse(_amountController.text) ?? 0.0,
+                'khqr_url': userData['bank_qr_url'], // យករូប QR ពី Profile
+                'status': 'pending',
+                'created_at': FieldValue.serverTimestamp(),
+              });
 
-
-                try {
-                  final now = DateTime.now();
-                  final userRef = FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(userId);
-                  final userDoc = await userRef.get();
-
-
-                  if (!userDoc.exists) {
-                    _showSnackBar(
-                      "❌ រកមិនឃើញទិន្នន័យអ្នកប្រើ!",
-                      isError: true,
-                    );
-                    setDialogState(() => isSubmitting = false);
-                    return;
-                  }
-
-
-                  final userData = userDoc.data() as Map<String, dynamic>;
-
-
-                  // 🛡️ ១. ឆែកមើលស្ថានភាព Lock ៥០នាទី
-                  if (userData['lock_until'] != null) {
-                    DateTime lockUntil =
-                    (userData['lock_until'] as Timestamp).toDate();
-                    if (now.isBefore(lockUntil)) {
-                      int remaining = lockUntil.difference(now).inMinutes;
-                      _showSnackBar(
-                        "🚫 គណនីត្រូវ Lock! សូមរង់ចាំ $remaining នាទីទៀត",
-                        isError: true,
-                      );
-                      setDialogState(() => isSubmitting = false);
-                      return;
-                    }
-                  }
-
-
-                  // 🎯 ២. ទាញ Field 'password' មកផ្ទៀងផ្ទាត់ (String)
-                  String savedPassword =
-                      userData['password']?.toString() ?? "";
-                  String inputPassword = pinController.text.trim();
-                  int attempts = userData['wrong_attempts'] ?? 0;
-
-
-                  if (inputPassword == savedPassword) {
-                    // ✅ បើត្រូវ៖ Reset ចំនួនដងដែលវាយខុស
-                    await userRef.update({
-                      'wrong_attempts': 0,
-                      'lock_until': null,
-                    });
-
-
-                    // ៣. បន្តការ Upload QR និងបង្កើតបុងដកលុយ
-                    String fileName =
-                        'khqr/${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-                    Reference ref = FirebaseStorage.instance.ref().child(
-                      fileName,
-                    );
-                    await ref.putFile(selectedQR!);
-                    String khqrUrl = await ref.getDownloadURL();
-
-
-                    await FirebaseFirestore.instance
-                        .collection('withdraw_requests')
-                        .add({
-                      'seller_id': userId,
-                      'bank_name': selectedBank,
-                      'account_name': accountNameController.text,
-                      'account_number': accountNumberController.text,
-                      'amount':
-                      double.tryParse(_amountController.text) ??
-                          0.0,
-                      'khqr_url': khqrUrl,
-                      'status': 'pending',
-                      'created_at': FieldValue.serverTimestamp(),
-                    });
-
-
-                    if (mounted) {
-                      Navigator.pop(context); // បិទ Dialog
-                      _amountController.clear();
-                      _showSnackBar(
-                        "✅ លេខសម្ងាត់ត្រឹមត្រូវ! សំណើបានបញ្ជូន។",
-                      );
-                    }
-                  } else {
-                    // ❌ បើវាយខុស៖ បូកចំនួនដង (Wrong Attempts)
-                    attempts++;
-                    if (attempts >= 5) {
-                      // Lock ៥០នាទីភ្លាម
-                      await userRef.update({
-                        'wrong_attempts': attempts,
-                        'lock_until': Timestamp.fromDate(
-                          now.add(const Duration(minutes: 50)),
-                        ),
-                      });
-                      _showSnackBar(
-                        "🚫 វាយខុស ៥ដង! គណនីត្រូវ Lock ៥០នាទី",
-                        isError: true,
-                      );
-                    } else {
-                      await userRef.update({'wrong_attempts': attempts});
-                      _showSnackBar(
-                        "❌ លេខសម្ងាត់មិនត្រឹមត្រូវ! នៅសល់ ${5 - attempts} ដងទៀត",
-                        isError: true,
-                      );
-                    }
-                    setDialogState(() => isSubmitting = false);
-                  }
-                } catch (e) {
-                  _showSnackBar("❌ កំហុសបច្ចេកទេស៖ $e", isError: true);
-                  setDialogState(() => isSubmitting = false);
-                }
+              Navigator.pop(context);
+              _amountController.clear();
+              _showSnackBar("✅ សំណើដកប្រាក់ត្រូវបានបញ្ជូន!");
+              } catch (e) {
+                _showSnackBar("❌ កំហុសបច្ចេកទេស៖ $e", isError: true);
+              }
+              } else {
+                _showSnackBar("❌ លេខសម្ងាត់មិនត្រឹមត្រូវ!", isError: true);
+              }
               },
-              child: isSubmitting
-                  ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-                  : const Text(
-                "បញ្ជាក់ដកលុយ",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Siemreap',
-                ),
+                child: isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Text("យល់ព្រម"),
               ),
-            ),
-          ],
+                      ],
+                  ),
+              );
+            },
         ),
-      ),
     );
   }
 

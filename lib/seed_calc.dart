@@ -89,7 +89,10 @@ class _SeedCalcPageState extends State<SeedCalcPage> {
         backgroundColor: Colors.green.shade800,
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
@@ -149,7 +152,10 @@ class _SeedCalcPageState extends State<SeedCalcPage> {
             ],
             const SizedBox(height: 25),
             ElevatedButton(
-              onPressed: _calculate,
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                _calculate();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green.shade800,
                 foregroundColor: Colors.white,
@@ -164,6 +170,7 @@ class _SeedCalcPageState extends State<SeedCalcPage> {
           ],
         ),
       ),
+        ),
     );
   }
 

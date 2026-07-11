@@ -9,6 +9,8 @@ import 'package:my_app/admin_dispute_screen.dart';
 import 'package:my_app/admin_notification_screen.dart';
 import 'package:my_app/admin_stock_management.dart';
 import 'package:my_app/admin_transfer_requests_screen.dart';
+import 'add_investor_screen.dart';
+import 'admin_withdrawal_list_screen.dart';
 import 'transactionconfirm_history.dart';
 
 
@@ -41,118 +43,82 @@ class _AdminWithdrawListState extends State<AdminWithdrawList> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(
-        title: const Text(
-          "បញ្ជីស្នើដកប្រាក់",
-          style: TextStyle(
-            fontFamily: 'KHMEROS',
-            fontSize: 18,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        // 🎯 ប្តូរទៅពណ៌ទឹកប៊ិចចាស់បែប ABA (Deep Navy Blue)
-        backgroundColor: const Color(0xFF003F63),
-        centerTitle: true,
-        elevation: 2,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          PopupMenuButton<String>(
-            // 🎯 ប្តូរ Icon ទៅជាតំណាងក្រុមហ៊ុន/ហ៊ុនវិញ (Icons.corporate_fare)
-            icon: const Icon(
-              Icons.corporate_fare,
+        appBar: AppBar(
+          title: const Text(
+            "បញ្ជីស្នើដកប្រាក់",
+            style: TextStyle(
+              fontFamily: 'KHMEROS',
+              fontSize: 18,
               color: Colors.white,
-              size: 28,
-            ),
-            offset: const Offset(0, 50), // ឱ្យវាធ្លាក់មកក្រោម AppBar បន្តិច
-            onSelected: (value) {
-              switch (value) {
-                case 'stock':
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminStockManagement(),
-                    ),
-                  );
-                  break;
-                case 'transfers':
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminTransferRequestsScreen(),
-                    ),
-                  );
-                  break;
-                case 'history':
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const TransactionConfirmHistory(),
-                    ),
-                  );
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              _buildPopupItem('stock', Icons.inventory_2, "គ្រប់គ្រងភាគហ៊ុន"),
-              _buildPopupItem('transfers', Icons.swap_horiz, "សំណើផ្ទេរ"),
-              _buildPopupItem('history', Icons.history, "ប្រវត្តិបាញ់លុយ"),
-            ],
-          ),
-          const SizedBox(width: 10),
-          TextButton.icon(
-            onPressed: () {
-              // ចុចទៅកាន់ Screen បង្កើតដំណឹង (Admin Side)
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdminNotificationScreen(),
-                ),
-              );
-            },
-            icon: const Icon(Icons.add_alert, color: Colors.white),
-            label: const Text(
-              "ផ្ញើដំណឹង",
-              style: TextStyle(color: Colors.white),
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(width: 10),
-          IconButton(
-            icon: const Icon(
-              Icons.report_problem_outlined,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AdminDisputeScreen(),
-                ),
-              );
-            },
-            tooltip: 'មើលបណ្ដឹង',
+          backgroundColor: const Color(0xFF003F63), // Deep Navy Blue
+          centerTitle: true,
+          elevation: 2,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+            onPressed: () => Navigator.pop(context),
           ),
-          IconButton(
-            icon: const Icon(
-              Icons.format_list_bulleted_rounded,
-              color: Colors.white70,
+          actions: [
+            // ១. ប៊ូតុង "ផ្ញើដំណឹង" ទុកខាងក្រៅមួយចុះ ព្រោះបងប្រហែលប្រើញឹកញាប់
+            IconButton(
+              icon: const Icon(Icons.add_alert, color: Colors.white),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminNotificationScreen()),
+                );
+              },
+              tooltip: 'ផ្ញើដំណឹង',
             ),
-            tooltip: 'គ្រប់គ្រងទិន្នន័យ',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AdminManagementScreen(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+
+            // ២. ប្រមូលប៊ូតុងដែលនៅសល់ទាំងអស់ ដាក់ចូលក្នុង Menu តែមួយ (More Options)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white, size: 28), // ប្រើ Icon ចុចបីដើម្បីមើលបន្ថែម
+              offset: const Offset(0, 50),
+              onSelected: (value) {
+                switch (value) {
+                  case 'history':
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionConfirmHistory()));
+                    break;
+                  case 'stock':
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminStockManagement()));
+                    break;
+                  case 'transfers':
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminTransferRequestsScreen()));
+                    break;
+                  case 'dispute':
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminDisputeScreen()));
+                    break;
+                  case 'manage':
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminManagementScreen()));
+                    break;
+                  case 'investor':
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const AddInvestorScreen()));
+                    break;
+                  case 'withdrawal_info':
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AdminWithdrawalListScreen()),
+                    );
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                _buildPopupItem('history', Icons.history, "ប្រវត្តិបាញ់លុយ"),
+                _buildPopupItem('stock', Icons.inventory_2, "គ្រប់គ្រងភាគហ៊ុន"),
+                _buildPopupItem('transfers', Icons.swap_horiz, "សំណើផ្ទេរ"),
+                const PopupMenuDivider(), // បន្ទាត់ខណ្ឌឱ្យស្អាត
+                _buildPopupItem('dispute', Icons.report_problem_outlined, "មើលបណ្ដឹង"),
+                _buildPopupItem('manage', Icons.format_list_bulleted_rounded, "គ្រប់គ្រងទិន្នន័យ"),
+                _buildPopupItem('investor', Icons.group_add_outlined, "គ្រប់គ្រងអ្នកវិនិយោគ"),
+                _buildPopupItem('withdrawal_info', Icons.account_balance_wallet_outlined, "ព័ត៌មានដកប្រាក់"),
+              ],
+            ),
+            const SizedBox(width: 5),
+          ],
+        ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection('withdraw_requests')
@@ -165,161 +131,83 @@ class _AdminWithdrawListState extends State<AdminWithdrawList> {
             return const Center(child: Text("មិនមានសំណើដកប្រាក់ទេ"));
 
 
+          // ... (ផ្នែក AppBar និង StreamBuilder ទុកដដែល) ...
+
           return ListView.builder(
             padding: const EdgeInsets.all(12),
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
               var request = snapshot.data!.docs[index];
               var data = request.data() as Map<String, dynamic>;
-              String sellerId = data['seller_id'] ?? "";
 
+              double requestAmount = (data['amount'] ?? 0).toDouble();
+              String requestTime = data['created_at'] != null
+                  ? DateFormat('dd-MM HH:mm').format((data['created_at'] as Timestamp).toDate())
+                  : "N/A";
 
               return Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: FutureBuilder(
-                  future: Future.wait([
-                    FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(sellerId)
-                        .get(),
-                    FirebaseFirestore.instance
-                        .collection('products')
-                        .where('seller_id', isEqualTo: sellerId)
-                        .limit(1)
-                        .get(),
-                  ]),
-                  builder: (context, AsyncSnapshot<List<dynamic>> multiSnapshot) {
-                    if (!multiSnapshot.hasData)
-                      return const LinearProgressIndicator();
-
-
-                    var userDoc = multiSnapshot.data![0] as DocumentSnapshot;
-                    var productQuery = multiSnapshot.data![1] as QuerySnapshot;
-
-
-                    String sesanId = userDoc.exists
-                        ? (userDoc.data() as Map)['sesan_id'] ?? 'N/A'
-                        : 'N/A';
-                    double availableBalance = userDoc.exists
-                        ? (userDoc.data() as Map)['available_balance']
-                        ?.toDouble() ??
-                        0.0
-                        : 0.0;
-                    String sName = productQuery.docs.isNotEmpty
-                        ? productQuery.docs.first['seller_name']
-                        : 'អត់ឈ្មោះ';
-                    String sPhone = productQuery.docs.isNotEmpty
-                        ? productQuery.docs.first['seller_phone']
-                        : 'អត់លេខ';
-                    String sPhoto = productQuery.docs.isNotEmpty
-                        ? productQuery.docs.first['seller_photo']
-                        : '';
-
-
-                    double requestAmount = (data['amount'] ?? 0).toDouble();
-                    String requestTime = data['created_at'] != null
-                        ? DateFormat(
-                      'dd-MM HH:mm',
-                    ).format((data['created_at'] as Timestamp).toDate())
-                        : "N/A";
-
-
-                    bool isBalanceInsufficient =
-                        availableBalance < requestAmount;
-                    return Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                elevation: 3,
+                margin: const EdgeInsets.only(bottom: 12),
+                child: Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              CircleAvatar(
-                                radius: 28,
-                                backgroundImage: sPhoto.isNotEmpty
-                                    ? NetworkImage(sPhoto)
-                                    : null,
-                                child: sPhoto.isEmpty
-                                    ? const Icon(Icons.person, size: 28)
-                                    : null,
+                              Text(
+                                "${requestAmount.toStringAsFixed(0)} ៛",
+                                style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 22),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "${requestAmount.toStringAsFixed(0)} ៛",
-                                      style: const TextStyle(
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                      ),
-                                    ),
-                                    Text(
-                                      "សមតុល្យ៖ ${availableBalance.toStringAsFixed(0)} ៛",
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: isBalanceInsufficient
-                                            ? Colors.red
-                                            : Colors.blueGrey,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      "ស្នើនៅ៖ $requestTime",
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              _buildActionButtons(
-                                request.id,
-                                sellerId,
-                                requestAmount,
-                                isBalanceInsufficient,
-                                sName,
-                                sPhone,
-                                sPhoto,
-                                sesanId,
-                                availableBalance,
-                              ),
+                              Text("ស្នើនៅ៖ $requestTime", style: const TextStyle(fontSize: 12, color: Colors.grey)),
                             ],
                           ),
-                          const Divider(height: 20),
-                          _buildInfoRow(
-                            Icons.badge_outlined,
-                            "Sesan ID",
-                            sesanId,
-                          ),
-                          _buildInfoRow(
-                            Icons.person_outline,
-                            "ឈ្មោះអ្នកលក់",
-                            sName,
-                          ),
-                          _buildInfoRow(
-                            Icons.account_balance_outlined,
-                            "ធនាគារ",
-                            "${data['bank_name'] ?? 'N/A'}",
-                          ),
-                          _buildInfoRow(
-                            Icons.credit_card_outlined,
-                            "លេខគណនី",
-                            "${data['account_number'] ?? 'N/A'}",
-                          ),
-                          _buildInfoRow(
-                            Icons.person_pin_outlined,
-                            "ឈ្មោះគណនី",
-                            "${data['account_name'] ?? 'N/A'}",
+                          // ប៊ូតុងចុចមើល QR Code សម្រាប់ Scan បាញ់លុយ
+                          IconButton(
+                            icon: const Icon(Icons.qr_code_2, size: 40, color: Color(0xFF003F63)),
+                            onPressed: () => _showQRPreview(context, data['khqr_url']),
                           ),
                         ],
                       ),
-                    );
-                  },
+                      const Divider(height: 25),
+
+                      // បង្ហាញព័ត៌មានធនាគារដែលទាញចេញពី Request ផ្ទាល់
+                      _buildInfoRow(Icons.account_balance, "ធនាគារ", "${data['bank_name'] ?? 'N/A'}"),
+                      _buildInfoRow(Icons.credit_card, "លេខគណនី", "${data['account_number'] ?? 'N/A'}"),
+                      _buildInfoRow(Icons.person, "ឈ្មោះគណនី", "${data['account_name'] ?? 'N/A'}"),
+
+                      const SizedBox(height: 15),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => _showRejectDialog(request.id, data['seller_id'], requestAmount),
+                              child: const Text("បដិសេធ", style: TextStyle(color: Colors.red)),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                              onPressed: () => _showApprovalDialog(
+                                  request.id,
+                                  data['seller_id'],
+                                  requestAmount,
+                                  false,
+                                  data['account_name'] ?? "N/A",
+                                  "", "", "", 0.0 // ទិន្នន័យផ្សេងៗទៀតលែងសូវសំខាន់ព្រោះមានក្នុង History ហើយ
+                              ),
+                              child: const Text("បាញ់លុយរួច", style: TextStyle(color: Colors.white)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -354,7 +242,28 @@ class _AdminWithdrawListState extends State<AdminWithdrawList> {
     );
   }
 
-
+// បន្ថែម Function ជំនួយសម្រាប់បង្ហាញរូប QR ឱ្យ Admin មើល
+  void _showQRPreview(BuildContext context, String? url) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(10),
+              child: Text("ស្កេន KHQR ដើម្បីបាញ់លុយ", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            url != null && url.isNotEmpty
+                ? Image.network(url, height: 350, fit: BoxFit.contain)
+                : const Padding(padding: EdgeInsets.all(30), child: Text("គ្មានរូបភាព QR")),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("បិទ")),
+          ],
+        ),
+      ),
+    );
+  }
   Widget _buildActionButtons(
       String rId,
       String sId,

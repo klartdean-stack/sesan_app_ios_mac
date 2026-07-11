@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:my_app/pre_order_related_products_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-
-// 👉 ត្រូវប្រាកដថា file ឈ្មោះ chat_screen.dart មានពិតប្រាកដក្នុង Project
+import 'package:share_plus/share_plus.dart';
 import 'chat_screen.dart';
+import 'user_profile_screen.dart';
+import 'media_viewer.dart';
 
 
 class PreOrderDetailScreen extends StatefulWidget {
@@ -32,10 +35,18 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
   int _currentImageIndex = 0;
 
 
+  // ✅ ព័ត៌មានអ្នកប្រកាស (ដូច WantedDetailScreen)
+  String _posterName = 'កំពុងផ្ទុក...';
+  String _posterPhotoUrl = '';
+  String _posterSesanId = '';
+  bool _isPosterLoading = true;
+
+
   @override
   void initState() {
     super.initState();
     _loadUser();
+    _loadPosterInfo();
   }
 
 
@@ -43,6 +54,55 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
     final prefs = await SharedPreferences.getInstance();
     currentUid = prefs.getString('user_uid');
     if (mounted) setState(() {});
+  }
+
+
+  // ✅ ទាញយកព័ត៌មានអ្នកប្រកាស (ដូច WantedDetailScreen)
+  Future<void> _loadPosterInfo() async {
+    final String? userId = widget.data['owner_id'];
+    if (userId == null || userId.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _posterName = 'មិនស្គាល់អ្នកប្រកាស';
+          _isPosterLoading = false;
+        });
+      }
+      return;
+    }
+
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+
+      if (doc.exists && mounted) {
+        final userData = doc.data() as Map<String, dynamic>;
+        setState(() {
+          _posterName =
+              userData['name'] ?? userData['displayName'] ?? 'គ្មានឈ្មោះ';
+          _posterPhotoUrl = userData['photoUrl'] ?? userData['photo'] ?? '';
+          _posterSesanId = userData['sesan_id'] ?? '';
+          _isPosterLoading = false;
+        });
+      } else {
+        if (mounted) {
+          setState(() {
+            _posterName = 'មិនអាចរកឃើញអ្នកប្រកាស';
+            _isPosterLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _posterName = 'មានបញ្ហាក្នុងការផ្ទុក';
+          _isPosterLoading = false;
+        });
+      }
+    }
   }
 
 
@@ -65,6 +125,30 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0.5,
+        // ✅ ប៊ូតុង Share & Copy (ដូច WantedDetailScreen)
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.copy),
+            onPressed: () {
+              String firstImg = images.isNotEmpty ? images[0].toString() : '';
+              Clipboard.setData(ClipboardData(text: firstImg));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('បានចម្លង Link រូបភាព')),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () {
+              String firstImg = images.isNotEmpty ? images[0].toString() : '';
+              Share.share(
+                'ត្រូវការទិញ: ${widget.data['product_name'] ?? ''}\n'
+                    'តម្លៃ: ${widget.data['price'] ?? '0'} ៛\n'
+                    'មើលរូបភាព: $firstImg',
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -86,23 +170,97 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _buildOwnerCard(ownerId),
+                  // ✅ ប្រអប់ព័ត៌មានអ្នកប្រកាស (អាចចុចចូល Profile)
+                  _buildPosterCard(),
                   const SizedBox(height: 25),
                   _buildProductDetails(),
-                  const SizedBox(height: 120), // ទុកចន្លោះសម្រាប់ Bottom Bar
+                  const SizedBox(height: 120),
                 ],
               ),
             ),
           ],
         ),
       ),
-      // ប៊ូតុង Call, Chat និង Delete នៅខាងក្រោម
       bottomNavigationBar: _buildBottomBar(isOwner),
     );
   }
 
 
-  // --- ប៊ូតុងខាងក្រោម (រៀបតាមការចង់បានរបស់មេ) ---
+  // ✅ Widget បង្ហាញព័ត៌មានអ្នកប្រកាស (អាចចុចចូល Profile)
+  Widget _buildPosterCard() {
+    if (_isPosterLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+
+    return GestureDetector(
+      onTap: () {
+        final String? userId = widget.data['owner_id'];
+        if (userId != null && userId.isNotEmpty) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserProfileScreen(userId: userId),
+            ),
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.orange.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.orange.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 25,
+              backgroundColor: Colors.orange.shade100,
+              backgroundImage: _posterPhotoUrl.isNotEmpty
+                  ? CachedNetworkImageProvider(_posterPhotoUrl)
+                  : null,
+              child: _posterPhotoUrl.isEmpty
+                  ? const Icon(Icons.person, color: Colors.orange, size: 30)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _posterName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  if (_posterSesanId.isNotEmpty)
+                    Text(
+                      'ID: $_posterSesanId',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontFamily: 'Siemreap',
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  // --- ប៊ូតុងខាងក្រោម ---
   Widget _buildBottomBar(bool isOwner) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 15, 20, 35),
@@ -118,7 +276,6 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
       ),
       child: Row(
         children: [
-          // ១. ប៊ូតុង Call (បង្ហាញរហូត)
           _buildActionButton(
             icon: Icons.phone_forwarded,
             color: Colors.green,
@@ -128,9 +285,6 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
             },
           ),
           const SizedBox(width: 12),
-
-
-          // ២. ប៊ូតុង Chat (បង្ហាញរហូត)
           Expanded(
             child: ElevatedButton.icon(
               onPressed: _goToChat,
@@ -154,9 +308,6 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
               ),
             ),
           ),
-
-
-          // ៣. ប៊ូតុងលុប (បង្ហាញតែចំពោះម្ចាស់ការប្រកាស)
           if (isOwner) ...[
             const SizedBox(width: 12),
             _buildActionButton(
@@ -171,7 +322,6 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
   }
 
 
-  // ជំនួយការបង្កើតប៊ូតុងតូចៗ (Call / Delete)
   Widget _buildActionButton({
     required IconData icon,
     required Color color,
@@ -192,7 +342,7 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
   }
 
 
-  // --- ផ្នែកបង្ហាញរូបភាព ---
+  // ✅ រូបភាពស្លាយ + ចុចមើលធំ
   Widget _buildImageGallery(List<dynamic> images) {
     return Stack(
       children: [
@@ -200,11 +350,31 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
           height: 320,
           width: double.infinity,
           child: images.isNotEmpty
-              ? PageView.builder(
-            itemCount: images.length,
-            onPageChanged: (i) => setState(() => _currentImageIndex = i),
-            itemBuilder: (_, i) =>
-                Image.network(images[i], fit: BoxFit.cover),
+              ? GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MediaViewer(
+                    url: images[_currentImageIndex],
+                    type: 'image',
+                  ),
+                ),
+              );
+            },
+            child: PageView.builder(
+              itemCount: images.length,
+              onPageChanged: (i) =>
+                  setState(() => _currentImageIndex = i),
+              itemBuilder: (_, i) => CachedNetworkImage(
+                imageUrl: images[i],
+                fit: BoxFit.cover,
+                placeholder: (_, __) =>
+                    Container(color: Colors.grey[300]),
+                errorWidget: (_, __, ___) =>
+                const Icon(Icons.broken_image, size: 50),
+              ),
+            ),
           )
               : Container(
             color: Colors.grey[200],
@@ -232,6 +402,9 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
   }
 
 
+  // ... កូដដែលនៅសល់ (_goToChat, _confirmDelete, _buildTitlePriceSection, _buildProductDetails, _row, _formatDate) រក្សាដូចដើម
+
+
   // --- ផ្នែកម្ចាស់ការប្រកាស ---
   Widget _buildOwnerCard(String ownerId) {
     return FutureBuilder<DocumentSnapshot>(
@@ -241,7 +414,7 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
           return const SizedBox(height: 50, child: LinearProgressIndicator());
         var user = snapshot.data!.data() as Map<String, dynamic>;
         String name = user['name'] ?? 'ម្ចាស់ការប្រកាស';
-        String image = user['profile_image'] ?? '';
+        String image = user['photoUrl'] ?? '';
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -330,23 +503,49 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
 
   // --- ផ្នែកអត្ថបទផ្សេងៗ ---
   Widget _buildTitlePriceSection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Text(
-            widget.data['product_name'] ?? '',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
+        // ឈ្មោះ និងតម្លៃ
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                widget.data['product_name'] ?? '',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Text(
+              "${formatter.format(widget.data['price'] ?? 0)} ៛",
+              style: const TextStyle(
+                fontSize: 20,
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
-        Text(
-          "${formatter.format(widget.data['price'] ?? 0)} ៛",
-          style: const TextStyle(
-            fontSize: 20,
-            color: Colors.green,
-            fontWeight: FontWeight.bold,
+        const SizedBox(height: 6),
+        // ✅ បង្ហាញកាលបរិច្ឆេទប្រកាស
+        if (widget.data['created_at'] != null)
+          Row(
+            children: [
+              const Icon(Icons.access_time, size: 14, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                'ប្រកាសនៅ: ${_formatDate(widget.data['created_at'])}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  fontFamily: 'Siemreap',
+                ),
+              ),
+            ],
           ),
-        ),
       ],
     );
   }
@@ -388,6 +587,12 @@ class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {
           "ពិពណ៌នា",
           widget.data['description'] ?? 'មិនមានការពិពណ៌នា',
         ),
+        const SizedBox(height: 30),
+        PreOrderRelatedProductsWidget(
+          category: widget.data['category'] ?? '',
+          currentProductId: widget.data['id'] ?? '',
+        ),
+        const SizedBox(height: 100),
       ],
     );
   }

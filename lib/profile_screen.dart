@@ -12,7 +12,9 @@ import 'package:my_app/investment_pitch_screen.dart';
 import 'package:my_app/logout_button.dart';
 import 'package:my_app/logout_service.dart';
 import 'package:my_app/saved_screen.dart';
+import 'package:my_app/seller_profile_screen.dart';
 import 'package:my_app/seller_withdraw_screen.dart';
+import 'package:my_app/vip_membership_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
@@ -46,12 +48,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Stream<QuerySnapshot>? _orderStream;
   bool _hideBalance = true;
   bool _isLoading = true; // ថែមជួរនេះចូល
+  bool _isInvestor = false; // ✅ បន្ថែមបន្ទាត់នេះ
 
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+  }
+
+
+  Future<void> _checkInvestorStatus() async {
+    if (_loggedUid == null) return;
+
+
+    try {
+      // អាន sesan_id ពី collection users
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_loggedUid)
+          .get();
+
+
+      final sesanId = userDoc.data()?['sesan_id'] as String?;
+
+
+      if (sesanId != null && sesanId.isNotEmpty) {
+        // ពិនិត្យមើលថា sesan_id នេះមានក្នុងបញ្ជី investors ដែរឬទេ
+        final investorDoc = await FirebaseFirestore.instance
+            .collection('investors')
+            .doc(sesanId)
+            .get();
+
+
+        if (mounted) {
+          setState(() {
+            _isInvestor = investorDoc.exists;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isInvestor = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checking investor status: $e');
+      if (mounted) {
+        setState(() {
+          _isInvestor = false;
+        });
+      }
+    }
   }
 
 
@@ -69,7 +118,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 
     if (uid == null || uid.isEmpty) {
-      if (mounted) Navigator.pushReplacementNamed(context, '/login');
+      // ✅ កុំ redirect ដោយស្វ័យប្រវត្តិ — ទុកជា Guest state
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _loggedUid = null;
+        });
+      }
       return;
     }
     setState(() {
@@ -103,6 +158,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         _isLoading = false; // ប្រាប់ថាទាញ ID រួចហើយ
       });
+      // ✅ បន្ថែមបន្ទាត់នេះ
+      _checkInvestorStatus();
     }
   }
 
@@ -133,11 +190,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // របាំងការពារដែកថែប៖ បើមិនទាន់ស្គាល់ ID ហាមឱ្យរត់ទៅក្រោមដាច់ខាត
-    if (_isLoading || _loggedUid == null || _loggedUid!.isEmpty) {
+    if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Colors.green, // ឬពណ៌តាមចិត្តមេ
+        backgroundColor: Colors.green,
         body: Center(child: CircularProgressIndicator(color: Colors.white)),
+      );
+    }
+
+
+    if (_loggedUid == null || _loggedUid!.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.grey[100],
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: const Text('គណនី', style: TextStyle(fontFamily: 'Siemreap')),
+          backgroundColor: Colors.green[700],
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.person_outline, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text(
+                'សូម Login ដើម្បីមើលគណនី',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pushNamed(context, '/login'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                child: const Text(
+                  'ទៅ Login',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -148,7 +238,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text(
-          'គណនី និងការគ្រប់គ្រងលុយ',
+          'គណនី និងការគ្រប់គ្រងប្រាក់',
           style: TextStyle(fontFamily: 'KHMEROS', fontSize: 18),
         ),
         backgroundColor: Colors.green[700],
@@ -176,9 +266,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(
-                        Icons.monetization_on,
-                        color: Colors.amber,
-                        size: 30,
+                        Icons.sell, // ✅ រូបស្លាកលក់
+                        color: Colors.white,
+                        size: 24,
                       ),
                       onPressed: () {
                         Navigator.push(
@@ -407,6 +497,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
 
 
+                      // ✅ បន្ថែមប៊ូតុងថ្មីនៅទីនេះ
+                      _buildMenuCard(
+                        title: "មើលហាងរបស់ខ្ញុំ",
+                        subtitle: "មើលហាងដូចអ្នកដទៃឃើញ",
+                        icon: Icons.storefront,
+                        color: Colors.teal,
+                        onTap: () async {
+                          if (_loggedUid == null) return;
+
+
+                          // ទាញឈ្មោះអ្នកលក់
+                          String sellerName = "ហាងរបស់ខ្ញុំ";
+                          try {
+                            final doc = await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(_loggedUid)
+                                .get();
+                            if (doc.exists) {
+                              sellerName = doc.data()?['name'] ?? sellerName;
+                            }
+                          } catch (_) {}
+
+
+                          if (mounted) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SellerProfileScreen(
+                                  sellerId: _loggedUid!,
+                                  sellerName: sellerName,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
                       _buildMenuCard(
                         title: "មជ្ឈមណ្ឌលហិរញ្ញវត្ថុ",
                         subtitle: "មើលរបាយការណ៍លុយចូល និងលុយចេញ",
@@ -425,18 +551,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
 
 
-                      _buildMenuCard(
-                        title: "ឱកាសវិនិយោគជាមួយសេសាន",
-                        subtitle: "ក្លាយជាម្ចាស់ភាគហ៊ុន និងរីកចម្រើនជាមួយយើង",
-                        icon: Icons.show_chart_rounded,
-                        color: Colors.orange,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const InvestmentPitchScreen(),
+                      // ✅ បង្ហាញប៊ូតុងវិនិយោគ លុះត្រាតែជាអ្នកវិនិយោគ
+                      if (_isInvestor)
+                        _buildMenuCard(
+                          title: "ក្លាយជាដៃគូរសហការសេសាន",
+                          subtitle: "ក្លាយជាម្ចាស់ភាគហ៊ុន និងរីកចម្រើនជាមួយយើង",
+                          icon: Icons.show_chart_rounded,
+                          color: Colors.orange,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                              const InvestmentPitchScreen(),
+                            ),
                           ),
                         ),
-                      ),
 
 
                       _buildMenuCard(
@@ -456,8 +585,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 
                       _buildMenuCard(
-                        title: "ទំនិញរក្សាទុក",
-                        subtitle: "បញ្ជីទំនិញដែលមេបានរក្សាទុក",
+                        title: "ទំនិញរក្សាទុក​ និងហាង",
+                        subtitle: "បញ្ជីទំនិញបានរក្សាទុក និងហាងបានតាមដាន",
                         icon: Icons.bookmark_rounded,
                         color: Colors.pinkAccent,
                         onTap: () {
@@ -469,8 +598,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           );
                         },
                       ),
+                      StreamBuilder<DocumentSnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(_loggedUid)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          // កំពុងផ្ទុក ឬរកមិនឃើញ
+                          if (!snapshot.hasData || !snapshot.data!.exists) {
+                            return const SizedBox.shrink();
+                          }
 
 
+                          final userData =
+                          snapshot.data!.data() as Map<String, dynamic>;
+                          final bool isVip = userData['isVip'] == true;
+
+
+                          if (isVip) {
+                            // ── ជា VIP រួចហើយ៖ បង្ហាញកាតដែលគ្មានសកម្មភាព ឬបើក Screen ពិសេស ──
+                            return _buildMenuCard(
+                              title: "សមាជិក VIP",
+                              subtitle:
+                              "អ្នកជាសមាជិក VIP រួចហើយ! ចុចដើម្បីមើលអត្ថប្រយោជន៍",
+                              icon: Icons.diamond,
+                              color: Colors.amber,
+                              onTap: () {
+                                // អាចរុញទៅកាន់ Screen ដែលបង្ហាញតែអត្ថប្រយោជន៍ ឬក្រាប (ដោយគ្មានជម្រើសទិញ)
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                    const VipMembershipScreen(), // ឬ Screen ថ្មីសម្រាប់ VIP
+                                  ),
+                                );
+                              },
+                            );
+                          } else {
+                            // ── មិនទាន់ជា VIP៖ បង្ហាញ Dialog លក់ ──
+                            return _buildMenuCard(
+                              title: "ក្លាយជាសមាជិក VIP",
+                              subtitle:
+                              "ទទួលបានអត្ថប្រយោជន៍ពិសេស និងស្ថិតិផ្សាយផ្ទាល់",
+                              icon: Icons.diamond,
+                              color: Colors.amber,
+                              onTap: _showVipBenefitsDialog,
+                            );
+                          }
+                        },
+                      ),
                       _buildMenuCard(
                         title: "កែប្រែព័ត៌មាន",
                         subtitle: "ប្តូរឈ្មោះ លេខទូរស័ព្ទ ឬរូបភាព",
@@ -645,6 +821,159 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+
+  void _showVipBenefitsDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+        clipBehavior: Clip.antiAlias,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ចំណងជើង
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Row(
+                  children: [
+                    Icon(Icons.diamond, color: Colors.amber[700], size: 28),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'អត្ថប្រយោជន៍ VIP',
+                        style: TextStyle(
+                          fontFamily: 'Siemreap',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // ខ្លឹមសារអាចរំកិលបាន
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _benefitLine('👑 ផ្លាកសញ្ញា VIP បង្ហាញលើប្រវត្តិរូប'),
+                      _benefitLine('📊 មើលស្ថិតិផ្សាយផ្ទាល់ និងក្រាបទិន្នន័យ'),
+                      _benefitLine('🎯 ទទួលបានការផ្សព្វផ្សាយមុនគេ'),
+                      _benefitLine('💎 ការគាំទ្រពិសេសពីក្រុមការងារ'),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.amber.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.monetization_on,
+                              color: Colors.amber.shade800,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'តម្លៃត្រឹមតែ 15,000៛ ប៉ុណ្ណោះ',
+                                style: TextStyle(
+                                  fontFamily: 'Siemreap',
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amber.shade900,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // ប៊ូតុងក្រោម
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text(
+                        'មើលសិន',
+                        style: TextStyle(
+                          fontFamily: 'Siemreap',
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber.shade700,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const VipMembershipScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.shopping_cart_checkout, size: 20),
+                      label: const Text(
+                        'ទិញឥឡូវនេះ',
+                        style: TextStyle(
+                          fontFamily: 'Siemreap',
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _benefitLine(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.check_circle, size: 18, color: Colors.green),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontFamily: 'Siemreap', fontSize: 14),
+            ),
+          ),
+        ],
       ),
     );
   }

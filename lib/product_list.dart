@@ -182,13 +182,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
 }
 
 
-// ─────────────────────────────────────────────────────────────
-// ProductGridView
-// ─────────────────────────────────────────────────────────────
 class ProductGridView extends StatefulWidget {
   final String category;
   final String searchQuery;
   final bool isHome;
+  final bool isAuction; // 🎯 ១. ត្រូវប្រកាស Variable នេះនៅទីនេះ!
 
 
   const ProductGridView({
@@ -196,6 +194,7 @@ class ProductGridView extends StatefulWidget {
     required this.category,
     this.searchQuery = "",
     this.isHome = false,
+    this.isAuction = false, // 🎯 ២. និងដាក់វាចូលក្នុង Constructor ទីនេះ!
   });
 
 
@@ -203,18 +202,18 @@ class ProductGridView extends StatefulWidget {
   State<ProductGridView> createState() => _ProductGridViewState();
 }
 
-
-class _ProductGridViewState extends State<ProductGridView> {
+class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
   final int _batchSize = 35; // ✅ ប្ដូរពី 35 → 100
-
-
   List<DocumentSnapshot> _products = [];
   bool _isLoading = false;
   bool _hasMore = true;
   DocumentSnapshot? _lastDoc;
   String? _currentUserId;
-
+  String _selectedSubCategory = 'ទាំងអស់'; // ✅ បន្ថែមបន្ទាត់នេះ
+  String _selectedSubSubCategory = 'ទាំងអស់'; // ✅ បន្ថែម
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -228,7 +227,18 @@ class _ProductGridViewState extends State<ProductGridView> {
 
   Future<void> _initUserAndFetch() async {
     _currentUserId = await UserService.getUserId();
-    // ✅ រង់ចាំ build ចប់ ទើប fetch
+
+
+    // ✅ Clear តែពេលចូលមកដំបូង
+    if (mounted) {
+      setState(() {
+        _products.clear();
+        _lastDoc = null;
+        _hasMore = true;
+      });
+    }
+
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _fetchProducts();
     });
@@ -247,11 +257,15 @@ class _ProductGridViewState extends State<ProductGridView> {
 
   // ── FETCH PRODUCTS ──────────────────────────────────────
   Future<void> _fetchProducts() async {
-    if (_isLoading || !_hasMore || _currentUserId == null)
-      return; // 🎯 ថែម _isLoading ត្រង់នេះ
+    if (_isLoading || !_hasMore) return;
+
+
+    if (!mounted) return; // ✅ បន្ថែម
 
 
     setState(() => _isLoading = true);
+
+
     try {
       if (widget.category == "ទំនិញរបស់ខ្ញុំ") {
         await _fetchMyProducts();
@@ -263,11 +277,21 @@ class _ProductGridViewState extends State<ProductGridView> {
     }
 
 
-    setState(() => _isLoading = false);
+    if (mounted) {
+      // ✅ បន្ថែមការពិនិត្យ
+      setState(() => _isLoading = false);
+    }
   }
 
 
   Future<void> _fetchMyProducts() async {
+    if (!mounted) return;
+    if (_currentUserId == null) {
+      setState(() => _hasMore = false);
+      return;
+    }
+
+
     final futures = await Future.wait([
       FirebaseFirestore.instance
           .collection('products')
@@ -280,6 +304,9 @@ class _ProductGridViewState extends State<ProductGridView> {
           .orderBy('createdAt', descending: true)
           .get(),
     ]);
+
+
+    if (!mounted) return; // ✅ បន្ថែមបន្ទាប់ពី await
 
 
     final combined = <DocumentSnapshot>[];
@@ -307,18 +334,27 @@ class _ProductGridViewState extends State<ProductGridView> {
 
 
   Future<void> _fetchByCategory() async {
-    Query query = FirebaseFirestore.instance.collection('products');
+    if (!mounted) return;
 
 
-    if (widget.category != "ទាំងអស់") {
+    // 🎯 ១. រើស Collection តាមកុងតាក់ (បើ true ទៅ auction_products បើ false ទៅ products ធម្មតា)
+    String targetCollection = widget.isAuction
+        ? 'auction_products'
+        : 'products';
+    Query query = FirebaseFirestore.instance.collection(targetCollection);
+
+
+    bool isCategoryAll =
+        widget.category == "ReadAll" || widget.category == "ទាំងអស់";
+
+
+    if (!isCategoryAll) {
       query = query.where('category', isEqualTo: widget.category);
     }
 
 
-    // ✅ ទាញច្រើន ដើម្បីទំហំ filter ក្រោយ
-    query = query
-        .orderBy('created_at', descending: true)
-        .limit(35); // ✅ limit ធំ
+    // 🎯 ២. តម្រៀបតាមថ្ងៃខែបង្កើត និងកំណត់ចំនួនទាញទិន្នន័យ (លែងមានការប្រើ status នាំឱ្យទាក់កូដទៀតហើយ)
+    query = query.orderBy('created_at', descending: true).limit(50);
 
 
     if (_lastDoc != null) {
@@ -329,31 +365,23 @@ class _ProductGridViewState extends State<ProductGridView> {
     final snapshot = await query.get();
 
 
-    if (snapshot.docs.isEmpty) {
-      if (mounted) setState(() => _hasMore = false);
-      return;
-    }
+    if (!mounted) return;
 
 
-    _lastDoc = snapshot.docs.last;
+    _lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : _lastDoc;
 
 
     if (mounted) {
       setState(() {
         for (var doc in snapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          final status = (data['status'] ?? '').toString().toLowerCase();
-
-
-          // ✅ filter ចេញ auction/exhibition ក្រោយទាញ
-          if (status == 'exhibition' || status == 'auction') continue;
-
-
+          // 🎯 ៣. រុញទិន្នន័យចូលបញ្ជីដោយផ្ទាល់ភ្លាមៗ លឿន និងរលូនបំផុត
           if (!_products.any((e) => e.id == doc.id)) {
             _products.add(doc);
           }
         }
-        if (snapshot.docs.length < 35) _hasMore = false;
+
+
+        _hasMore = snapshot.docs.length >= 50;
       });
     }
   }
@@ -362,55 +390,334 @@ class _ProductGridViewState extends State<ProductGridView> {
   // ── BUILD ───────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    super.build(context); // ✅ ត្រូវតែមាន
+    // ✅ ត្រងតាម Sub Category
     final filtered = _products.where((doc) {
       final data = doc.data() as Map<String, dynamic>;
       final name = (data['product_name'] ?? data['productName'] ?? '')
           .toString()
           .toLowerCase();
       final query = widget.searchQuery.toLowerCase();
-      return query.isEmpty || name.contains(query);
+
+
+      final subCategory = (data['sub_category'] ?? '').toString();
+      final subSubCategory = (data['sub_sub_category'] ?? '').toString();
+
+
+      final matchesSub =
+          _selectedSubCategory == 'ទាំងអស់' ||
+              subCategory == _selectedSubCategory;
+
+
+      final matchesSubSub =
+          _selectedSubSubCategory == 'ទាំងអស់' ||
+              subSubCategory == _selectedSubSubCategory;
+
+
+      return (query.isEmpty || name.contains(query)) &&
+          matchesSub &&
+          matchesSubSub;
     }).toList();
 
 
+    // ✅ បើគ្មានទំនិញ ហើយមិនមែនកំពុងផ្ទុក
     if (filtered.isEmpty && !_isLoading) {
-      return const Center(
-        child: Text(
-          "មិនមានទំនិញដែលអ្នករកទេ",
-          style: TextStyle(fontFamily: 'Siemreap'),
+      return Column(
+        children: [
+          if (!widget.isHome) _buildSubCategoryFilter(),
+          const Expanded(
+            child: Center(
+              child: Text(
+                "មិនមានទំនិញដែលអ្នករកទេ",
+                style: TextStyle(fontFamily: 'Siemreap'),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+
+    // ✅ បង្ហាញ Sub Category Filter + GridView
+    return Column(
+      children: [
+        if (!widget.isHome) _buildSubCategoryFilter(),
+        Expanded(
+          child: GridView.builder(
+            key: const PageStorageKey('productGrid'),
+            controller: widget.isHome ? null : _scrollController,
+            shrinkWrap: widget.isHome,
+            addRepaintBoundaries: true,
+            addAutomaticKeepAlives: true,
+            physics: widget.isHome
+                ? const NeverScrollableScrollPhysics()
+                : const BouncingScrollPhysics(),
+            padding: const EdgeInsets.all(12),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: MediaQuery.of(context).size.width > 800 ? 4 : 2,
+              childAspectRatio: MediaQuery.of(context).size.width > 800
+                  ? 0.75
+                  : 0.68,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount:
+            filtered.length +
+                ((_hasMore && _isLoading && !widget.isHome) ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (!widget.isHome && _isLoading && index >= filtered.length) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.green),
+                );
+              }
+              return RepaintBoundary(child: _buildProductCard(filtered[index]));
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+
+  Widget _buildSubCategoryFilter() {
+    if (widget.category == 'ទាំងអស់' ||
+        widget.category == 'ទំនិញរបស់ខ្ញុំ') {
+      return const SizedBox.shrink();
+    }
+
+
+    // បញ្ជី Sub Categories
+    final Map<String, dynamic> subCategories = {
+      'គ្រឿងចក្រ': ['ទាំងអស់', 'ថ្មី', 'មួយទឹក', 'កាប់សាច់', 'គ្រឿងបន្លាស់'],
+      'សម្ភារៈកសិកម្ម': {
+        'ទាំងអស់': [],
+        'ម៉ាស៊ីន': ['ទាំងអស់', 'ថ្មី', 'មួយទឹក', 'កាប់សាច់'],
+        'ឧបករណ៍': ['ទាំងអស់', 'ថ្មី', 'មួយទឹក', 'កាប់សាច់'],
+        'គ្រឿងបន្លាស់': ['ទាំងអស់', 'ថ្មី', 'មួយទឹក', 'កាប់សាច់'],
+      },
+      'ពូជដំណាំ': [
+        'ទាំងអស់',
+        'ឈើហូបផ្លែ',
+        'បន្លែ',
+        'ផ្ការ',
+        'ឈើព្រៃ',
+        'ផ្សេងៗ',
+      ],
+      'ពូជសត្វចិញ្ចឹម': [
+        'ទាំងអស់',
+        'គោ',
+        'ក្របី',
+        'ជ្រូក',
+        'ចៀម',
+        'ពពែ',
+        'មាន់',
+        'ទា',
+        'ក្ងាន',
+        'ក្រួច',
+        'អណ្ដើក/កន្ឋាយ',
+        'ត្រី',
+        'កង្កែប',
+        'ពស់',
+        'ជន្លេន',
+        'ផ្សេងៗ',
+      ],
+      'ជីនិងថ្នាំ': ['ទាំងអស់', 'ជី', 'ថ្នាំ', 'វីតាមីន', 'ចំណីសត្វ', 'ផ្សេងៗ'],
+
+      'បន្លែផ្លែឈើ': [
+        'ទាំងអស់',
+        'បន្លែ',
+        'ផ្លែឈើ',
+        'គ្រឿងទេស',
+        'អាហារផ្អាប់',
+        'ស៊ុត',
+        'ផ្សេងៗ',
+      ],
+
+
+      'ត្រីសាច់': [
+        'ទាំងអស់',
+        'ត្រី',
+        'សាច់',
+        'កង្កែប',
+        'អណ្ដើក',
+        'ពស់',
+        'ក្ដាម',
+        'ផ្សេងៗ',
+      ],
+      'សេវាកម្ម': [
+        'ទាំងអស់',
+        'សេវាកម្មសត្វ',
+        'ដំណាំ',
+        'ម៉ាស៊ីន',
+        'គ្រឿងចក្រ',
+        'ទឹក/ភ្លើង',
+        'ហិរញ្ញវត្ថុ',
+        'ច្បាប់',
+        'ផ្សេងៗ',
+      ],
+      'ផ្សេងៗ': [
+        'ទាំងអស់',
+        'ដីកសិកម្ម',
+        'កសិដ្ឋាន',
+        'តំណាងចែកចាយ/ហ្វ្រែនឆាយ',
+        'ផលិតផលឌីជីថល',
+        'សៀវភៅកសិកម្ម',
+        'ផ្សេងៗ',
+      ],
+    };
+
+
+    final subData = subCategories[widget.category];
+    if (subData == null) return const SizedBox.shrink();
+
+
+    // ✅ បើជា Map (មាន 3 ជាន់)
+    if (subData is Map) {
+      final subList = subData.keys.cast<String>().toList();
+      final subSubList =
+      _selectedSubCategory != 'ទាំងអស់' &&
+          subData.containsKey(_selectedSubCategory)
+          ? subData[_selectedSubCategory] as List<String>?
+          : null;
+
+
+      return Column(
+        children: [
+          // Sub Category Row
+          Container(
+            height: 40,
+            margin: const EdgeInsets.only(bottom: 4),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: subList.length,
+              itemBuilder: (context, index) {
+                final sub = subList[index];
+                final isSelected = _selectedSubCategory == sub;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: FilterChip(
+                    label: Text(
+                      sub,
+                      style: TextStyle(
+                        fontFamily: 'Siemreap',
+                        fontSize: 11,
+                        color: isSelected ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedSubCategory = sub;
+                        _selectedSubSubCategory = 'ទាំងអស់';
+                      });
+                    },
+                    selectedColor: Colors.orange,
+                    checkmarkColor: Colors.white,
+                    backgroundColor: Colors.grey[100],
+                    side: BorderSide(
+                      color: isSelected ? Colors.orange : Colors.grey[300]!,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+
+          // Sub-Sub Category Row (បង្ហាញតែពេលមាន)
+          if (subSubList != null && subSubList.length > 1)
+            Container(
+              height: 40,
+              margin: const EdgeInsets.only(bottom: 4),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: subSubList.length,
+                itemBuilder: (context, index) {
+                  final subSub = subSubList[index];
+                  final isSelected = _selectedSubSubCategory == subSub;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: FilterChip(
+                      label: Text(
+                        subSub,
+                        style: TextStyle(
+                          fontFamily: 'Siemreap',
+                          fontSize: 11,
+                          color: isSelected ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedSubSubCategory = subSub;
+                        });
+                      },
+                      selectedColor: Colors.red,
+                      checkmarkColor: Colors.white,
+                      backgroundColor: Colors.grey[100],
+                      side: BorderSide(
+                        color: isSelected ? Colors.red : Colors.grey[300]!,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      );
+    }
+
+
+    // ✅ បើជា List (មាន 2 ជាន់)
+    if (subData is List) {
+      final subs = subData.cast<String>();
+      if (subs.length <= 1) return const SizedBox.shrink();
+
+
+      return Container(
+        height: 40,
+        margin: const EdgeInsets.only(bottom: 4),
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          itemCount: subs.length,
+          itemBuilder: (context, index) {
+            final sub = subs[index];
+            final isSelected = _selectedSubCategory == sub;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                label: Text(
+                  sub,
+                  style: TextStyle(
+                    fontFamily: 'Siemreap',
+                    fontSize: 12,
+                    color: isSelected ? Colors.white : Colors.black87,
+                  ),
+                ),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setState(() {
+                    _selectedSubCategory = sub;
+                  });
+                },
+                selectedColor: Colors.green,
+                checkmarkColor: Colors.white,
+                backgroundColor: Colors.grey[100],
+                side: BorderSide(
+                  color: isSelected ? Colors.green : Colors.grey[300]!,
+                ),
+              ),
+            );
+          },
         ),
       );
     }
 
 
-    // កែសម្រួលផ្នែក GridView.builder ឱ្យរលូនជាងមុន
-    return GridView.builder(
-      key: const PageStorageKey('productGrid'),
-      controller: widget.isHome ? null : _scrollController,
-      shrinkWrap: widget.isHome,
-      // 🎯 បន្ថែម RepaintBoundary ដើម្បីកុំឱ្យ Widget គូរឡើងវិញផ្ដេសផ្ដាសពេលអូស
-      addRepaintBoundaries: true,
-      addAutomaticKeepAlives: true,
-      physics: widget.isHome
-          ? const NeverScrollableScrollPhysics()
-          : const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(12),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: MediaQuery.of(context).size.width > 700 ? 4 : 2,
-        childAspectRatio: 0.68,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: filtered.length + (_hasMore && !widget.isHome ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (!widget.isHome && index >= filtered.length) {
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.green),
-          );
-        }
-        // 🎯 ប្រើ RepaintBoundary ព័ទ្ធជុំវិញ Card
-        return RepaintBoundary(child: _buildProductCard(filtered[index]));
-      },
-    );
+    return const SizedBox.shrink();
   }
 
 
@@ -427,6 +734,7 @@ class _ProductGridViewState extends State<ProductGridView> {
 
     // 🎯 កំណត់តម្លៃចាក់សោដំបូង
     bool currentLockStatus = data['is_locked'] ?? false;
+    final bool? shippingIncluded = data['shipping_included'];
 
 
     final String name = isWanted
@@ -472,38 +780,74 @@ class _ProductGridViewState extends State<ProductGridView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 🖼 ផ្នែករូបភាព
+                    // 🖼 ផ្នែករូបភាព (ជាមួយ Play icon បើមានវីដេអូ)
                     Expanded(
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(12),
-                        ),
-                        child: imageUrl.isNotEmpty
-                            ? CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          // 🎯 ថែម ២ ជួរនេះដើម្បីឱ្យអូសរលូន (Lag Fix)
-                          memCacheHeight: 350,
-                          maxWidthDiskCache: 500,
-                          placeholder: (context, url) =>
-                              Container(color: Colors.grey[100]),
-                          errorWidget: (context, url, error) =>
-                          const Icon(
-                            Icons.broken_image,
-                            color: Colors.grey,
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                            child: imageUrl.isNotEmpty
+                                ? CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              memCacheHeight: 350,
+                              maxWidthDiskCache: 500,
+                              placeholder: (context, url) => Container(color: Colors.grey[100]),
+                              errorWidget: (context, url, error) => const Icon(
+                                Icons.broken_image, color: Colors.grey,
+                              ),
+                            )
+                                : Container(
+                              color: Colors.grey[100],
+                              child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                            ),
                           ),
-                        )
-                            : Container(
-                          color: Colors.grey[100],
-                          child: const Icon(
-                            Icons.image_not_supported,
-                            color: Colors.grey,
-                          ),
-                        ),
+                          // ✅ បង្ហាញ Play Icon បើមាន video_url
+                          if (data['video_url'] != null &&
+                              data['video_url'].toString().isNotEmpty)
+                            Positioned(
+                              bottom: 4,
+                              right: 4,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                child: const Icon(
+                                  Icons.play_arrow_rounded,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          // ✅ បង្ហាញ Verified Badge បើ shop_tier មាន basic ឬ premium
+                          if (data['shop_tier'] != null &&
+                              (data['shop_tier'] == 'basic' || data['shop_tier'] == 'premium'))
+                            Positioned(
+                              bottom: 4,
+                              left: 4,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: data['shop_tier'] == 'premium'
+                                      ? Colors.amber.withOpacity(0.8)
+                                      : Colors.blueAccent.withOpacity(0.8),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  data['shop_tier'] == 'premium'
+                                      ? Icons.diamond_rounded
+                                      : Icons.verified_user_rounded,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-
-
                     // 📝 ផ្នែកព័ត៌មានអត្ថបទ
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -571,7 +915,11 @@ class _ProductGridViewState extends State<ProductGridView> {
                                 ),
                               ),
                               if (!isWanted)
-                                _buildCartButton(data, currentLockStatus)
+                                _buildCartButton(
+                                  data,
+                                  currentLockStatus,
+                                  shippingIncluded,
+                                )
                               else
                                 const Icon(
                                   Icons.info_outline,
@@ -583,6 +931,7 @@ class _ProductGridViewState extends State<ProductGridView> {
                         ],
                       ),
                     ),
+
                   ],
                 ),
 
@@ -644,16 +993,16 @@ class _ProductGridViewState extends State<ProductGridView> {
                                       SnackBar(
                                         content: Text(
                                           newValue
-                                              ? "បើកលក់តាមកន្ត្រក់"
-                                              : "បិទការលក់តាមកន្ត្រក់",
+                                              ? "បិទលក់តាមកន្ត្រក់"
+                                              : "បើកការលក់តាមកន្ត្រក់",
                                           style: const TextStyle(
                                             fontFamily: 'Siemreap',
                                           ),
                                         ),
                                         duration: const Duration(seconds: 1),
                                         backgroundColor: newValue
-                                            ? Colors.green
-                                            : Colors.grey[700],
+                                            ? Colors.grey[700]
+                                            : Colors.green,
                                       ),
                                     );
                                   } catch (e) {
@@ -747,18 +1096,24 @@ class _ProductGridViewState extends State<ProductGridView> {
 
 
   // ── CART BUTTON ─────────────────────────────────────────
-  Widget _buildCartButton(Map<String, dynamic> data, bool isLocked) {
+  Widget _buildCartButton(
+      Map<String, dynamic> data,
+      bool isLocked,
+      bool? shippingIncluded,
+      ) {
+    // បិទប៊ូតុងបើចាក់សោ ឬ មិនទាន់បូកថ្លៃផ្ញើ
+    final bool disabled = isLocked || (shippingIncluded == false);
     return GestureDetector(
-      onTap: isLocked ? null : () => _fastAddToCart(data),
+      onTap: disabled ? null : () => _fastAddToCart(data),
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: isLocked ? Colors.grey[200] : Colors.green[50],
+          color: disabled ? Colors.grey[200] : Colors.green[50],
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           Icons.add_shopping_cart,
-          color: isLocked ? Colors.grey : Colors.green,
+          color: disabled ? Colors.grey : Colors.green,
           size: 22,
         ),
       ),

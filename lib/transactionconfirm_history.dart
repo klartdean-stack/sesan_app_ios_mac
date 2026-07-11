@@ -2,179 +2,137 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 class TransactionConfirmHistory extends StatelessWidget {
   const TransactionConfirmHistory({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // ចាប់យក ID របស់អ្នកដែលកំពុងបើក App
-    final String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? "";
-
-    // ខ្ញុំដាក់ UID របស់មេចូលឱ្យស្រេចតែម្ដង មិនបាច់កែទៀតទេ
-    const String adminUID = "WBdQVvrgEIPBTcgIlumu6bAZGUl2";
-    bool isAdmin = (currentUserId == adminUID);
+    // 🎯 សម្រាប់អេក្រង់ Admin បងមិនបាច់ឆែក isAdmin ច្រើននាំតែញ៉ាំញ៉ៃទេ
+    // គឺយើងទាញយកទិន្នន័យដែលបាញ់លុយជោគជ័យទាំងអស់មកបង្ហាញតែម្តង
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          isAdmin ? "ប្រវត្តិបាញ់លុយឱ្យអ្នកលក់" : "ប្រវត្តិដកប្រាក់របស់ខ្ញុំ",
-          style: const TextStyle(fontFamily: 'KHMEROS', fontSize: 18),
+        appBar: AppBar(
+          title: const Text(
+            "ប្រវត្តិបាញ់លុយទៅអ្នកលក់", // ដាក់ឈ្មោះឱ្យដូចក្នុងរូបបង
+            style: TextStyle(fontFamily: 'KHMEROS', fontSize: 18),
+          ),
+          backgroundColor: const Color(0xFF003F63), // ពណ៌ទឹកប៊ិច ABA
+          centerTitle: true,
         ),
-        backgroundColor: Colors.blueGrey[800],
-        foregroundColor: Colors.white,
-      ),
-      body: StreamBuilder(
-        // Logic ទាញទិន្នន័យ៖ បើជាមេ Admin គឺឃើញទាំងអស់ បើអ្នកលក់ឃើញតែរបស់ខ្លួនឯង
-        stream: isAdmin
-            ? FirebaseFirestore.instance
-                  .collection('withdraw_requests')
-                  .where('status', isEqualTo: 'success')
-                  .orderBy('approved_at', descending: true)
-                  .snapshots()
-            : FirebaseFirestore.instance
-                  .collection('withdraw_requests')
-                  .where('seller_id', isEqualTo: currentUserId)
-                  .where('status', isEqualTo: 'success')
-                  .orderBy('approved_at', descending: true)
-                  .snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (snapshot.hasError) {
-            return const Center(
-              child: Text("សូមបង្កើត Index ក្នុង Firebase Console ឱ្យវាដើរ..."),
-            );
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("មិនទាន់មានប្រវត្តិជោគជ័យទេ"));
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(10),
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              var data =
-                  snapshot.data!.docs[index].data() as Map<String, dynamic>;
-
-              String dateStr = "មិនមានម៉ោង";
-              if (data['approved_at'] != null) {
-                dateStr = DateFormat(
-                  'dd-MM-yyyy HH:mm',
-                ).format((data['approved_at'] as Timestamp).toDate());
+        body: StreamBuilder<QuerySnapshot>(
+          // ទាញយកតែ Status: success និងតម្រៀបតាមម៉ោងដែល Admin ចុចយល់ព្រម
+            stream: FirebaseFirestore.instance
+                .collection('withdraw_requests')
+                .where('status', isEqualTo: 'success')
+                .orderBy('approved_at', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return const Center(child: Text("មិនទាន់មានប្រវត្តិបាញ់លុយទេ"));
               }
 
-              return Card(
-                elevation: 3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ExpansionTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: Colors.green,
-                    child: Icon(Icons.check, color: Colors.white),
-                  ),
-                  title: Text(
-                    "ចំនួន៖ ${data['amount']} ៛",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17,
-                      color: Colors.green,
-                    ),
-                  ),
-                  subtitle: Text(
-                    isAdmin
-                        ? "អ្នកលក់៖ ${data['account_name']}"
-                        : "កាលបរិច្ឆេទ៖ $dateStr",
-                  ),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(15.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Divider(),
-                          _buildDetailRow(
-                            "ឈ្មោះគណនី:",
-                            "${data['account_name']}",
-                          ),
-                          _buildDetailRow(
-                            "លេខគណនី:",
-                            "${data['account_number']}",
-                          ),
-                          _buildDetailRow("ម៉ោងអនុម័ត:", dateStr),
-                          const SizedBox(height: 15),
-                          const Text(
-                            "ភស្តុតាងបាញ់លុយ (Admin Receipt)៖",
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
+              return ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    var data = snapshot.data!.docs[index].data() as Map<String, dynamic>;
+
+                    // កំណត់ទម្រង់ថ្ងៃខែឱ្យដូចក្នុងរូប (ថ្ងៃ/ខែ/ឆ្នាំ ម៉ោង:នាទី)
+                    String dateStr = data['approved_at'] != null
+                        ? DateFormat('dd/MM/yyyy HH:mm').format((data['approved_at'] as Timestamp).toDate())
+                        : "N/A";
+
+                    return Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ExpansionTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: Color(0xFFE8F5E9),
+                              child: Icon(Icons.check_circle, color: Colors.green),
                             ),
-                          ),
-                          const SizedBox(height: 10),
-                          if (data['admin_receipt'] != null)
-                            InkWell(
-                              onTap: () => _viewFullImage(
-                                context,
-                                data['admin_receipt'],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.network(
-                                  data['admin_receipt'],
-                                  height: 250,
-                                  width: double.infinity,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(
-                                        Icons.broken_image,
-                                        size: 50,
-                                        color: Colors.grey,
-                                      ),
+                            title: Row(
+                              children: [
+                                Text(
+                                  "${data['amount']} ៛",
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green),
                                 ),
-                              ),
-                            )
-                          else
-                            const Text(
-                              "មិនមានរូបភាពភស្តុតាង",
-                              style: TextStyle(color: Colors.red, fontSize: 12),
+                              ],
                             ),
-                        ],
+                            subtitle: Text("ID: ${data['seller_id']?.toString().substring(0,6)} • $dateStr"),
+                            children: [
+                        Padding(
+                        padding: const EdgeInsets.all(15),
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                            const Divider(),
+                        _buildRow("ឈ្មោះអ្នកលក់:", "${data['account_name'] ?? 'N/A'}"),
+                        _buildRow("ធនាគារ:", "${data['bank_name'] ?? 'N/A'}"),
+                        _buildRow("ឈ្មោះគណនី:", "${data['account_name'] ?? 'N/A'}"),
+                        _buildRow("លេខគណនី:", "${data['account_number'] ?? 'N/A'}"),
+
+                        const SizedBox(height: 15),
+                        const Text("ភស្តុតាងពី Admin៖", style: TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 10),
+
+                        // បង្ហាញរូបភាពបង្កាន់ដៃបាញ់លុយ
+                        if (data['admin_receipt'] != null)
+                    ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        data['admin_receipt'],
+                        width: double.infinity,
+                        height: 250,
+                        fit: BoxFit.contain,
                       ),
-                    ),
-                  ],
-                ),
+                    )
+                        else
+                          const Text("មិនមានរូបភាពភស្តុតាង", style: TextStyle(color: Colors.red)),
+                            ],
+                        ),
+                        ),
+                            ],
+                        ),
+                    );
+                  },
               );
             },
-          );
-        },
-      ),
+        ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          ),
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
-
-  void _viewFullImage(BuildContext context, String url) {
+}
+  void _viewImage(BuildContext context, String url) {
     showDialog(
       context: context,
-      builder: (_) =>
-          Dialog(child: InteractiveViewer(child: Image.network(url))),
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.pop(context)),
+            ),
+            InteractiveViewer(child: Image.network(url)),
+          ],
+        ),
+      ),
     );
   }
-}

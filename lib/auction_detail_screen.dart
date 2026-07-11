@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:my_app/user_profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
 import 'chat_screen.dart';
 
 class AuctionDetailScreen extends StatefulWidget {
@@ -36,7 +37,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
   late Timer _timer;
   late AnimationController _bidPulseCtrl;
   late Animation<double> _bidPulseAnim;
-  final PageController _pageCtrl = PageController();
+  late PageController _pageCtrl; // ✅ ប្តូរពី final ទៅ late
 
   // ── SharedPreferences user ────────────────────────────────────
   String? _currentUid;
@@ -48,9 +49,21 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
   String _ownerName = '';
   String _ownerPhotoUrl = '';
   String _sesanId = '';
+  // ✅ លាក់លេខទូរស័ព្ទ (បង្ហាញតែ 3 ខ្ទង់ដើម និង 2 ខ្ទង់ចុងក្រោយ)
+  String _maskPhoneNumber(String phone) {
+    if (phone.length <= 5) return phone;
+    final firstThree = phone.substring(0, 3);
+    final lastTwo = phone.substring(phone.length - 2);
+    final maskedLength = phone.length - 5;
+    final masked = '*' * maskedLength;
+    return '$firstThree$masked$lastTwo';
+  }
 
   bool _isLoggedIn = false;
   bool _userLoaded = false; // Track if we've loaded user data
+  VideoPlayerController? _videoController;
+  bool _isVideoPlaying = false;
+  int _viewerCount = 0;
 
   @override
   void initState() {
@@ -67,6 +80,53 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
       begin: 1.0,
       end: 1.06,
     ).animate(CurvedAnimation(parent: _bidPulseCtrl, curve: Curves.easeInOut));
+    _pageCtrl = PageController(keepPage: true); // ✅ បន្ថែម keepPage
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _bidPulseCtrl.dispose();
+    _pageCtrl.dispose();
+    _removeViewer();
+    _videoController?.dispose();
+    super.dispose();
+  }
+
+  // ✅ បន្ថែមអ្នកមើល
+  Future<void> _addViewer() async {
+    if (_currentUid == null) return;
+    await FirebaseFirestore.instance
+        .collection('auction_products') // 🎯 ប្តូរទៅ Collection ថ្មី
+        .doc(widget.productId)
+        .collection('viewers')
+        .doc(_currentUid)
+        .set({'viewed_at': FieldValue.serverTimestamp()});
+  }
+
+  // ✅ ដកអ្នកមើលចេញ
+  Future<void> _removeViewer() async {
+    if (_currentUid == null) return;
+    await FirebaseFirestore.instance
+        .collection('auction_products') // 🎯 ប្តូរទៅ Collection ថ្មី
+        .doc(widget.productId)
+        .collection('viewers')
+        .doc(_currentUid)
+        .delete();
+  }
+
+  // ✅ ស្តាប់ចំនួនអ្នកមើល
+  void _listenViewerCount() {
+    FirebaseFirestore.instance
+        .collection('auction_products') // 🎯 ប្តូរទៅ Collection ថ្មី
+        .doc(widget.productId)
+        .collection('viewers')
+        .snapshots()
+        .listen((snapshot) {
+      if (mounted) {
+        setState(() => _viewerCount = snapshot.docs.length);
+      }
+    });
   }
 
   Future<void> _loadUser() async {
@@ -89,6 +149,12 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
           _isLoggedIn = loggedIn && uid != null && uid.isNotEmpty;
           _userLoaded = true;
         });
+      }
+
+      // ✅ ផ្លាស់មកខាងក្រៅ if (mounted) - ប្រើ uid ផ្ទាល់
+      if (uid != null && uid.isNotEmpty) {
+        _addViewer();
+        _listenViewerCount();
       }
     } catch (e) {
       print('DEBUG: Error loading user: $e');
@@ -120,14 +186,6 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
     } catch (e) {
       print('Error loading owner: $e');
     }
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    _bidPulseCtrl.dispose();
-    _pageCtrl.dispose();
-    super.dispose();
   }
 
   // ── Delete ────────────────────────────────────────────────────
@@ -207,7 +265,9 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                       ),
                       onPressed: () async {
                         await FirebaseFirestore.instance
-                            .collection('products')
+                            .collection(
+                          'auction_products',
+                        ) // 🎯 លុបចេញពី Collection ថ្មី
                             .doc(widget.productId)
                             .delete();
                         if (ctx.mounted) Navigator.pop(ctx);
@@ -313,7 +373,9 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
 
       final batch = FirebaseFirestore.instance.batch();
       final prodRef = FirebaseFirestore.instance
-          .collection('products')
+          .collection(
+        'auction_products',
+      ) // 🎯 រក្សាទុកតម្លៃ និង Sub-collection 'bids' ទៅក្នុង Collection ថ្មី
           .doc(widget.productId);
 
       batch.update(prodRef, {
@@ -537,7 +599,9 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('products')
+          .collection(
+        'auction_products',
+      ) // 🎯 ប្តូរមកទាញព័ត៌មានពីរបស់ដេញថ្លៃពិតប្រាកដ
           .doc(widget.productId)
           .snapshots(),
       builder: (context, snap) {
@@ -603,82 +667,54 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
           body: Column(
             children: [
               // ── Images ──────────────────────────────────
+              // ── Media Gallery (Video + Images) ──────────────────
+              // ── Media Gallery ──────────────────
               SizedBox(
-                height: 320,
+                height: 360,
                 child: Stack(
                   children: [
-                    // PageView រូបភាព
-                    images.isEmpty
-                        ? Container(
-                      color: _card,
-                      child: const Center(
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          color: _textMuted,
-                          size: 60,
-                        ),
-                      ),
-                    )
-                        : PageView.builder(
-                      controller: _pageCtrl,
-                      itemCount: images.length,
-                      onPageChanged: (i) =>
-                          setState(() => _currentImageIndex = i),
-                      itemBuilder: (_, i) => CachedNetworkImage(
-                        imageUrl: images[i].toString(),
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(color: _card),
-                        errorWidget: (_, __, ___) => const Icon(
-                          Icons.broken_image,
-                          color: _textMuted,
-                        ),
-                      ),
-                    ),
+                    Builder(
+                      builder: (context) {
+                        final videoUrl = data['video_url']?.toString() ?? '';
+                        final images = (data['image_urls'] as List?) ?? [];
 
-                    // Gradient
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, _bg.withOpacity(0.95)],
-                            stops: const [0.5, 1.0],
-                          ),
-                        ),
-                      ),
-                    ),
+                        List<Map<String, dynamic>> mediaItems = [];
+                        if (videoUrl.isNotEmpty)
+                          mediaItems.add({'type': 'video', 'url': videoUrl});
+                        for (var img in images) {
+                          mediaItems.add({
+                            'type': 'image',
+                            'url': img.toString(),
+                          });
+                        }
+                        if (mediaItems.isEmpty) return Container(color: _card);
 
-                    // ✅ OWNER BADGE - ខាងក្រោមឆ្វេង
+                        return PageView.builder(
+                          controller: _pageCtrl,
+                          itemCount: mediaItems.length,
+                          onPageChanged: (i) =>
+                              setState(() => _currentImageIndex = i),
+                          itemBuilder: (_, i) {
+                            final item = mediaItems[i];
+                            if (item['type'] == 'video') {
+                              return _AuctionVideoPlayer(
+                                videoUrl: item['url'] as String,
+                                onPlayingChanged: (playing) {
+                                  setState(() => _isVideoPlaying = playing);
+                                },
+                              );
+                            }
+                            return CachedNetworkImage(
+                              imageUrl: item['url'] as String,
+                              fit: BoxFit.cover,
+                            );
+                          },
+                        );
+                      },
+                    ),
                     _buildOwnerBadge(),
-
-                    // Dots
-                    if (images.length > 1)
-                      Positioned(
-                        bottom: 16,
-                        left: 0,
-                        right: 0,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            images.length,
-                                (i) => AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              margin: const EdgeInsets.symmetric(horizontal: 3),
-                              width: _currentImageIndex == i ? 20 : 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: _currentImageIndex == i
-                                    ? _accentBlue
-                                    : Colors.white38,
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
                     // LIVE badge
+                    // បង្ហាញ LIVE លុះត្រាតែការដេញថ្លៃមិនទាន់ផុតកំណត់ (ទោះមានវីដេអូ ឬគ្មាន)
                     if (!isFinished)
                       Positioned(
                         top: 60,
@@ -691,12 +727,6 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                           decoration: BoxDecoration(
                             color: _red,
                             borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: _red.withOpacity(0.4),
-                                blurRadius: 8,
-                              ),
-                            ],
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
@@ -715,10 +745,77 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                           ),
                         ),
                       ),
+                    // ចំនួនអ្នកកំពុងមើល
+                    if (_viewerCount > 0)
+                      Positioned(
+                        top: 60,
+                        left: 16,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.visibility,
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$_viewerCount នាក់',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    Builder(
+                      builder: (context) {
+                        final images = (data['image_urls'] as List?) ?? [];
+                        final videoUrl = data['video_url']?.toString() ?? '';
+                        final totalItems =
+                            (videoUrl.isNotEmpty ? 1 : 0) + images.length;
+                        if (totalItems <= 1) return const SizedBox();
+                        return Positioned(
+                          bottom: 16,
+                          left: 0,
+                          right: 0,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(totalItems, (i) {
+                              final isVideo = videoUrl.isNotEmpty && i == 0;
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 3,
+                                ),
+                                width: _currentImageIndex == i ? 24 : 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: _currentImageIndex == i
+                                      ? (isVideo ? Colors.red : _accentBlue)
+                                      : Colors.white38,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              );
+                            }),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
-
               // ── Body ─────────────────────────────────────
               Expanded(
                 child: SingleChildScrollView(
@@ -791,6 +888,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    // រកមើលកូដចាស់ត្រង់នេះ៖
                                     const Text(
                                       'តម្លៃបច្ចុប្បន្ន',
                                       style: TextStyle(
@@ -800,12 +898,18 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      '${fmt.format(currentPrice)} ៛', // លុប \$ ចេញ ទុកតែ ៛
-                                      style: const TextStyle(
-                                        color: _accent,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w800,
+                                    // កែប្រែត្រង់ Text បង្ហាញតម្លៃនេះ៖
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        '${fmt.format(currentPrice)} ៛',
+                                        style: const TextStyle(
+                                          color: _accent,
+                                          fontSize:
+                                          22, // 📉 បន្ថយពី 28 មក 22 ដើម្បីកុំឱ្យចង្អៀត
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -823,20 +927,26 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                     ),
                                   ),
                                   const SizedBox(height: 4),
+                                  // រកមើលកូដចាស់ត្រង់នេះ៖
                                   Text(
-                                    '+${fmt.format(bidStep)} ៛', // លុប \$ ចេញ
+                                    '+${fmt.format(bidStep)} ៛',
                                     style: const TextStyle(
                                       color: _gold,
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                  Text(
-                                    '= ${fmt.format(currentPrice + bidStep)} ៛', // លុប \$ ចេញ
-                                    style: const TextStyle(
-                                      color: _text,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
+                                  // កែប្រែត្រង់ Text បូកសរុបខាងក្រោមនេះ៖
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      '= ${fmt.format(currentPrice + bidStep)} ៛',
+                                      style: const TextStyle(
+                                        color: _text,
+                                        fontSize: 12, // 📉 បន្ថយពី 13 មក 12
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1087,6 +1197,10 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                   ),
 
                                   // ── Phone ──────────────────
+                                  // ស្វែងរក Container ដែលមាន "លេខអ្នកឈ្នះ" ឬ "លេខម្ចាស់ទំនិញ"
+                                  // ហើយដាក់លក្ខខណ្ឌពិនិត្យថាតើអ្នកមើលគឺជា Owner ឬ Winner
+
+                                  // ជំនួសផ្នែក Phone ដោយកូដខាងក្រោម៖
                                   if (phone != null && phone.isNotEmpty) ...[
                                     const SizedBox(height: 14),
                                     Container(
@@ -1123,74 +1237,89 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                                   ),
                                                 ),
                                                 const SizedBox(height: 2),
+                                                // ✅ បង្ហាញលេខទូរស័ព្ទតែចំពោះ Owner និង Winner
                                                 Text(
-                                                  phone,
-                                                  style: const TextStyle(
+                                                  (isOwner || isWinner)
+                                                      ? phone
+                                                      : _maskPhoneNumber(
+                                                    phone,
+                                                  ), // ✅ លាក់លេខសម្រាប់អ្នកផ្សេង
+                                                  style: TextStyle(
                                                     color: _text,
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w700,
-                                                    letterSpacing: 1,
+                                                    letterSpacing:
+                                                    (isOwner || isWinner)
+                                                        ? 1
+                                                        : 2,
                                                   ),
                                                 ),
                                               ],
                                             ),
                                           ),
-                                          // Call button
-                                          GestureDetector(
-                                            onTap: () async {
-                                              final uri = Uri.parse(
-                                                'tel:$phone',
-                                              );
-                                              if (await canLaunchUrl(uri)) {
-                                                await launchUrl(uri);
-                                              }
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(10),
-                                              decoration: BoxDecoration(
-                                                color: _accent,
-                                                borderRadius:
-                                                BorderRadius.circular(10),
-                                              ),
-                                              child: const Icon(
-                                                Icons.call_rounded,
-                                                color: Colors.white,
-                                                size: 20,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          // Telegram button
-                                          GestureDetector(
-                                            onTap: () async {
-                                              final cleaned = phone!
-                                                  .replaceAll('+', '')
-                                                  .replaceAll(' ', '');
-                                              final uri = Uri.parse(
-                                                'https://t.me/+$cleaned',
-                                              );
-                                              if (await canLaunchUrl(uri)) {
-                                                await launchUrl(
-                                                  uri,
-                                                  mode: LaunchMode
-                                                      .externalApplication,
+                                          // ✅ បង្ហាញប៊ូតុង Call តែចំពោះ Owner និង Winner
+                                          if (isOwner || isWinner) ...[
+                                            GestureDetector(
+                                              onTap: () async {
+                                                final uri = Uri.parse(
+                                                  'tel:$phone',
                                                 );
-                                              }
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(10),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFF0088CC),
-                                                borderRadius:
-                                                BorderRadius.circular(10),
-                                              ),
-                                              child: const Icon(
-                                                Icons.send_rounded,
-                                                color: Colors.white,
-                                                size: 18,
+                                                if (await canLaunchUrl(uri)) {
+                                                  await launchUrl(uri);
+                                                }
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  10,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: _accent,
+                                                  borderRadius:
+                                                  BorderRadius.circular(10),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.call_rounded,
+                                                  color: Colors.white,
+                                                  size: 20,
+                                                ),
                                               ),
                                             ),
-                                          ),
+                                            const SizedBox(width: 8),
+                                            GestureDetector(
+                                              onTap: () async {
+                                                final cleaned = phone!
+                                                    .replaceAll('+', '')
+                                                    .replaceAll(' ', '');
+                                                final uri = Uri.parse(
+                                                  'https://t.me/+$cleaned',
+                                                );
+                                                if (await canLaunchUrl(uri)) {
+                                                  await launchUrl(
+                                                    uri,
+                                                    mode: LaunchMode
+                                                        .externalApplication,
+                                                  );
+                                                }
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  10,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(
+                                                    0xFF0088CC,
+                                                  ),
+                                                  borderRadius:
+                                                  BorderRadius.circular(10),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.send_rounded,
+                                                  color: Colors.white,
+                                                  size: 18,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ],
                                       ),
                                     ),
@@ -1328,7 +1457,9 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                       // ══════════════════════════════════════════════════════════════
                       StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance
-                            .collection('products')
+                            .collection(
+                          'auction_products',
+                        ) // 🎯 ប្តូរមកទាញប្រវត្តិបោះលុយពីរបស់ដេញថ្លៃពិតប្រាកដ
                             .doc(widget.productId)
                             .collection('bids')
                             .orderBy('bid_time', descending: true)
@@ -1564,7 +1695,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
     required bool isTop,
     required int rank,
   }) {
-    // ប្រសិនបើមិនមាន bidderId មិនចុចបាន (show ធម្មតា)
+    // ប្រសិនបើគ្មាន bidderId → មិនចុចបាន
     if (bidderId == null || bidderId.isEmpty) {
       return Container(
         width: 38,
@@ -1588,54 +1719,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
       );
     }
 
-    // ✅ មាន bidderId → ចុចបាន + ទៅ Profile
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => UserProfileScreen(
-              userId: bidderId, // ផ្ញើ UID ទៅ Profile Screen
-            ),
-          ),
-        );
-      },
-      child: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('users')
-            .doc(bidderId)
-            .get(),
-        builder: (context, userSnap) {
-          String? photoUrl;
-          if (userSnap.hasData && userSnap.data!.exists) {
-            final u = userSnap.data!.data() as Map<String, dynamic>;
-            photoUrl = u['photoUrl'] ?? u['photo'] ?? u['avatar'];
-          }
-
-          return Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: isTop ? _gold.withOpacity(0.15) : _border,
-              shape: BoxShape.circle,
-              border: isTop
-                  ? Border.all(color: _gold.withOpacity(0.5), width: 2)
-                  : null,
-            ),
-            child: ClipOval(
-              child: photoUrl != null && photoUrl.isNotEmpty
-                  ? CachedNetworkImage(
-                imageUrl: photoUrl,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => _buildRankIcon(isTop, rank),
-                errorWidget: (_, __, ___) => _buildRankIcon(isTop, rank),
-              )
-                  : _buildRankIcon(isTop, rank),
-            ),
-          );
-        },
-      ),
-    );
+    // ✅ មាន bidderId → បង្កើត Widget ដែលចុចបានដោយឡែក
+    return _ClickableBidderAvatar(bidderId: bidderId, isTop: isTop, rank: rank);
   }
 
   // Helper សម្រាប់ icon ចំណាត់ថ្នាក់
@@ -1771,6 +1856,163 @@ class _ExpandableDescriptionState extends State<_ExpandableDescription> {
         ],
       ),
     );
+  }
+}
+
+// ✅ Widget ថ្មីដាច់ដោយឡែកសម្រាប់ Avatar ដែលអាចចុចបាន
+class _ClickableBidderAvatar extends StatefulWidget {
+  final String bidderId;
+  final bool isTop;
+  final int rank;
+
+  const _ClickableBidderAvatar({
+    required this.bidderId,
+    required this.isTop,
+    required this.rank,
+  });
+
+  @override
+  State<_ClickableBidderAvatar> createState() => _ClickableBidderAvatarState();
+}
+
+class _ClickableBidderAvatarState extends State<_ClickableBidderAvatar> {
+  static const _textMuted = Color(0xFF8B949E);
+  static const _border = Color(0xFF30363D);
+  static const _gold = Color(0xFFFFB300);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPhoto();
+  }
+
+  String? _photoUrl;
+  bool _isLoading = true;
+
+  Future<void> _loadPhoto() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.bidderId)
+          .get();
+      if (doc.exists && mounted) {
+        final data = doc.data() as Map<String, dynamic>;
+        setState(() {
+          _photoUrl = data['photoUrl'] ?? data['photo'] ?? data['avatar'];
+          _isLoading = false;
+        });
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserProfileScreen(userId: widget.bidderId),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(19),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: widget.isTop ? _gold.withOpacity(0.15) : _border,
+            shape: BoxShape.circle,
+            border: widget.isTop
+                ? Border.all(color: _gold.withOpacity(0.5), width: 2)
+                : null,
+          ),
+          child: ClipOval(
+            child: _photoUrl != null && _photoUrl!.isNotEmpty
+                ? CachedNetworkImage(
+              imageUrl: _photoUrl!,
+              fit: BoxFit.cover,
+              placeholder: (_, __) => _buildFallbackIcon(),
+              errorWidget: (_, __, ___) => _buildFallbackIcon(),
+            )
+                : _buildFallbackIcon(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackIcon() {
+    return Center(
+      child: widget.isTop
+          ? const Icon(Icons.emoji_events_rounded, color: _gold, size: 18)
+          : Text(
+        '${widget.rank}',
+        style: const TextStyle(
+          color: _textMuted,
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
+        ),
+      ),
+    );
+  }
+}
+
+// ✅ Widget ដាច់ដោយឡែកសម្រាប់ Video Player - មិន rebuild ពេល parent rebuild
+class _AuctionVideoPlayer extends StatefulWidget {
+  final String videoUrl;
+  final Function(bool)? onPlayingChanged; // ✅ បន្ថែម
+
+  const _AuctionVideoPlayer({required this.videoUrl, this.onPlayingChanged});
+
+  @override
+  State<_AuctionVideoPlayer> createState() => _AuctionVideoPlayerState();
+}
+
+class _AuctionVideoPlayerState extends State<_AuctionVideoPlayer> {
+  VideoPlayerController? _controller;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initVideo();
+  }
+
+  void _initVideo() {
+    _controller = VideoPlayerController.network(widget.videoUrl)
+      ..initialize().then((_) {
+        if (mounted) {
+          setState(() => _initialized = true);
+          _controller!.play();
+          _controller!.setLooping(true);
+          widget.onPlayingChanged?.call(true); // ✅ បន្ថែម
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  void play() => _controller?.play();
+  void pause() => _controller?.pause();
+  bool get isPlaying => _controller?.value.isPlaying ?? false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_initialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return VideoPlayer(_controller!);
   }
 }
 

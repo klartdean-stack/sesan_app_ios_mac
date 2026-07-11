@@ -26,13 +26,19 @@ import 'package:permission_handler/permission_handler.dart'; // ថែមតែ�
 import 'package:firebase_messaging/firebase_messaging.dart'; // ថែមជួរនេះ
 
 
+
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final bool guestMode; // បន្ថែមនេះ
+  const HomeScreen({super.key, this.guestMode = false}); // កែនេះ
 
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
+
+
+
+
 
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -43,38 +49,45 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ១. ថែមជួរនេះដើម្បីឱ្យស្គាល់ UID (បាត់ក្រហម build)
   String? _loggedUid;
+String? name;
 
 
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
-    loadUser(); // 🎯 បន្ថែមនេះ!
-    NotificationService.updateSellerToken();
-    _subscribeAdminTopic();
-    _checkAndRequestPermission();
+
+
+    loadUser();
+
+
+    if (!widget.guestMode) {
+      NotificationService.updateSellerToken();
+      _subscribeAdminTopic();
+      _checkAndRequestPermission();
+    }
   }
-
-
-  String? name;
 
 
   Future<void> loadUser() async {
     try {
+      if (widget.guestMode) {
+        if (mounted) setState(() => _loggedUid = null);
+        return;
+      }
+
+
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('user_uid');
 
 
       if (userId == null || userId.isEmpty) {
-        if (mounted) Navigator.pushReplacementNamed(context, '/login');
+        // ✅ កុំ redirect — គ្រាន់តែទុកជា guest
+        if (mounted) setState(() => _loggedUid = null);
         return;
       }
 
 
-      // 🎯 ហៅ Function សុំ Token នៅត្រង់នេះ
       _setupFcmToken(userId);
-
-
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
@@ -91,6 +104,10 @@ class _HomeScreenState extends State<HomeScreen> {
       print("❌ loadUser Error: $e");
     }
   }
+
+
+
+
 
 
   // 🎯 បន្ថែម Function នេះដើម្បីទាញ FCM Token និងរក្សាទុកទៅ Firestore
@@ -159,7 +176,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void _markAsRead() async {
     final prefs = await SharedPreferences.getInstance();
     // រក្សាទុកពេលវេលាបច្ចុប្បន្ន ជាម៉ោងដែលបានអានចុងក្រោយ
-    await prefs.setInt('last_read_noti', DateTime.now().millisecondsSinceEpoch);
+    await prefs.setInt('last_read_noti', DateTime
+        .now()
+        .millisecondsSinceEpoch);
 
 
     // Refresh UI ឱ្យលេខ Noti ក្រហមបាត់ទៅ
@@ -239,7 +258,10 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Row(
           children: [
             // ១. Logo សេសាន (បង្ហាញតែលើអេក្រង់ធំ)
-            if (MediaQuery.of(context).size.width > 600)
+            if (MediaQuery
+                .of(context)
+                .size
+                .width > 600)
               const Padding(
                 padding: EdgeInsets.only(right: 10),
                 child: Text(
@@ -403,7 +425,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          "កំពុងបង្ហោះទំនិញ... ${(uploadController.uploadProgress.value * 100).toInt()}%",
+                          "កំពុងបង្ហោះទំនិញ... ${(uploadController
+                              .uploadProgress.value * 100).toInt()}%",
                         ),
                       ],
                     ),
@@ -456,27 +479,29 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showLoginRequiredDialog(BuildContext context, String actionText) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("សូមចូលប្រើប្រាស់"),
-        content: Text("$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("មើលសិន", style: TextStyle(color: Colors.grey)),
+      builder: (context) =>
+          AlertDialog(
+            title: const Text("សូមចូលប្រើប្រាស់"),
+            content: Text("$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                    "មើលសិន", style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/login');
+                },
+                child: const Text(
+                  "ទៅ Login",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/login');
-            },
-            child: const Text(
-              "ទៅ Login",
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -609,7 +634,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           // --- ១. Banner ---
                           AspectRatio(
-                            aspectRatio: MediaQuery.of(context).size.width > 800
+                            aspectRatio: MediaQuery
+                                .of(context)
+                                .size
+                                .width > 800
                                 ? 21 / 7
                                 : 16 / 8,
                             child: Image.asset(
@@ -627,7 +655,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment
-                                  .spaceBetween, // រុញអក្សរទៅឆ្វេង ប៊ូតុងទៅស្តាំ
+                                  .spaceBetween,
+                              // រុញអក្សរទៅឆ្វេង ប៊ូតុងទៅស្តាំ
                               children: [
                                 const Text(
                                   "ប្រភេទផលិតផល",
@@ -719,7 +748,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               Tab(
                                 child: Text(
-                                  "ប្រកាសទិញ",
+                                  "លក់មុន",
                                   style: TextStyle(
                                     fontFamily: 'Siemreap',
                                     fontWeight: FontWeight.bold,
@@ -728,7 +757,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               Tab(
                                 child: Text(
-                                  "លក់មុន",
+                                  "ប្រកាសទិញ",
                                   style: TextStyle(
                                     fontFamily: 'Siemreap',
                                     fontWeight: FontWeight.bold,
@@ -745,18 +774,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 // 🎯 កន្លែងនេះគឺសំខាន់បំផុត វានឹងរីកតាមចំនួនទំនិញដោយស្វ័យប្រវត្តិ
                 body: TabBarView(
                   children: [
-                    // Tab ទី ១: ទំនិញលក់
-                    // បញ្ជាក់៖ មេត្រូវប្រាកដថា ProductGridView លុបជួរ "controller" ចោលដូចដែលយើងនិយាយគ្នា
                     ProductGridView(
                       category: _selectedCategory,
                       searchQuery: _searchQuery,
                       isHome: true,
                     ),
-
-
-                    // Tab ទី ២: ប្រកាសទិញ
-                    const WantedGridView(),
-                    const PreOrderGridView(), // 🎯 ថែម File Grid ថ្មីដែលយើងនឹងបង្កើត
+                    PreOrderGridView(searchQuery: _searchQuery),   // ✅ ថែម
+                    WantedGridView(searchQuery: _searchQuery),     // ✅ ថែម
                   ],
                 ),
               ),
@@ -812,14 +836,14 @@ class _HomeScreenState extends State<HomeScreen> {
               AnimatedBuilder(
                 animation: tabController,
                 builder: (context, child) {
-                  if (tabController.index == 1) {
+                  if (tabController.index == 2) {
                     return _buildFloatingBtn(
                       "ប្រកាសទិញ",
                       Icons.campaign,
                       Colors.blue[700]!,
                       const AddWantedScreen(),
                     );
-                  } else if (tabController.index == 2) {
+                  } else if (tabController.index == 1) {
                     // 🎯 បង្ហាញប៊ូតុង "ចុះឈ្មោះលក់មុន" ពេលនៅ Tab ទី ៣
                     return _buildFloatingBtn(
                       "ចុះឈ្មោះលក់មុន",
@@ -840,12 +864,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   // 🎯 បង្កើត function ជំនួយដើម្បីកុំឱ្យកូដវែងពេក
-  Widget _buildFloatingBtn(
-      String label,
+  Widget _buildFloatingBtn(String label,
       IconData icon,
       Color color,
-      Widget nextScreen,
-      ) {
+      Widget nextScreen,) {
     return Positioned(
       bottom: 20,
       right: 20,
@@ -871,7 +893,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildCategoryGrid() {
     // 🎯 ១. ឆែកមើលទំហំអេក្រង់ជាមុន
-    double screenWidth = MediaQuery.of(context).size.width;
+    double screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
     bool isDesktop = screenWidth > 800;
 
 
@@ -942,34 +967,46 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
-  // នេះជាកូដសម្រាប់ "ស្ទាក់ផ្លូវ" User កុំឱ្យគាត់បិទ Noti
-  Future<void> _checkAndRequestPermission() async {
+  // ✅ ដាក់កូដនេះនៅទីនេះ (ក្នុង class _HomeScreenState)
+  void _checkAndRequestPermission() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool hasShownDialog = prefs.getBool(
+        'has_shown_notification_dialog') ?? false;
+
+    if (hasShownDialog) return;
+
     var status = await Permission.notification.status;
     if (status.isDenied || status.isPermanentlyDenied) {
       if (mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: Text("បើកការជូនដំណឹង"),
-            content: Text(
-              "ដើម្បីទទួលបានសារកម្ម៉ង់ភ្លាមៗ សូមមេចុច 'បើក' រួច Switch លើពាក្យ 'Allow notifications' ផង!",
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await openAppSettings(); // នាំទៅកន្លែង Switch ភ្លាម
-                },
-                child: Text("ទៅបើកឥឡូវនេះ"),
+          builder: (context) =>
+              AlertDialog(
+                title: Text("បើកការជូនដំណឹង"),
+                content: Text(
+                  "ដើម្បីទទួលបានសារកម្ម៉ង់ភ្លាមៗ សូមមេចុច 'បើក' រួច Switch លើពាក្យ 'Allow notifications' ផង!",
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      prefs.setBool('has_shown_notification_dialog', true);
+                    },
+                    child: Text("ក្រោយមក"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      prefs.setBool('has_shown_notification_dialog', true);
+                      await openAppSettings();
+                    },
+                    child: Text("ទៅបើកឥឡូវនេះ"),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
       }
     }
   }
 }
-
-
-

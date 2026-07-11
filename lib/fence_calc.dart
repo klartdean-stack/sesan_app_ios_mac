@@ -29,28 +29,28 @@ class _FenceCalcPageState extends State<FenceCalcPage> {
   double totalMoney = 0;
 
   void calculateAll() {
-    double totalLength = double.tryParse(lengthController.text) ?? 0;
+    double totalLength = double.tryParse(lengthController.text.replaceAll(',', '.')) ?? 0;
     if (totalLength <= 0) return;
 
     setState(() {
       totalMoney = 0; // Reset លុយ
       if (selectedType == 0) {
         // --- Logic របងបង្គោលឈើ ---
-        double spacing = double.tryParse(spacingController.text) ?? 2.5;
-        int layers = int.tryParse(layerController.text) ?? 4;
+        double spacing = double.tryParse(spacingController.text.replaceAll(',', '.')) ?? 2.5;
+        int layers = int.tryParse(layerController.text.replaceAll(',', '.')) ?? 4;
 
         resPost = (totalLength / spacing) + 1;
         resWire = totalLength * layers;
         resNails = resPost * layers; // ដែកគោលមេអំបៅ
 
         // គណនាលុយបើមានបញ្ចូលតម្លៃ
-        double pPrice = double.tryParse(postPriceCtrl.text) ?? 0;
+        double pPrice = double.tryParse(postPriceCtrl.text.replaceAll(',', '.')) ?? 0;
         double wPrice =
-            double.tryParse(wirePriceCtrl.text) ?? 0; // តម្លៃក្នុង ១ ម៉ែត្រ
+            double.tryParse(wirePriceCtrl.text.replaceAll(',', '.')) ?? 0; // តម្លៃក្នុង ១ ម៉ែត្រ
         totalMoney = (resPost * pPrice) + (resWire * wPrice);
       } else {
         // --- Logic របងជញ្ជាំងឥដ្ឋ ---
-        double height = double.tryParse(heightController.text) ?? 0;
+        double height = double.tryParse(heightController.text.replaceAll(',', '.')) ?? 0;
         double area = totalLength * height;
 
         resBrick = area * 65; // ៦៥ ដុំ/ម២
@@ -58,8 +58,8 @@ class _FenceCalcPageState extends State<FenceCalcPage> {
         resSand = area * 0.05; // ០.០៥ ម៉ែត្រគូប/ម២
 
         // គណនាលុយបើមានបញ្ចូលតម្លៃ
-        double bPrice = double.tryParse(brickPriceCtrl.text) ?? 0;
-        double cPrice = double.tryParse(cementPriceCtrl.text) ?? 0;
+        double bPrice = double.tryParse(brickPriceCtrl.text.replaceAll(',', '.')) ?? 0;
+        double cPrice = double.tryParse(cementPriceCtrl.text.replaceAll(',', '.')) ?? 0;
         totalMoney = (resBrick * bPrice) + (resCement * cPrice);
       }
     });
@@ -70,12 +70,15 @@ class _FenceCalcPageState extends State<FenceCalcPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'គណនារបង Sesan',
+          'គណនារបង',
           style: TextStyle(fontFamily: 'Siemreap'),
         ),
         backgroundColor: Colors.green.shade700,
       ),
-      body: SingleChildScrollView(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -134,7 +137,10 @@ class _FenceCalcPageState extends State<FenceCalcPage> {
             ],
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: calculateAll,
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                calculateAll();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green.shade700,
                 minimumSize: const Size(double.infinity, 50),
@@ -151,6 +157,7 @@ class _FenceCalcPageState extends State<FenceCalcPage> {
           ],
         ),
       ),
+        ),
     );
   }
 
@@ -187,7 +194,7 @@ class _FenceCalcPageState extends State<FenceCalcPage> {
       padding: const EdgeInsets.only(bottom: 12),
       child: TextField(
         controller: ctrl,
-        keyboardType: TextInputType.number,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: Colors.green.shade700),
@@ -232,7 +239,7 @@ class _FenceCalcPageState extends State<FenceCalcPage> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               Text(
-                "${totalMoney.toStringAsFixed(0)} ៛",
+                "${_formatMoney(totalMoney)} ៛",
                 style: const TextStyle(
                   fontSize: 22,
                   color: Colors.red,
@@ -243,6 +250,14 @@ class _FenceCalcPageState extends State<FenceCalcPage> {
           ),
         ],
       ),
+    );
+  }
+  String _formatMoney(double value) {
+    if (value == 0) return "0";
+    final intVal = value.toInt();
+    return intVal.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:my_app/sack_history_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SackWeigherScreen extends StatefulWidget {
   const SackWeigherScreen({super.key});
@@ -22,10 +23,19 @@ class _SackWeigherScreenState extends State<SackWeigherScreen> {
   // 🎯 Logic គណនាសរុប
   double get _totalWeight => _sacks.fold(0, (sum, item) => sum + item);
   double get _totalMoney => _totalWeight * _unitPrice;
+  String _formatNumber(double value) {
+    if (value == 0) return "0";
+    final parts = value.toStringAsFixed(2).split('.');
+    final intPart = parts[0].replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
+    );
+    return parts.length > 1 ? '$intPart.${parts[1]}' : intPart;
+  }
 
   // 🎯 Function សម្រាប់បន្ថែមបាវ
   void _addSack() {
-    double weight = double.tryParse(_weightController.text) ?? 0;
+    double weight = double.tryParse(_weightController.text.replaceAll(',', '.')) ?? 0;
     if (weight > 0) {
       setState(() {
         _sacks.insert(0, weight);
@@ -51,7 +61,7 @@ class _SackWeigherScreenState extends State<SackWeigherScreen> {
         ),
         content: TextField(
           controller: _weightController,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
           autofocus: true,
           decoration: const InputDecoration(suffixText: "គីឡូ"),
         ),
@@ -64,7 +74,7 @@ class _SackWeigherScreenState extends State<SackWeigherScreen> {
             onPressed: () {
               setState(() {
                 _sacks[index] =
-                    double.tryParse(_weightController.text) ?? _sacks[index];
+                    double.tryParse(_weightController.text.replaceAll(',', '.')) ?? _sacks[index];
                 _weightController.clear();
               });
               Navigator.pop(context);
@@ -109,12 +119,26 @@ class _SackWeigherScreenState extends State<SackWeigherScreen> {
       ),
     );
   }
+  String? _sellerId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSellerId();
+  }
+
+  Future<void> _loadSellerId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _sellerId = prefs.getString('user_uid');
+    });
+  }
 
   // 🎯 Function រក្សាទុកទិន្នន័យទៅ Firebase
   Future<void> _saveDataToFirestore(String note) async {
     try {
-      await FirebaseFirestore.instance.collection('rice_records').add({
-        'seller_id': FirebaseAuth.instance.currentUser?.uid ?? 'unknown',
+      await FirebaseFirestore.instance.collection('sack_history').add({
+        'seller_id': _sellerId ?? 'unknown',   // ✅ ប្តូរត្រង់នេះ
         'note': note,
         'sacks_data': _sacks,
         'total_sacks': _sacks.length,
@@ -160,7 +184,10 @@ class _SackWeigherScreenState extends State<SackWeigherScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: Column(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: Column(
         children: [
           // ១. ប្រអប់បញ្ចូលតម្លៃ (ខាងលើគេ)
           _buildTopPriceInput(),
@@ -181,6 +208,7 @@ class _SackWeigherScreenState extends State<SackWeigherScreen> {
           ),
         ],
       ),
+        ),
     );
   }
 
@@ -193,7 +221,7 @@ class _SackWeigherScreenState extends State<SackWeigherScreen> {
           Expanded(
             child: TextField(
               controller: _priceController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
               style: const TextStyle(color: Colors.white, fontSize: 18),
               decoration: const InputDecoration(
                 labelText: "តម្លៃក្នុង ១ គីឡូ",
@@ -206,7 +234,7 @@ class _SackWeigherScreenState extends State<SackWeigherScreen> {
                 ),
               ),
               onChanged: (v) =>
-                  setState(() => _unitPrice = double.tryParse(v) ?? 0),
+                  setState(() => _unitPrice = double.tryParse(v.replaceAll(',', '.')) ?? 0),
             ),
           ),
           const SizedBox(width: 15),
@@ -268,8 +296,8 @@ class _SackWeigherScreenState extends State<SackWeigherScreen> {
               ),
               Text(
                 _currency == "៛"
-                    ? "${_totalMoney.toStringAsFixed(0)} ៛"
-                    : "\$${_totalMoney.toStringAsFixed(2)}",
+                    ? "${_formatNumber(_totalMoney)} ៛"
+                    : "\$${_formatNumber(_totalMoney)}",
                 style: const TextStyle(
                   color: Colors.orange,
                   fontSize: 24,
@@ -291,7 +319,7 @@ class _SackWeigherScreenState extends State<SackWeigherScreen> {
           Expanded(
             child: TextField(
               controller: _weightController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
               decoration: InputDecoration(
                 hintText: "ទម្ងន់បាវទី ${_sacks.length + 1}",
                 hintStyle: const TextStyle(fontFamily: 'Siemreap'),

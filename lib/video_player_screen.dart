@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
-  final String? videoUrl; // អាចទទួលតម្លៃ Null បានដើម្បីការពារការរលត់
+  final String? videoUrl;
   const VideoPlayerScreen({super.key, this.videoUrl});
 
   @override
@@ -12,6 +12,7 @@ class VideoPlayerScreen extends StatefulWidget {
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   VideoPlayerController? _controller;
   bool _hasError = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -19,13 +20,41 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _initializeVideo();
   }
 
-  void _initializeVideo() {
-    // ១. ឆែកមើលបើអត់មាន Link វីដេអូ គឺមិនឱ្យវាដំណើរការនាំឱ្យរលត់ទេ
+  void _initializeVideo() async {
+    // ១. ពិនិត្យ URL
     if (widget.videoUrl == null || widget.videoUrl!.isEmpty) {
       setState(() {
         _hasError = true;
+        _isLoading = false;
       });
       return;
+    }
+
+    try {
+      // ២. បង្កើត Controller និងផ្ទុកវីដេអូ
+      final controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoUrl!),
+      );
+
+      await controller.initialize();
+
+      // ៣. ចាក់វីដេអូដោយស្វ័យប្រវត្តិ
+      await controller.play();
+
+      if (mounted) {
+        setState(() {
+          _controller = controller;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Video Error: $e");
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -44,51 +73,65 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       body: Center(
         child: _hasError
             ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.videocam_off, color: Colors.white, size: 60),
-                  const SizedBox(height: 10),
-                  const Text(
-                    "មិនអាចមើលវីដេអូបានទេ",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    "មិនអាចមើលវីដេអូបានទេ",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ],
-              )
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.videocam_off, color: Colors.white, size: 60),
+            SizedBox(height: 10),
+            Text(
+              "មិនអាចមើលវីដេអូបានទេ",
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        )
+            : _isLoading
+            ? const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Colors.white),
+            SizedBox(height: 10),
+            Text(
+              "កំពុងផ្ទុកវីដេអូ...",
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        )
             : (_controller != null && _controller!.value.isInitialized)
-            ? AspectRatio(
-                aspectRatio: _controller!.value.aspectRatio,
-                child: VideoPlayer(_controller!),
-              )
-            : const CircularProgressIndicator(color: Colors.white),
+            ? GestureDetector(
+          onTap: () {
+            setState(() {
+              _controller!.value.isPlaying
+                  ? _controller!.pause()
+                  : _controller!.play();
+            });
+          },
+          child: AspectRatio(
+            aspectRatio: _controller!.value.aspectRatio,
+            child: VideoPlayer(_controller!),
+          ),
+        )
+            : const SizedBox(),
       ),
       floatingActionButton:
-          (_controller != null && _controller!.value.isInitialized)
+      (_controller != null && _controller!.value.isInitialized)
           ? FloatingActionButton(
-              backgroundColor: Colors.white.withOpacity(0.5),
-              onPressed: () {
-                setState(() {
-                  _controller!.value.isPlaying
-                      ? _controller!.pause()
-                      : _controller!.play();
-                });
-              },
-              child: Icon(
-                _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
-                color: Colors.black,
-              ),
-            )
+        backgroundColor: Colors.white.withOpacity(0.5),
+        onPressed: () {
+          setState(() {
+            _controller!.value.isPlaying
+                ? _controller!.pause()
+                : _controller!.play();
+          });
+        },
+        child: Icon(
+          _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
+          color: Colors.black,
+        ),
+      )
           : null,
     );
-  }
-
-  @override
+  }@override
   void dispose() {
-    _controller?.dispose(); // បិទឱ្យស្អាតពេលចាកចេញ
+    _controller?.dispose();
     super.dispose();
   }
 }

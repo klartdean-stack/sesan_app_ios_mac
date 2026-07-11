@@ -58,7 +58,7 @@ class _ElectricCalcPageState extends State<ElectricCalcPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'វិស្វករអគ្គិសនី Sesan',
+          'វិស្វករអគ្គិសនី',
           style: TextStyle(fontFamily: 'Siemreap'),
         ),
         backgroundColor: Colors.orange.shade900,
@@ -73,7 +73,10 @@ class _ElectricCalcPageState extends State<ElectricCalcPage> {
             stops: const [0.1, 0.3],
           ),
         ),
-        child: SingleChildScrollView(
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
@@ -114,7 +117,10 @@ class _ElectricCalcPageState extends State<ElectricCalcPage> {
                       ),
                       const SizedBox(height: 10),
                       ElevatedButton(
-                        onPressed: calculateAll,
+                        onPressed: () {
+                          FocusScope.of(context).unfocus();
+                          calculateAll();
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange.shade900,
                           minimumSize: const Size(double.infinity, 55),
@@ -141,6 +147,7 @@ class _ElectricCalcPageState extends State<ElectricCalcPage> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

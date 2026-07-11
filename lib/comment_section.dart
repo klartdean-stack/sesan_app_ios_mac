@@ -431,16 +431,20 @@ class _CommentSectionState extends State<CommentSection> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          const Divider(height: 1),
-          _buildCommentsList(),
-          const Divider(height: 1),
-          if (_replyingToCommentId != null) _buildReplyIndicator(),
-          _buildInputSection(),
-        ],
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(), // ទម្លាក់ keyboard
+        behavior: HitTestBehavior.translucent, // ឲ្យកូន Widget នៅតែទទួលការចុច
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const Divider(height: 1),
+            _buildCommentsList(),
+            const Divider(height: 1),
+            if (_replyingToCommentId != null) _buildReplyIndicator(),
+            _buildInputSection(),
+          ],
+        ),
       ),
     );
   }

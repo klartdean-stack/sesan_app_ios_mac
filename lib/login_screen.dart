@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:my_app/controllers/auth_controller.dart';
+import 'package:my_app/home_screen.dart';
 import 'package:my_app/product_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'forgot_password_screen.dart';
 import 'user_service.dart' hide UserService;
 
 
@@ -146,9 +152,16 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         _showSnackBar('✅ ចូលប្រើប្រាស់ជោគជ័យ');
+
+
+        // 🎯 ថែមជួរនេះ៖ ដាស់ AuthController ឱ្យដឹងថាមាន User បាន Login ហើយ
+        await Get.find<AuthController>().loginWithUid(userDoc.id);
+
+
         await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+          // 🎯 កែមកប្រើ Get.offAllNamed ជំនួស Navigator ដើម្បីឱ្យ Obx ក្នុង main.dart ដំណើរការស្របគ្នា
+          Get.offAllNamed('/home');
         }
       }
     } catch (e) {
@@ -220,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   _buildTextField(
                     controller: _phoneController,
                     label: 'លេខទូរសព្ទ',
-                    hint: 'ឧទាហរណ៍ 088xxxxxxx',
+                    hint: 'ឧទាហរណ៍ 088XXXXXXX',
                     icon: Icons.phone_android,
                     isNumber: true,
                     validator: (v) {
@@ -266,8 +279,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const Spacer(),
                       TextButton(
-                        onPressed: () =>
-                            _showSnackBar('សូមទាក់ទង Admin ដើម្បីកែលេខសម្ងាត់'),
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                        ),
                         child: Text(
                           'ភ្លេចលេខសម្ងាត់?',
                           style: TextStyle(
@@ -335,6 +350,38 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 24),
+                  // ── ប៊ូតុងចូលមើលសិន ─────────────────────────
+                  // ── ប៊ូតុងចូលមើលសិន ─────────────────────────
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await Get.find<AuthController>().loginAsGuest();
+                      // 🎯 កែត្រង់នេះ៖ បញ្ជូន guestMode: true ទៅឱ្យ HomeScreen ផងដើម្បីកុំឱ្យវាច្រឡំ
+                      Get.offAllNamed('/home-guest'); // Guest mode
+                    },
+                    icon: const Icon(Icons.person_outline, color: Colors.green),
+                    label: const Text(
+                      'ចូលមើលសិន',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 14,
+                      ),
+                      side: const BorderSide(color: Colors.green, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30), // រាងមូល
+                      ),
+                      backgroundColor: Colors.green.shade50.withOpacity(
+                        0.3,
+                      ), // ពណ៌ផ្ទៃថ្លាបៃតងខ្ចី
+                    ),
                   ),
                   const SizedBox(height: 20),
                 ],

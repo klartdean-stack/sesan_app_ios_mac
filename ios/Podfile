@@ -1,4 +1,4 @@
-platform :ios, '14.0'
+platform :ios, '13.0'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
@@ -18,7 +18,7 @@ def flutter_root
     matches = line.match(/FLUTTER_ROOT\=(.*)/)
     return matches[1].strip if matches
   end
-  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deletingvmnb, Generated.xcconfig, then run flutter pub get"
 end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
@@ -29,10 +29,12 @@ target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
-  pod 'SDWebImage', '5.18.3'
-  pod 'SDWebImageWebPCoder', '0.14.2'
-
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+
+  # ✅ កំណត់ជំនាន់ SDWebImage និង SDWebImageWebPCoder ឲ្យត្រូវគ្នា
+  pod 'SDWebImage', '5.15.0'
+  pod 'SDWebImageWebPCoder', '0.11.0'
+
   target 'RunnerTests' do
     inherit! :search_paths
   end
@@ -41,15 +43,10 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
-
-    if target.name == 'record_darwin'
-      target.build_configurations.each do |config|
-        config.build_settings['SWIFT_VERSION'] = '5.0'
-      end
-    end
-
     target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      # ✅ អនុញ្ញាតឱ្យប្រើ non-modular headers បណ្ដោះអាសន្ន
+      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
     end
   end
 end

@@ -221,11 +221,15 @@ class _AnimalAgeTrackerPageState extends State<AnimalAgeTrackerPage> {
     if (birthDateStr.isEmpty || sellAgeStr == '0') return "-";
     try {
       DateTime birthDate = DateTime.parse(birthDateStr);
-      int sellMonths = int.tryParse(sellAgeStr) ?? 0;
+      double sellMonths = double.tryParse(sellAgeStr.replaceAll(',', '.')) ?? 0;
+      int wholeMonths = sellMonths.floor();
+      double fractionMonth = sellMonths - wholeMonths;
+      int extraDays = (fractionMonth * 30.44).round();
+
       DateTime sellDate = DateTime(
         birthDate.year,
-        birthDate.month + sellMonths,
-        birthDate.day,
+        birthDate.month + wholeMonths,
+        birthDate.day + extraDays,
       );
       int remainingDays = sellDate.difference(DateTime.now()).inDays;
       return remainingDays <= 0 ? "គ្រប់លក់" : "$remainingDays ថ្ងៃ";
@@ -294,7 +298,10 @@ class _AnimalAgeTrackerPageState extends State<AnimalAgeTrackerPage> {
           IconButton(icon: const Icon(Icons.save), onPressed: _saveAllAnimals),
         ],
       ),
-      body: Column(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: Column(
         children: [
           _buildHeaderCard(),
           _buildBatchInfo(), // ✅ បង្ហាញ Batch ID
@@ -307,6 +314,7 @@ class _AnimalAgeTrackerPageState extends State<AnimalAgeTrackerPage> {
           ),
         ],
       ),
+        ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addAnimal,
         backgroundColor: Colors.indigo,
@@ -612,12 +620,12 @@ class _AnimalAgeTrackerPageState extends State<AnimalAgeTrackerPage> {
           ),
         ),
         const SizedBox(width: 8),
-        Expanded(
-            flex: 2,
-            child: TextField(
+            Expanded(
+              flex: 2,
+              child: TextField(
                 onChanged: (v) => setState(() => animals[index]['sellAge'] = v),
                 textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
                 decoration: InputDecoration(
                     hintText: "ខែ",
                     hintStyle: TextStyle(color: Colors.grey[400], fontSize: 12),

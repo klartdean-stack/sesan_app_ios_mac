@@ -2,66 +2,83 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'dart:io';
-
 import 'package:intl/intl.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:flutter/services.dart';
+
 
 class CreateInvoiceSheet extends StatefulWidget {
   final Function(Map<String, dynamic> data) onAction;
 
+
   static final TextEditingController cusName = TextEditingController();
   static final TextEditingController cusPhone = TextEditingController();
   static final TextEditingController cusAddress = TextEditingController();
+
+
+  // 🎯 កែប្រែទី១៖ ថ្លៃដឹកដំបូងទុកទំនេរស្អាត មិនឱ្យជាប់ 0.0 នាំហត់លុប
   static final TextEditingController shipPrice = TextEditingController(
-    text: '0.0',
+    text: '',
   );
 
+
+  // 🎯 កែប្រែទី២៖ តម្លៃទំនិញជួរទីមួយ ទុកទំនេរស្អាត ('') មិនឱ្យចេញ 0.0 ឡើយ
   static List<Map<String, TextEditingController>> items = [
     {
       'desc': TextEditingController(),
-      'qty': TextEditingController(text: '1.0'),
-      'price': TextEditingController(text: '0.0'),
+      'qty': TextEditingController(
+        text: '1',
+      ), // ចំនួនចេញលេខ 1 អូតូ ត្រឹមត្រូវហើយ
+      'price': TextEditingController(text: ''),
     },
   ];
 
+
   static File? qrFile;
 
+
   const CreateInvoiceSheet({super.key, required this.onAction});
+
 
   @override
   State<CreateInvoiceSheet> createState() => _CreateInvoiceSheetState();
 }
 
+
 class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
   final ScreenshotController _screenshotController = ScreenshotController();
-  // ១. មុខងារ Reset ទិន្នន័យ (Method ដែលបាត់)
+
+
+  // មុខងារ Reset ទិន្នន័យ
   void _resetInvoice() {
     setState(() {
       CreateInvoiceSheet.cusName.clear();
       CreateInvoiceSheet.cusPhone.clear();
       CreateInvoiceSheet.cusAddress.clear();
-      CreateInvoiceSheet.shipPrice.text = '0.0';
+      CreateInvoiceSheet.shipPrice.text = ''; // ទុកឱ្យទំនេរ
       CreateInvoiceSheet.qrFile = null;
       CreateInvoiceSheet.items = [
         {
           'desc': TextEditingController(),
-          'qty': TextEditingController(text: '1.0'),
-          'price': TextEditingController(text: '0.0'),
+          'qty': TextEditingController(text: '1'),
+          'price': TextEditingController(text: ''), // ទុកឱ្យទំនេរ
         },
       ];
     });
   }
 
+
   Future<void> _pickAndCropQRCode() async {
     final ImagePicker picker = ImagePicker();
     final ImageCropper cropper = ImageCropper();
 
+
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
 
     if (image != null) {
       final CroppedFile? croppedFile = await cropper.cropImage(
         sourcePath: image.path,
-        // 🎯 កែសម្រួលត្រង់នេះ៖ ក្នុង Version ថ្មី គេប្រើចំណុចខាងក្រោមជំនួសវិញ
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'តម្រឹម QR Code',
@@ -69,17 +86,16 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: true,
-            // ✅ ដាក់ Aspect Ratio Presets ក្នុង AndroidUiSettings វិញ
             aspectRatioPresets: [CropAspectRatioPreset.square],
           ),
           IOSUiSettings(
-            title: 'តម្រឹម QR Code',
+            title: 'តឹម QR Code',
             aspectRatioLockEnabled: true,
-            // ✅ ដាក់ Aspect Ratio Presets ក្នុង IOSUiSettings វិញ
             aspectRatioPresets: [CropAspectRatioPreset.square],
           ),
         ],
       );
+
 
       if (croppedFile != null) {
         setState(() {
@@ -89,45 +105,56 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
     }
   }
 
+
+  // 🎯 កែប្រែទី៣៖ មុខងារគណនាលុយសរុបថ្មី ដោយលុបសញ្ញាក្បៀស (,) ចេញមុននឹងបូកលេខ
   double _calculateGrandTotal() {
     double subtotal = CreateInvoiceSheet.items.fold(0, (sum, item) {
-      double q = double.tryParse(item['qty']!.text) ?? 0;
-      double p = double.tryParse(item['price']!.text) ?? 0;
+      String qtyText = (item['qty']!.text).replaceAll(',', '');
+      String priceText = (item['price']!.text).replaceAll(',', '');
+
+
+      // ✅ ពិនិត្យទទេ
+      double q = double.tryParse(qtyText) ?? 0;
+      double p = double.tryParse(priceText) ?? 0;
       return sum + (q * p);
     });
-    double shipping = double.tryParse(CreateInvoiceSheet.shipPrice.text) ?? 0;
+
+
+    String shipText = CreateInvoiceSheet.shipPrice.text.replaceAll(',', '');
+    double shipping = double.tryParse(shipText) ?? 0;
     return subtotal + shipping;
   }
-
   @override
   Widget build(BuildContext context) {
     return Screenshot(
-        controller: _screenshotController,
-        child: Container(
-          // ១. កំណត់ពណ៌សដាច់ខាត និងអនុញ្ញាតឱ្យកម្ពស់អូសតាមទិន្នន័យ
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Column(
-                mainAxisSize: MainAxisSize.min, // 🎯 ឱ្យ Column រួញ/រីកតាមទិន្នន័យបុង
-                children: [
-                _buildHeader(), // ក្បាលបុង
-            // ២. ប្រើ Flexible ជំនួស Expanded ដើម្បីកុំឱ្យវាបង្ខាំងទំហំពេល Screenshot
+      controller: _screenshotController,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeader(),
             Flexible(
+              child: GestureDetector(
+                // ✅ ចាប់ Tap លើផ្ទៃទំនេរ
+                onTap: () {
+                  FocusScope.of(context).unfocus();
+                },
+                behavior: HitTestBehavior.opaque,
                 child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // --- ផ្នែកបញ្ជីទំនិញ ---
                       const Text(
                         "បញ្ជីទំនិញ / Items List",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
 
-                      // 🎯 បង្ហាញទំនិញទាំងអស់ (មិនប្រើ ListView នាំឱ្យដាច់រូប)
                       ...CreateInvoiceSheet.items
                           .asMap()
                           .entries
@@ -139,7 +166,7 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
                               () => CreateInvoiceSheet.items.add({
                             'desc': TextEditingController(),
                             'qty': TextEditingController(text: '1'),
-                            'price': TextEditingController(text: '0'),
+                            'price': TextEditingController(text: ''),
                           }),
                         ),
                         icon: const Icon(Icons.add_circle, color: Colors.green),
@@ -150,7 +177,6 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
                       ),
                       const Divider(height: 30, thickness: 1),
 
-                      // --- ផ្នែកព័ត៌មានអ្នកទិញ ---
                       const Text(
                         "ព័ត៌មានអ្នកទិញ / Buyer Info",
                         style: TextStyle(fontWeight: FontWeight.bold),
@@ -170,28 +196,28 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
                         CreateInvoiceSheet.cusAddress,
                       ),
                       _buildInput(
-                        "ថ្លៃដឹកជញ្ជូន / Shipping (៛)", // ✅ ប្រើ៛សុទ្ធ
+                        "ថ្លៃដឹកជញ្ជូន / Shipping (៛)",
                         CreateInvoiceSheet.shipPrice,
                         isNum: true,
+                        isPrice: true,
                         onChanged: (v) => setState(() {}),
                       ),
                       const SizedBox(height: 20),
 
-                      // --- ផ្នែក QR Code ---
                       _buildQRUploadSection(),
                       const SizedBox(height: 30),
                     ],
                   ),
                 ),
+              ),
             ),
-
-                  // ៣. ផ្នែកប៊ូតុង Save/Capture (នៅជាប់ខាងក្រោមជានិច្ច)
-                  _buildActionSection(),
-                ],
-            ),
+            _buildActionSection(),
+          ],
         ),
+      ),
     );
   }
+
 
   Widget _buildQRUploadSection() {
     return Column(
@@ -230,9 +256,10 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
     );
   }
 
+
   Widget _buildHeader() {
     return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
       ),
@@ -245,11 +272,8 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
           ),
           Row(
             children: [
-              // 🎯 ប៊ូតុងចូលមើលប្រវត្តិបុង
-              // ក្នុង Method _buildHeader របស់ CreateInvoiceSheet
               IconButton(
                 onPressed: () {
-                  // 🎯 បិទ Sheet សិន រួចចាំបើក Screen ថ្មី (ដើម្បីកុំឱ្យវាជាន់គ្នា)
                   Navigator.pop(context);
                   widget.onAction({'type': 'history'});
                 },
@@ -266,14 +290,26 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
     );
   }
 
-  // ៣. មុខងារបង្ហាញកាតទំនិញ (Method ដែលបាត់)
+
+  // 🎯 កែប្រែទី៤៖ មុខងារបង្ហាញកាតទំនិញ បន្ថែមជួរលេខរាប់ឈរ (1, 2, 3...) នៅពីមុខ
   Widget _buildItemCard(int index) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 🔢 លេខរាប់ជួរឈរទំនិញ
+            Text(
+              "ទំនិញទី ${index + 1}",
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 4),
             _buildInput("ឈ្មោះទំនិញ", CreateInvoiceSheet.items[index]['desc']!),
             Row(
               children: [
@@ -288,11 +324,12 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _buildInput(
-                    "តម្លៃរាយ ៛", // 🎯 ប្តូរ Label ពី $ មកជា ៛ សុទ្ធ
+                    "តម្លៃរាយ ៛",
                     CreateInvoiceSheet.items[index]['price']!,
                     isNum: true,
+                    isPrice:
+                    true, // 🎯 ថែមប៉ារ៉ាម៉ែត្រនេះ ដើម្បីឱ្យវាលោតសញ្ញាក្បៀសតាមដៃ
                     onChanged: (v) {
-                      // 🎯 រក្សាទិន្នន័យ និង Refresh UI ភ្លាមៗ
                       setState(() {});
                     },
                   ),
@@ -310,69 +347,65 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
     );
   }
 
+
   Widget _buildActionSection() {
     return Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
-        ),
-        child: Column(
-          children: [
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+      ),
+      child: Column(
+        children: [
           Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              "សរុបចុងក្រោយ៖",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              // 🎯 ប្រើ NumberFormat ដើម្បីឱ្យចេញក្បៀស (ឧទាហរណ៍៖ 1,200,000 ៛)
-              "${NumberFormat('#,###').format(_calculateGrandTotal())} ៛",
-              style: const TextStyle(
-                fontSize: 22, // 🎯 រីកទំហំឱ្យធំជាងមុនបន្តិច
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "សរុបចុងក្រោយ៖",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 15),
-        Row(
+              Text(
+                "${NumberFormat('#,###').format(_calculateGrandTotal())} ៛",
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-            // 🎯 កែត្រង់ជួរ 330 និង 334 ក្នុងរូបមេ
-            // ១. ប៊ូតុង Save
-            _actionBtn(Icons.save, "Save", Colors.blue, () {
-          widget.onAction({
-            'type': 'save',
-            'total':
-            _calculateGrandTotal(), // 🎯 ថែមជួរនេះដើម្បីបោះតម្លៃឱ្យ ChatScreen
-          });
-        }),
-
-        // ២. ប៊ូតុង Capture
-        _actionBtn(Icons.camera_alt,"Capture", Colors.purple, () {
-          widget.onAction({
-            'type': 'screenshot',
-            'total': _calculateGrandTotal(), // 🎯 ថែមជួរនេះដែរ
-          });
-        }),
+              _actionBtn(Icons.save, "Save", Colors.blue, () {
+                widget.onAction({
+                  'type': 'save',
+                  'total': _calculateGrandTotal(),
+                });
+              }),
+              _actionBtn(Icons.camera_alt, "Capture", Colors.purple, () {
+                widget.onAction({
+                  'type': 'screenshot',
+                  'total': _calculateGrandTotal(),
+                });
+              }),
             ],
-        ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
+
 
   Widget _actionBtn(
       IconData icon,
       String label,
       Color color,
-      VoidCallback onTap, // 🎯 ប្រកាសថាទទួល Function ពីក្រៅ
+      VoidCallback onTap,
       ) {
     return InkWell(
-      onTap: onTap, // 🎯 ពេលចុចឱ្យវាហៅ Function នោះ
+      onTap: onTap,
       child: Column(
         children: [
           CircleAvatar(
@@ -393,10 +426,13 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
     );
   }
 
+
+  // 🎯 កែប្រែទី៥៖ មុខងារបង្កើត TextField ថ្មីដោយបញ្ចូលប្រព័ន្ធ Format ដាក់ក្បៀស
   Widget _buildInput(
       String label,
       TextEditingController ctrl, {
         bool isNum = false,
+        bool isPrice = false, // 🎯 ថែមប៉ារ៉ាម៉ែត្រនេះដើម្បីសម្គាល់ប្រឡោះលុយ
         Function(String)? onChanged,
       }) {
     return Padding(
@@ -407,8 +443,18 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
         keyboardType: isNum
             ? const TextInputType.numberWithOptions(decimal: true)
             : TextInputType.text,
+        // 🎯 បន្ថែមកូដត្រង់នេះ៖ បើជាប្រឡោះលុយ ឱ្យវាចាប់ហៅ Class Format ក្បៀសអូតូភ្លាមៗ
+        inputFormatters: isPrice
+            ? [
+          FilteringTextInputFormatter.digitsOnly,
+          ThousandsSeparatorInputFormatter(),
+        ]
+            : null,
         decoration: InputDecoration(
           labelText: label,
+          hintText: isPrice
+              ? '0'
+              : null, // បើជាប្រឡោះតម្លៃលក់ ឱ្យបង្ហាញគំរូ 0 ស្រអាប់ៗ
           isDense: true,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         ),
@@ -416,3 +462,40 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
     );
   }
 }
+
+
+// 🎯 កែប្រែទី៦៖ Class សម្រាប់ Format សញ្ញាក្បៀស គ្រប់គ្រងទីតាំង Cursor ត្រឹមត្រូវ ១០០%
+class ThousandsSeparatorInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue,
+      TextEditingValue newValue,
+      ) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+
+
+    // លុបសញ្ញាក្បៀសចាស់ៗចេញ
+    String strippedValue = newValue.text.replaceAll(',', '');
+
+
+    // បំប្លែងទៅជាលេខ
+    int? numValue = int.tryParse(strippedValue);
+    if (numValue == null) return oldValue;
+
+
+    // ដាក់សញ្ញាក្បៀសខ្ទង់ពាន់
+    final formatter = NumberFormat('#,###');
+    String formattedValue = formatter.format(numValue);
+
+
+    return TextEditingValue(
+      text: formattedValue,
+      selection: TextSelection.collapsed(offset: formattedValue.length),
+    );
+  }
+}
+
+
+

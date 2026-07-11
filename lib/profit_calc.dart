@@ -25,15 +25,15 @@ class _ProfitCalcPageState extends State<ProfitCalcPage> {
   void _calculate() {
     setState(() {
       // គណនាចំណាយសរុប
-      double seeds = double.tryParse(_seedCostCtrl.text) ?? 0;
-      double labor = double.tryParse(_laborCostCtrl.text) ?? 0;
-      double fertilizer = double.tryParse(_fertilizerCostCtrl.text) ?? 0;
-      double others = double.tryParse(_otherCostCtrl.text) ?? 0;
+      double seeds = double.tryParse(_seedCostCtrl.text.replaceAll(',', '.')) ?? 0;
+      double labor = double.tryParse(_laborCostCtrl.text.replaceAll(',', '.')) ?? 0;
+      double fertilizer = double.tryParse(_fertilizerCostCtrl.text.replaceAll(',', '.')) ?? 0;
+      double others = double.tryParse(_otherCostCtrl.text.replaceAll(',', '.')) ?? 0;
       _totalCost = seeds + labor + fertilizer + others;
 
       // គណនាចំណូលសរុប
-      double harvest = double.tryParse(_harvestAmountCtrl.text) ?? 0;
-      double price = double.tryParse(_pricePerUnitCtrl.text) ?? 0;
+      double harvest = double.tryParse(_harvestAmountCtrl.text.replaceAll(',', '.')) ?? 0;
+      double price = double.tryParse(_pricePerUnitCtrl.text.replaceAll(',', '.')) ?? 0;
       _totalIncome = harvest * price;
 
       // គណនាចំណេញ/ខាត
@@ -51,12 +51,15 @@ class _ProfitCalcPageState extends State<ProfitCalcPage> {
         ),
         backgroundColor: Colors.teal.shade700,
       ),
-      body: SingleChildScrollView(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle("💰 ចំណាយប៉ាន់ស្មាន (ដើមទុន)", Colors.red),
+            _buildSectionTitle("💰 ចំណាយប៉ាន់ស្មាន (ដើមទុន) បញ្ចូលជាដុល្លា", Colors.red),
             _buildInput(_seedCostCtrl, "ថ្លៃគ្រាប់ពូជ/កូនដាំ", Icons.grass),
             _buildInput(
               _fertilizerCostCtrl,
@@ -81,7 +84,10 @@ class _ProfitCalcPageState extends State<ProfitCalcPage> {
 
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: _calculate,
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                _calculate();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal.shade700,
                 foregroundColor: Colors.white,
@@ -94,15 +100,15 @@ class _ProfitCalcPageState extends State<ProfitCalcPage> {
           ],
         ),
       ),
+        ),
     );
   }
-
   Widget _buildInput(TextEditingController ctrl, String label, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: TextField(
         controller: ctrl,
-        keyboardType: TextInputType.number,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
@@ -146,24 +152,32 @@ class _ProfitCalcPageState extends State<ProfitCalcPage> {
         children: [
           _resultRow(
             "ចំណាយសរុប៖",
-            "- \$${_totalCost.toStringAsFixed(2)}",
+            "- \$${_formatMoney(_totalCost)}",
             Colors.red,
           ),
           _resultRow(
             "ចំណូលសរុប៖",
-            "+ \$${_totalIncome.toStringAsFixed(2)}",
+            "+ \$${_formatMoney(_totalIncome)}",
             Colors.green,
           ),
           const Divider(),
           _resultRow(
             isProfit ? "ចំណេញសុទ្ធ៖" : "ខាតបង់៖",
-            "\$${_profit.abs().toStringAsFixed(2)}",
+            "\$${_formatMoney(_profit.abs())}",
             isProfit ? Colors.green.shade800 : Colors.red.shade800,
             isBold: true,
           ),
         ],
       ),
     );
+  }
+  String _formatMoney(double value) {
+    final parts = value.toStringAsFixed(2).split('.');
+    final intPart = parts[0].replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
+    );
+    return '$intPart.${parts[1]}';
   }
 
   Widget _resultRow(

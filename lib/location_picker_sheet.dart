@@ -35,235 +35,147 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.85,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (_, controller) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            boxShadow: [
-              BoxShadow(color: Colors.black12, blurRadius: 20, spreadRadius: 5),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Handle
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.location_on,
-                        color: Colors.green[700],
-                        size: 24,
-                      ),
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, controller) {
+          // ប្រើ GestureDetector តែមួយគត់ដើម្បីបិទ Keyboard
+          return GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Container(
+                // ដាក់ពណ៌ និង Decoration ក្នុង Container តែមួយគត់ (គ្មាន Error ក្រហម)
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  ),
+                  child: Column(
+                      children: [
+                      const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(Icons.location_on, color: Colors.green[700], size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("ទំលាក់ទីតាំងទទួល", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              Text("បំពេញព័ត៌មានដឹកជញ្ជូន", style: TextStyle(fontSize: 13, color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                        IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Content
+                  Expanded(
+                      child: ListView(
+                        controller: controller,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         children: [
-                          Text(
-                            "ទំលាក់ទីតាំងទទួល",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1A1A),
-                            ),
-                          ),
-                          Text(
-                            "បំពេញព័ត៌មានដឹកជញ្ជូន",
-                            style: TextStyle(fontSize: 13, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-              ),
-
-
-              const SizedBox(height: 20),
-
-
-              // Content
-              Expanded(
-                child: ListView(
-                  controller: controller,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    // Province Dropdown
-                    _buildDropdown(
-                      label: "ជ្រើសរើសខេត្ត/ក្រុង",
-                      icon: Icons.map_outlined,
-                      value: selectedProvince,
-                      items: cambodiaProvinceData.keys.toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          selectedProvince = val;
-                          selectedDistrict = null;
-                          selectedVireakBranch = null;
-                        });
-                      },
-                    ),
-
-
-                    const SizedBox(height: 16),
-
-
-                    // Vireak Buntham Switch
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: SwitchListTile(
-                        title: const Text(
-                          "ផ្ញើតាមវិរៈប៊ុនថាំ",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                        subtitle: const Text(
-                          "ជ្រើសរើសបើចង់ផ្ញើតាមវិរៈប៊ុនថាំ",
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                        value: isVireakBuntham,
-                        activeColor: Colors.red,
+                        _buildDropdown(
+                        label: "ជ្រើសរើសខេត្ត/ក្រុង",
+                        icon: Icons.map_outlined,
+                        value: selectedProvince,
+                        items: cambodiaProvinceData.keys.toList(),
                         onChanged: (val) {
                           setState(() {
-                            isVireakBuntham = val;
+                            selectedProvince = val;
                             selectedDistrict = null;
                             selectedVireakBranch = null;
                           });
                         },
                       ),
-                    ),
-
-
-                    const SizedBox(height: 16),
-                    // District / Vireak Branch Dropdown
-                    if (selectedProvince != null)
-                      isVireakBuntham
-                          ? _buildDropdown(
-                        label: "ជ្រើសរើសសាខាវិរៈ",
-                        icon: Icons.store_outlined,
-                        value: selectedVireakBranch,
-                        iconColor: Colors.red,
-                        items: VETData.branches[selectedProvince] ?? [],
-                        onChanged: (val) {
-                          setState(() => selectedVireakBranch = val);
-                        },
-                      )
-                          : _buildDropdown(
-                        label: "ជ្រើសរើសស្រុក/ខណ្ឌ",
-                        icon: Icons.location_city_outlined,
-                        value: selectedDistrict,
-                        items:
-                        cambodiaProvinceData[selectedProvince!] ?? [],
-                        onChanged: (val) {
-                          setState(() => selectedDistrict = val);
-                        },
-                      ),
-
-
-                    const SizedBox(height: 16),
-
-
-                    // Address TextField
-                    TextField(
-                      controller: _addressController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        labelText: "អាសយដ្ឋានលម្អិត",
-                        hintText: "ផ្ទះលេខ, ផ្លូវ, ភូមិ...",
-                        prefixIcon: const Icon(Icons.home_outlined),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF4CAF50),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-
-
-                    const SizedBox(height: 24),
-
-
-                    // Submit Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _canSubmit() ? _submitLocation : null,
-                        icon: const Icon(Icons.send),
-                        label: const Text(
-                          "ផ្ញើទីតាំង",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4CAF50),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
+                      const SizedBox(height: 16),
+                      Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade200),
                           ),
-                          elevation: 0,
-                        ),
+                          child: SwitchListTile(
+                              title: const Text("ផ្ញើតាមវិរៈប៊ុនថាំ", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red)),
+                              value: isVireakBuntham,
+                              onChanged: (val) {
+                                setState(() {
+                                  isVireakBuntham = val;selectedDistrict = null;
+                                  selectedVireakBranch = null;
+                                });
+                              },
+                          ),
                       ),
-                    ),
-
-
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                          const SizedBox(height: 16),
+                          if (selectedProvince != null)
+                            isVireakBuntham
+                                ? _buildDropdown(
+                              label: "ជ្រើសរើសសាខាវិរៈ",
+                              icon: Icons.store_outlined,
+                              value: selectedVireakBranch,
+                              items: VETData.branches[selectedProvince] ?? [],
+                              onChanged: (val) => setState(() => selectedVireakBranch = val),
+                            )
+                                : _buildDropdown(
+                              label: "ជ្រើសរើសស្រុក/ខណ្ឌ",
+                              icon: Icons.location_city_outlined,
+                              value: selectedDistrict,
+                              items: cambodiaProvinceData[selectedProvince!] ?? [],
+                              onChanged: (val) => setState(() => selectedDistrict = val),
+                            ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _addressController,
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                              labelText: "លេខទូរស័ព្ទ/អាសយដ្ឋានលម្អិត",
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _canSubmit() ? _submitLocation : null,
+                              icon: const Icon(Icons.send),
+                              label: const Text("ផ្ញើទីតាំង"),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                  ),
+                      ],
+                  ),
               ),
-            ],
-          ),
-        );
-      },
+          );
+        },
     );
   }
-
 
   Widget _buildDropdown({
     required String label,

@@ -93,7 +93,10 @@ class _PigFeedCalcPageState extends State<PigFeedCalcPage> {
         title: const Text("ជំនួយការផ្សំចំណីជ្រូក"),
         backgroundColor: Colors.pink.shade400,
       ),
-      body: SingleChildScrollView(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
@@ -125,6 +128,7 @@ class _PigFeedCalcPageState extends State<PigFeedCalcPage> {
           ],
         ),
       ),
+        ),
     );
   }
 

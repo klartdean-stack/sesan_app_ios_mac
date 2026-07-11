@@ -1,4 +1,5 @@
 # This is a generated file; do not edit or check into version control.
+app_links=/Users/soknov/.pub-cache/hosted/pub.dev/app_links-6.0.0/
 audioplayers=/Users/soknov/.pub-cache/hosted/pub.dev/audioplayers-5.2.1/
 audioplayers_android=/Users/soknov/.pub-cache/hosted/pub.dev/audioplayers_android-4.0.3/
 audioplayers_darwin=/Users/soknov/.pub-cache/hosted/pub.dev/audioplayers_darwin-5.0.2/
@@ -37,6 +38,7 @@ geolocator_web=/Users/soknov/.pub-cache/hosted/pub.dev/geolocator_web-4.0.0/
 geolocator_windows=/Users/soknov/.pub-cache/hosted/pub.dev/geolocator_windows-0.2.3/
 google_mlkit_barcode_scanning=/Users/soknov/.pub-cache/hosted/pub.dev/google_mlkit_barcode_scanning-0.10.0/
 google_mlkit_commons=/Users/soknov/.pub-cache/hosted/pub.dev/google_mlkit_commons-0.6.1/
+gtk=/Users/soknov/.pub-cache/hosted/pub.dev/gtk-2.2.0/
 image_cropper=/Users/soknov/.pub-cache/hosted/pub.dev/image_cropper-7.1.0/
 image_cropper_for_web=/Users/soknov/.pub-cache/hosted/pub.dev/image_cropper_for_web-5.1.0/
 image_picker=/Users/soknov/.pub-cache/hosted/pub.dev/image_picker-1.1.2/
@@ -50,8 +52,6 @@ local_auth=/Users/soknov/.pub-cache/hosted/pub.dev/local_auth-2.3.0/
 local_auth_android=/Users/soknov/.pub-cache/hosted/pub.dev/local_auth_android-1.0.38/
 local_auth_darwin=/Users/soknov/.pub-cache/hosted/pub.dev/local_auth_darwin-1.4.1/
 local_auth_windows=/Users/soknov/.pub-cache/hosted/pub.dev/local_auth_windows-1.0.11/
-location=/Users/soknov/.pub-cache/hosted/pub.dev/location-6.0.2/
-location_web=/Users/soknov/.pub-cache/hosted/pub.dev/location_web-5.0.1/
 mobile_scanner=/Users/soknov/.pub-cache/hosted/pub.dev/mobile_scanner-3.5.7/
 path_provider=/Users/soknov/.pub-cache/hosted/pub.dev/path_provider-2.1.4/
 path_provider_android=/Users/soknov/.pub-cache/hosted/pub.dev/path_provider_android-2.2.4/

@@ -648,17 +648,123 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 
-class _BidHistorySection extends StatelessWidget {
+class _BidHistorySection extends StatefulWidget {
   final String userId;
   const _BidHistorySection({required this.userId});
 
 
   @override
+  State<_BidHistorySection> createState() => _BidHistorySectionState();
+}
+
+
+class _BidHistorySectionState extends State<_BidHistorySection>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final Map<String, String> _productNameCache = {};
+
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+
+  Future<String> _getProductName(String productId) async {
+    if (_productNameCache.containsKey(productId)) {
+      return _productNameCache[productId]!;
+    }
+
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('auction_products') // 🎯 ប្តូរទៅ Collection ថ្មី
+          .doc(productId)
+          .get();
+
+
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        final name = data['product_name']?.toString() ?? 'គ្មានឈ្មោះ';
+        _productNameCache[productId] = name;
+        return name;
+      }
+    } catch (e) {
+      debugPrint("Error fetching product name: $e");
+    }
+
+
+    _productNameCache[productId] = 'គ្មានឈ្មោះ';
+    return 'គ្មានឈ្មោះ';
+  }
+
+
+  @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // ✅ Tab Bar
+        Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            indicator: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4),
+              ],
+            ),
+            indicatorSize: TabBarIndicatorSize.tab,
+            labelColor: Colors.blueAccent,
+            unselectedLabelColor: Colors.grey[600],
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              fontFamily: 'Siemreap',
+            ),
+            tabs: const [
+              Tab(text: 'ប្រវត្តិដេញថ្លៃ'),
+              Tab(text: 'ប្រវត្តិឈ្នះ'),
+            ],
+          ),
+        ),
+
+
+        // ✅ Tab Content
+        SizedBox(
+          height: 400, // កំណត់កម្ពស់
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildBidHistoryTab(), // Tab ប្រវត្តិដេញថ្លៃ
+              _buildWinHistoryTab(), // Tab ប្រវត្តិឈ្នះ
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+
+  // ✅ Tab ប្រវត្តិដេញថ្លៃ (ដូចដើម)
+  Widget _buildBidHistoryTab() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collectionGroup('bids')
-          .where('bidder_id', isEqualTo: userId)
+          .where('bidder_id', isEqualTo: widget.userId)
           .orderBy('bid_time', descending: true)
           .limit(20)
           .snapshots(),
@@ -667,38 +773,52 @@ class _BidHistorySection extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return _InfoCard(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                child: const Column(
-                  children: [
-                    Icon(Icons.gavel_outlined, color: Colors.grey, size: 40),
-                    SizedBox(height: 8),
-                    Text(
-                      'មិនទាន់មានប្រវត្តិដេញថ្លៃ',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontFamily: 'Siemreap',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
+          return _buildEmptyState('មិនទាន់មានប្រវត្តិដេញថ្លៃ');
         }
 
 
         final bids = snapshot.data!.docs;
-        return _InfoCard(
-          children: List.generate(bids.length, (index) {
+        return ListView.builder(
+          itemCount: bids.length,
+          itemBuilder: (context, index) {
             final bid = bids[index].data() as Map<String, dynamic>;
-            final bidTime = bid['bid_time'] != null
-                ? (bid['bid_time'] as Timestamp).toDate()
-                : null;
-            final amount = bid['bid_amount'] ?? 0;
-            final productName = bid['product_name'] ?? 'គ្មានឈ្មោះ';
+            final String productId =
+                bids[index].reference.parent.parent?.id ?? '';
+            return _buildBidTile(bid, productId);
+          },
+        );
+      },
+    );
+  } // ✅ Tab ប្រវត្តិឈ្នះ (ថ្មី)
+
+
+  Widget _buildWinHistoryTab() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection(
+        'auction_products',
+      ) // 🎯 ប្តូរមកទាញប្រវត្តិឈ្នះពីរបស់ដេញថ្លៃពិតប្រាកដ
+          .where('last_bidder_id', isEqualTo: widget.userId)
+      // .where('status', isEqualTo: 'auction') // 💡 បើក្នុង auction_products មានតែអីវ៉ាន់ដេញថ្លៃស្រាប់ អាចដកលក្ខខណ្ឌ status នេះចេញបាន បើមិនត្រូវការ
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return _buildEmptyState('មិនទាន់មានប្រវត្តិឈ្នះ');
+        }
+
+
+        final products = snapshot.data!.docs;
+        return ListView.builder(
+          itemCount: products.length,
+          itemBuilder: (context, index) {
+            final data = products[index].data() as Map<String, dynamic>;
+            final productName =
+                data['product_name']?.toString() ?? 'គ្មានឈ្មោះ';
+            final currentPrice = data['current_price'] ?? 0;
+            final endTime = data['end_time'];
 
 
             return ListTile(
@@ -706,10 +826,14 @@ class _BidHistorySection extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.amber.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.gavel, color: Colors.blueAccent),
+                child: const Icon(
+                  Icons.emoji_events,
+                  color: Colors.amber,
+                  size: 24,
+                ),
               ),
               title: Text(
                 productName,
@@ -718,14 +842,14 @@ class _BidHistorySection extends StatelessWidget {
                   fontSize: 14,
                 ),
               ),
-              subtitle: bidTime != null
+              subtitle: endTime != null
                   ? Text(
-                DateFormat('dd/MM/yyyy HH:mm').format(bidTime),
+                'បញ្ចប់៖ ${DateFormat('dd/MM/yyyy').format((endTime as Timestamp).toDate())}',
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               )
                   : null,
               trailing: Text(
-                '${NumberFormat('#,###').format(amount)} ៛',
+                '${NumberFormat('#,###').format(currentPrice)} ៛',
                 style: const TextStyle(
                   color: Colors.green,
                   fontWeight: FontWeight.bold,
@@ -733,9 +857,80 @@ class _BidHistorySection extends StatelessWidget {
                 ),
               ),
             );
-          }),
+          },
         );
       },
+    );
+  }
+
+
+  Widget _buildBidTile(Map<String, dynamic> bid, String productId) {
+    final bidTime = bid['bid_time'] != null
+        ? (bid['bid_time'] as Timestamp).toDate()
+        : null;
+    final amount = bid['bid_amount'] ?? 0;
+
+
+    return FutureBuilder<String>(
+      future: _getProductName(productId),
+      builder: (context, nameSnapshot) {
+        final productName = nameSnapshot.data ?? 'កំពុងផ្ទុក...';
+
+
+        return ListTile(
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.gavel, color: Colors.blueAccent),
+          ),
+          title: Text(
+            productName,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          ),
+          subtitle: bidTime != null
+              ? Text(
+            DateFormat('dd/MM/yyyy HH:mm').format(bidTime),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          )
+              : null,
+          trailing: Text(
+            '${NumberFormat('#,###').format(amount)} ៛',
+            style: const TextStyle(
+              color: Colors.green,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+  Widget _buildEmptyState(String message) {
+    return _InfoCard(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Icon(Icons.gavel_outlined, color: Colors.grey, size: 40),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontFamily: 'Siemreap',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
