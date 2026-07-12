@@ -3,8 +3,12 @@ workflows:
     name: iOS Build
     environment:
       flutter: stable
-      xcode: latest
+      xcode: 15.4   # ← កំណត់ Xcode version ឲ្យច្បាស់ (ប្រើ 15.4 ឬ 16.0)
     scripts:
+      - name: Update CocoaPods
+        script: |
+          sudo gem install cocoapods
+          pod --version
       - name: Install Flutter dependencies
         script: |
           flutter pub get
@@ -13,6 +17,7 @@ workflows:
           cd ios
           pod deintegrate
           rm -rf Pods Podfile.lock
+          pod repo update
           pod install --repo-update
           cd ..
     artifacts:
@@ -20,4 +25,4 @@ workflows:
     publishing:
       email:
         recipients:
-          - klartdean@gmail.com # ប្តូរទៅអ៊ីមែលរបស់អ្នក
+          - klartdean@gmail.com
