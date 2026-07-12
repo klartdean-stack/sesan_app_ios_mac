@@ -3,7 +3,7 @@ workflows:
     name: iOS Build
     environment:
       flutter: stable
-      xcode: 15.4   # ← កំណត់ Xcode version ឲ្យច្បាស់ (ប្រើ 15.4 ឬ 16.0)
+      xcode: 14.3.1   # ← កំណត់ Xcode version ឲ្យច្បាស់ (ប្រើ 15.4 ឬ 16.0)
     scripts:
       - name: Update CocoaPods
         script: |
