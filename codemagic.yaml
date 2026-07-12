@@ -3,7 +3,7 @@ workflows:
     name: iOS Build
     environment:
       flutter: stable
-      xcode: 14.3.1
+      xcode: 15.4
     scripts:
       - name: Install specific CocoaPods version
         script: |
@@ -22,6 +22,17 @@ workflows:
           rm -rf Pods Podfile.lock
           pod install --repo-update
           cd ..
+
+      - name: Remove -G flag from Pods project
+        script: |
+          cd ios
+          # ដក -G ចេញពីឯកសារ xcconfig ទាំងអស់
+          find Pods -name "*.xcconfig" -exec perl -pi -e 's/-G //g' {} \;
+          cd ..
+
+      - name: Build iOS
+        script: |
+          flutter build ios --release --no-codesign --ios-arch=arm64
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
