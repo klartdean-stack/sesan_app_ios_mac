@@ -5,9 +5,10 @@ workflows:
       flutter: stable
       xcode: 14.3.1
     scripts:
-      - name: Update CocoaPods
+      - name: Install specific CocoaPods version
         script: |
-          sudo gem install cocoapods
+          sudo gem uninstall cocoapods -a
+          sudo gem install cocoapods -v 1.15.2
           pod --version
 
       - name: Install Flutter dependencies
@@ -19,13 +20,8 @@ workflows:
           cd ios
           pod deintegrate
           rm -rf Pods Podfile.lock
-          pod repo update
           pod install --repo-update
           cd ..
-
-      - name: Build iOS
-        script: |
-          flutter build ios --release --no-codesign --ios-arch=arm64
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
