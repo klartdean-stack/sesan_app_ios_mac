@@ -38,17 +38,26 @@ target 'Runner' do
     inherit! :search_paths
   end
 end
-
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+
+    # 🎯 ដក -G ពីគ្រប់ targets (ដូចជា gRPC, abseil, BoringSSL)
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       config.build_settings['GCC_WARN_CHECK_SWITCH_STATEMENTS'] = 'NO'
+      config.build_settings['WARNING_CFLAGS'] = '-Wno-unknown-warning-option'
 
-      ['OTHER_C_FLAGS', 'OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |flag_key|
-        config.build_settings[flag_key] = (config.build_settings[flag_key] || []).reject { |f| f.include?('-G') }
+      # លុប -G ពីគ្រប់ flag keys
+      ['OTHER_C_FLAGS', 'OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS', 'OTHER_LDFLAGS'].each do |flag_key|
+        flags = config.build_settings[flag_key] || []
+        flags = flags.split(' ') if flags.is_a?(String)
+        flags = flags.reject { |f| f == '-G' }
+        config.build_settings[flag_key] = flags.join(' ') if flags.any?
       end
     end
   end
+
+  # 🎯 ដក -G ពី xcconfig files ដោយផ្ទាល់
+  system("find #{installer.sandbox.root} -name '*.xcconfig' -type f -exec sed -i '' 's/-G //g' {} \\;")
 end
