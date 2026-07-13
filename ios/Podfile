@@ -38,11 +38,14 @@ post_install do |installer|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       config.build_settings['GCC_WARN_CHECK_SWITCH_STATEMENTS'] = 'NO'
 
-      # បន្ថែមផ្នែកនេះដើម្បីកាត់ Flag -G ចេញ
-      cflags = config.build_settings['OTHER_CFLAGS']
-      if cflags
-        cflags_array = cflags.is_a?(Array) ? cflags : [cflags]
-        config.build_settings['OTHER_CFLAGS'] = cflags_array.reject { |f| f == '-G' }
+      # នេះជាការបង្ខំដក -G ចេញពីគ្រប់កន្លែងក្នុង Build Settings
+      if config.build_settings['OTHER_CFLAGS']
+        cflags = config.build_settings['OTHER_CFLAGS']
+        if cflags.is_a?(Array)
+          config.build_settings['OTHER_CFLAGS'] = cflags.reject { |f| f == '-G' }
+        else
+          config.build_settings['OTHER_CFLAGS'] = cflags.to_s.gsub(/-G\b/, '')
+        end
       end
     end
   end
