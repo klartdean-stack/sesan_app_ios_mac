@@ -39,14 +39,16 @@ target 'Runner' do
     inherit! :search_paths
   end
 end
-
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-      # Remove -G flag if present
-      config.build_settings['OTHER_CFLAGS'] = (config.build_settings['OTHER_CFLAGS'] || []).reject { |flag| flag == '-G' }
+      config.build_settings['GCC_WARN_CHECK_SWITCH_STATEMENTS'] = 'NO'
+
+      # ដក -G ពីឯកសារកំណត់រចនាសម្ព័ន្ធទាំងអស់
+      ['OTHER_C_FLAGS', 'OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |flag_key|
+        config.build_settings[flag_key] = (config.build_settings[flag_key] || []).reject { |f| f.include?('-G') }
+      end
     end
   end
-end
