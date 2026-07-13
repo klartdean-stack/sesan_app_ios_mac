@@ -31,7 +31,6 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
-  # ✅ កំណត់ជំនាន់ SDWebImage និង SDWebImageWebPCoder ឲ្យត្រូវគ្នា
   pod 'SDWebImage', '5.15.0'
   pod 'SDWebImageWebPCoder', '0.11.0'
 
@@ -39,6 +38,7 @@ target 'Runner' do
     inherit! :search_paths
   end
 end
+
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
@@ -46,9 +46,9 @@ post_install do |installer|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       config.build_settings['GCC_WARN_CHECK_SWITCH_STATEMENTS'] = 'NO'
 
-      # ដក -G ពីឯកសារកំណត់រចនាសម្ព័ន្ធទាំងអស់
       ['OTHER_C_FLAGS', 'OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |flag_key|
         config.build_settings[flag_key] = (config.build_settings[flag_key] || []).reject { |f| f.include?('-G') }
       end
     end
   end
+end
