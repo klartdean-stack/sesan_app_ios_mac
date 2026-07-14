@@ -1,6 +1,5 @@
 platform :ios, '14.0'
 
-# កំណត់កន្លែងដែល Flutter ស្ថិតនៅ
 def flutter_root
   generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
   unless File.exist?(generated_xcode_build_settings_path)
@@ -13,7 +12,6 @@ def flutter_root
   raise "FLUTTER_ROOT not found."
 end
 
-# ភ្ជាប់ Flutter Tools
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
 flutter_ios_podfile_setup
@@ -21,22 +19,20 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
-
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
   post_install do |installer|
     installer.pods_project.targets.each do |target|
       flutter_additional_ios_build_settings(target)
-
-      # កាត់ Flag -G ចេញពីគ្រប់ទីកន្លែងដើម្បីបំបាត់ Error របស់ Xcode 16
       target.build_configurations.each do |config|
+        # បង្ខំឱ្យ Library ទាំងអស់ប្រើ Deployment Target 14.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+
+        # បំបាត់ Flag -G
         cflags = config.build_settings['OTHER_CFLAGS']
         if cflags
-          if cflags.is_a?(Array)
-            config.build_settings['OTHER_CFLAGS'] = cflags.map { |f| f.to_s.gsub(/-G/, '') }
-          else
-            config.build_settings['OTHER_CFLAGS'] = cflags.to_s.gsub(/-G/, '')
-          end
+          cflags_array = cflags.is_a?(Array) ? cflags : [cflags]
+          config.build_settings['OTHER_CFLAGS'] = cflags_array.reject { |f| f == '-G' }
         end
       end
     end
