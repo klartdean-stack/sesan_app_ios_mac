@@ -25,10 +25,8 @@ target 'Runner' do
     installer.pods_project.targets.each do |target|
       flutter_additional_ios_build_settings(target)
       target.build_configurations.each do |config|
-        # បង្ខំឱ្យ Library ទាំងអស់ប្រើ Deployment Target 14.0
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
 
-        # បំបាត់ Flag -G
         cflags = config.build_settings['OTHER_CFLAGS']
         if cflags
           cflags_array = cflags.is_a?(Array) ? cflags : [cflags]
