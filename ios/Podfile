@@ -31,26 +31,21 @@ target 'Runner' do
     inherit! :search_paths
   end
 end
+
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
-
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-      config.build_settings['GCC_WARN_CHECK_SWITCH_STATEMENTS'] = 'NO'
 
-      # បង្ខំកាត់ Flag -G ចេញពីគ្រប់ទីកន្លែង
-      if config.build_settings['OTHER_CFLAGS']
-        config.build_settings['OTHER_CFLAGS'] = config.build_settings['OTHER_CFLAGS'].gsub(/-G/, '')
-      end
-    end
-  end
-
-  # បន្ថែមការបង្ខំសម្រាប់ target ជាក់លាក់ដែលមានបញ្ហា
-  installer.pods_project.targets.each do |target|
-    if ['BoringSSL-GRPC', 'gRPC-Core', 'abseil'].include?(target.name)
-      target.build_configurations.each do |config|
-        config.build_settings['OTHER_CFLAGS'] = '$(inherited)'
+      # វិធីសាស្ត្រកាត់ Flag -G ចេញពីគ្រប់កន្លែង
+      cflags = config.build_settings['OTHER_CFLAGS']
+      if cflags
+        if cflags.is_a?(Array)
+          config.build_settings['OTHER_CFLAGS'] = cflags.map { |f| f.to_s.gsub(/-G/, '') }
+        else
+          config.build_settings['OTHER_CFLAGS'] = cflags.to_s.gsub(/-G/, '')
+        end
       end
     end
   end
