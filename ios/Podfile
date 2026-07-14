@@ -2,10 +2,14 @@ platform :ios, '14.0'
 
 def flutter_root
   generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. Run 'flutter pub get' first."
+  end
   File.foreach(generated_xcode_build_settings_path) do |line|
     matches = line.match(/FLUTTER_ROOT\=(.*)/)
     return matches[1].strip if matches
   end
+  raise "FLUTTER_ROOT not found."
 end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
@@ -23,11 +27,10 @@ target 'Runner' do
       target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
 
-        # កាត់ Flag -G ចេញពីគ្រប់ទីកន្លែង
-        if config.build_settings['OTHER_CFLAGS']
-          cflags = config.build_settings['OTHER_CFLAGS']
-          # បំបែក Array រួចត្រងយកតែអ្វីដែលមិនមែន -G
-          config.build_settings['OTHER_CFLAGS'] = (cflags.is_a?(Array) ? cflags : [cflags]).reject { |f| f == '-G' }
+        cflags = config.build_settings['OTHER_CFLAGS']
+        if cflags
+          cflags_array = cflags.is_a?(Array) ? cflags : [cflags]
+          config.build_settings['OTHER_CFLAGS'] = cflags_array.reject { |f| f == '-G' }
         end
       end
     end
