@@ -28,16 +28,14 @@ target 'Runner' do
       target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
 
-        # វិធីសាស្ត្រលុប -G ពីរាល់ Configuration ទាំងអស់
-        cflags = config.build_settings['OTHER_CFLAGS']
-        if cflags
-          if cflags.is_a?(Array)
-            config.build_settings['OTHER_CFLAGS'] = cflags.map { |f| f.to_s.gsub(/-G/, '') }
-          else
-            config.build_settings['OTHER_CFLAGS'] = cflags.to_s.gsub(/-G/, '')
+        ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |flag|
+          if config.build_settings[flag]
+            cflags = config.build_settings[flag]
+            cflags_array = cflags.is_a?(Array) ? cflags : [cflags.to_s]
+            config.build_settings[flag] = cflags_array.reject { |f| f.to_s == '-G' }
           end
         end
       end
     end
   end
-end
+end # <--- នេះជា 'end' ដែលមេខ្វះ ដើម្បីបិទ target 'Runner'
