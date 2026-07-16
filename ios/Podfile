@@ -17,18 +17,19 @@ target 'Runner' do
   use_frameworks!
   use_modular_headers!
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
 
-  post_install do |installer|
-    installer.pods_project.targets.each do |target|
-      flutter_additional_ios_build_settings(target)
-      target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-
-        # កាត់ Flag -G ចេញពីគ្រប់ទីកន្លែង
-        if config.build_settings['OTHER_CFLAGS']
-          cflags = config.build_settings['OTHER_CFLAGS']
-          # បំបែក Array រួចត្រងយកតែអ្វីដែលមិនមែន -G
-          config.build_settings['OTHER_CFLAGS'] = (cflags.is_a?(Array) ? cflags : [cflags]).reject { |f| f == '-G' }
+      # កម្ទេច Flag -G មិនឱ្យសល់ពីគ្រប់ទីកន្លែង
+      ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |flag|
+        if config.build_settings[flag]
+          cflags = config.build_settings[flag]
+          cflags_array = cflags.is_a?(Array) ? cflags : [cflags.to_s]
+          # កាត់ -G ចេញ មិនឱ្យនៅសល់
+          config.build_settings[flag] = cflags_array.reject { |f| f.to_s == '-G' }
         end
       end
     end
