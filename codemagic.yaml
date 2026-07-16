@@ -4,33 +4,25 @@ workflows:
     environment:
       flutter: stable
       xcode: 15.4
-      vars:
-        GCC_WARN_CHECK_SWITCH_STATEMENTS: "NO"
     scripts:
-      - name: Install specific CocoaPods version
-        script: |
-          sudo gem uninstall cocoapods -a
-          sudo gem install cocoapods -v 1.15.2
-          pod --version
-
       - name: Install Flutter dependencies
         script: |
           flutter pub get
 
-      - name: Clean and Install CocoaPods
+      - name: Clean iOS
         script: |
           cd ios
-          pod deintegrate
           rm -rf Pods Podfile.lock
+          cd ..
+
+      - name: Install Pods
+        script: |
+          cd ios
           pod install --repo-update
           cd ..
 
       - name: Build iOS
         script: |
-          flutter build ios --release --no-codesign --ios-arch=arm64
+          flutter build ios --release --no-codesign
     artifacts:
       - build/ios/ipa/*.ipa
-    publishing:
-      email:
-        recipients:
-          - klartdean@gmail.com

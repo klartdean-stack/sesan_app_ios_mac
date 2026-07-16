@@ -1,4 +1,4 @@
-platform :ios, '13'
+platform :ios, '14'
 
 project 'Runner', {
   'Debug' => :debug,
