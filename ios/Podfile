@@ -1,51 +1,36 @@
 platform :ios, '14.0'
 
-project 'Runner', {
-  'Debug' => :debug,
-  'Profile' => :release,
-  'Release' => :release,
-}
+# នាំចូល podhelper តាមរបៀបត្រឹមត្រូវរបស់ Flutter
+flutter_application_path = File.join('..', '.')
+require File.join(flutter_application_path, '.flutter-plugins')
 
-def flutter_root
-  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-  unless File.exist?(generated_xcode_build_settings_path)
-    raise "#{generated_xcode_build_settings_path} must exist. Run 'flutter pub get' first."
+# នេះគឺជាវិធីដែលត្រឹមត្រូវបំផុតដើម្បីហៅ podhelper
+flutter_root = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+if File.exist?(flutter_root)
+  File.foreach(flutter_root) do |line|
+    if line =~ /^FLUTTER_ROOT\=(.*)/
+      flutter_root = File.join($1.strip, 'packages', 'flutter_tools', 'bin', 'podhelper')
+    end
   end
-  File.foreach(generated_xcode_build_settings_path) do |line|
-    matches = line.match(/FLUTTER_ROOT\=(.*)/)
-    return matches[1].strip if matches
-  end
-  raise "FLUTTER_ROOT not found."
 end
-
-require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
-
-flutter_ios_podfile_setup
+require flutter_root
 
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
+
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
   post_install do |installer|
     installer.pods_project.targets.each do |target|
-      flutter_additional_ios_build_settings(target)
       target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-
-        # ការកែតម្រូវដ៏រឹងមាំសម្រាប់ Flag -G
+        # កម្ទេច Flag -G មិនឱ្យ Compiler រករឿង
         ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |flag|
-          cflags = config.build_settings[flag]
-          cflags_array = cflags.is_a?(Array) ? cflags : (cflags ? [cflags.to_s] : ['$(inherited)'])
-
-          # សម្អាត -G ចេញពី array
-          config.build_settings[flag] = cflags_array.reject { |f| f.to_s == '-G' }
+          if config.build_settings[flag]
+            config.build_settings[flag] = config.build_settings[flag].to_s.gsub('-G', '')
+          end
         end
       end
     end
-  end
-
-  target 'RunnerTests' do
-    inherit! :search_paths
   end
 end
