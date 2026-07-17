@@ -1,0 +1,41 @@
+workflows:
+  ios-build:
+    name: iOS Build
+    environment:
+      flutter: stable
+      xcode: 16.0   # ផ្លាស់ទៅ 16 ឬ latest ប្រសើរជាង 15.4
+      cocoapods: 1.15.2   # បញ្ជាក់ version ដើម្បីស្ថេរភាព
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: "com.sesan.app"
+
+    cache:
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - $HOME/.cocoapods
+
+    scripts:
+      - name: Flutter Pub Get
+        script: |
+          flutter clean          # សំខាន់! លុប cache ចាស់
+          flutter pub get
+          flutter pub get        # រត់ពីរដង ដើម្បីប្រាកដ
+
+      - name: Pod Install
+        script: |
+          cd ios
+          rm -f Podfile.lock     # លុប lock file ចាស់
+          pod install --repo-update --verbose
+          cd ..
+
+      - name: Build iOS Archive
+        script: |
+          flutter build ipa --release --no-codesign   # បន្ថែម --no-codesign សិន
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+
+    publishing:
+      email:
+        recipients:
+          - klartdean@gmail.com
