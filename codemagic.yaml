@@ -3,27 +3,42 @@ workflows:
     name: iOS Build
     environment:
       flutter: stable
-      xcode: 15.4
+      xcode: 16.0
+      cocoapods: 1.15.2
       ios_signing:
         distribution_type: app_store
         bundle_identifier: "com.sesan.app"
+
     cache:
       cache_paths:
         - $FLUTTER_ROOT/.pub-cache
         - $HOME/.cocoapods
-    scripts:
-      - name: Install Flutter dependencies
-        script: flutter pub get
 
-      - name: Install CocoaPods
+    scripts:
+      - name: Prepare Flutter & Generate Xcode files
+        script: |
+          flutter clean
+          rm -rf ios/Flutter/   # លុប folder ចាស់
+          flutter pub get
+          flutter pub get       # រត់ពីរដង
+          
+          # បង្ខំ generate Generated.xcconfig
+          mkdir -p ios/Flutter
+          flutter build ios --debug --no-codesign || echo "Build debug failed but continuing..."
+          
+          ls -la ios/Flutter/   # ពិនិត្យថាមាន Generated.xcconfig ឬអត់ (សម្រាប់ debug)
+
+      - name: Pod Install
         script: |
           cd ios
-          pod install --repo-update
+          rm -rf Pods Podfile.lock
+          pod repo update
+          pod install --verbose
           cd ..
 
-      - name: Build iOS Archive
+      - name: Build Release IPA
         script: |
-          flutter build ipa --release
+          flutter build ipa --release --no-codesign
 
     artifacts:
       - build/ios/ipa/*.ipa
