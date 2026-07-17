@@ -13,7 +13,8 @@ workflows:
         - $HOME/.cocoapods
     scripts:
       - name: Install Flutter dependencies
-        script: flutter pub get
+        script: |
+          flutter pub get
 
       - name: Install CocoaPods
         script: |
