@@ -1,16 +1,19 @@
+# បន្ទាត់សំខាន់៖ ហៅ Podhelper របស់ Flutter ចូល
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), Flutter::Tools::Bin::Podhelper.find_flutter_root(File.dirname(File.realpath(__FILE__))))
+
 platform :ios, '14.0'
 
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
-  # ហៅប្រើប្រាស់ Podfile របស់ Flutter
+  # ហៅ Function របស់ Flutter
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
   post_install do |installer|
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        # កម្ទេច Flag -G
+        # កម្ទេច Flag -G មិនឱ្យ Compiler រករឿង
         ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |flag|
           if config.build_settings[flag]
             config.build_settings[flag] = config.build_settings[flag].to_s.gsub('-G', '')
