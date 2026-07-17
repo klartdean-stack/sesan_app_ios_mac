@@ -33,13 +33,13 @@ target 'Runner' do
       target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
 
-        # កម្ទេច Flag -G មិនឱ្យ Compiler រករឿង
+        # ការកែតម្រូវដ៏រឹងមាំសម្រាប់ Flag -G
         ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |flag|
-          if config.build_settings[flag]
-            cflags = config.build_settings[flag]
-            cflags_array = cflags.is_a?(Array) ? cflags : [cflags.to_s]
-            config.build_settings[flag] = cflags_array.reject { |f| f.to_s == '-G' }
-          end
+          cflags = config.build_settings[flag]
+          cflags_array = cflags.is_a?(Array) ? cflags : (cflags ? [cflags.to_s] : ['$(inherited)'])
+
+          # សម្អាត -G ចេញពី array
+          config.build_settings[flag] = cflags_array.reject { |f| f.to_s == '-G' }
         end
       end
     end
