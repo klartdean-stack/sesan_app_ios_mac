@@ -1,30 +1,16 @@
 platform :ios, '14.0'
 
-# នាំចូល podhelper តាមរបៀបត្រឹមត្រូវរបស់ Flutter
-flutter_application_path = File.join('..', '.')
-require File.join(flutter_application_path, '.flutter-plugins')
-
-# នេះគឺជាវិធីដែលត្រឹមត្រូវបំផុតដើម្បីហៅ podhelper
-flutter_root = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-if File.exist?(flutter_root)
-  File.foreach(flutter_root) do |line|
-    if line =~ /^FLUTTER_ROOT\=(.*)/
-      flutter_root = File.join($1.strip, 'packages', 'flutter_tools', 'bin', 'podhelper')
-    end
-  end
-end
-require flutter_root
-
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
+  # ហៅប្រើប្រាស់ Podfile របស់ Flutter
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
   post_install do |installer|
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        # កម្ទេច Flag -G មិនឱ្យ Compiler រករឿង
+        # កម្ទេច Flag -G
         ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |flag|
           if config.build_settings[flag]
             config.build_settings[flag] = config.build_settings[flag].to_s.gsub('-G', '')
