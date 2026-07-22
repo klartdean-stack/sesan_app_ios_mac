@@ -27,55 +27,76 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run flutter pub outdated.
+
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+
+  # 📸 Image & Video
   image_picker: ^1.1.2
-  video_player: ^2.8.3
-  firebase_auth: ^4.16.0
-  firebase_storage: ^11.5.0
-  url_launcher: ^6.3.1
-  share_plus: ^10.0.0
-  intl: ^0.18.1
-  cloud_firestore: ^4.13.0
-  firebase_messaging: ^14.6.0
-  firebase_core: ^2.24.2
+  video_player: ^2.9.2
+  video_compress: ^3.1.4
+  cached_network_image: ^3.4.0
+  photo_view: ^0.15.0
+
+  # 🔥 Firebase - USE THESE EXACT VERSIONS
+  firebase_core: ^3.8.0
+  firebase_auth: ^5.3.0
+  firebase_storage: ^12.3.0
+  cloud_firestore: ^5.4.0
+  firebase_messaging: ^15.1.0
+  cloud_functions: ^5.0.0
+
+  # 🌐 Networking
   http: ^1.2.2
-  path_provider: ^2.1.4
-  gal: ^2.3.2
   dio: ^5.7.0
+  url_launcher: ^6.3.1
+
+  # 📦 Storage
+  path_provider: ^2.1.4
+  shared_preferences: ^2.2.3
+  permission_handler: ^11.3.1
+  gal: ^2.3.2
+
+  # 🔐 Auth
   local_auth: ^2.3.0
-  ai_barcode_scanner: ^5.1.1+2
-  qr_flutter: ^4.1.0
+
+  # 🎵 Audio - COMPATIBLE WITH Xcode 26
+  audioplayers: ^6.1.0
+
+  # 📱 UI
   provider: ^6.1.5+1
   flutter_staggered_grid_view: ^0.7.0
-  audio_video_progress_bar: ^2.0.3
   flutter_staggered_animations: ^1.0.0
-  photo_view: ^0.15.0
-  cached_network_image: ^3.4.0
-  flutter_image_compress: ^2.3.0
-  video_compress: ^3.1.4
-  rxdart: ^0.28.0
-  shared_preferences: ^2.2.3
-  flutter_localizations:
-    sdk: flutter
-  flutter_local_notifications: ^18.0.1
-  cloud_functions: ^4.5.0
+  audio_video_progress_bar: ^2.0.3
   fl_chart: ^0.71.0
-  file_picker: ^8.0.5
-  get: ^4.6.6
-  permission_handler: ^11.3.1
-  screenshot: ^2.1.0
-  geolocator: ^12.0.0
-  math_expressions: ^2.6.0
-  mobile_scanner: ^5.1.1
-  audioplayers: ^6.3.0
-  image_cropper: ^8.0.1
-  record: 4.4.4
   flutter_rating_bar: ^4.0.1
   shimmer: ^3.0.0
-video_thumbnail: ^0.5.6
+
+  # 📊 Utilities
+  intl: ^0.18.1
+  get: ^4.6.6
+  rxdart: ^0.28.0
+  math_expressions: ^2.6.0
+  screenshot: ^2.1.0
+  geolocator: ^12.0.0
+  file_picker: ^8.0.5
+  share_plus: ^10.0.0
+  record: ^4.4.4
+
+  # 📷 Barcode & QR
+  ai_barcode_scanner: ^5.1.1+2
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^5.1.1
+  image_cropper: ^8.0.1
+
+  # 🔔 Notifications
+  flutter_local_notifications: ^18.0.1
+
+  # 🌍 Localization
+  flutter_localizations:
+    sdk: flutter
 
 dependency_overrides:
   video_player_avfoundation: 2.5.7
@@ -83,12 +104,14 @@ dependency_overrides:
   video_player_platform_interface: 6.2.2
   google_mlkit_barcode_scanning: ^0.12.1
   app_links: 6.0.0
+  # ✅ IMPORTANT: Fix audioplayers for Xcode 26
+  audioplayers_darwin: 6.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: ^0.14.4
-
+  flutter_lints: ^4.0.0
 
 flutter_launcher_icons:
   android: "launcher_icon"

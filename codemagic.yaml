@@ -1,36 +1,28 @@
 workflows:
-  ios-build:
+  ios-workflow:
     name: iOS Build
+    instance_type: mac_mini_m2
     environment:
-      flutter: stable
-      xcode: 16.0
-      cocoapods: 1.15.2
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: "com.sesan.app"
-
+      flutter: 3.24.0  # ✅ Use specific version
+      xcode: 16.0      # ✅ Use Xcode 16 (not latest)
+      vars:
+        XCODE_WORKSPACE: "ios/Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
     scripts:
-      - name: Prepare iOS
-        script: |
-          flutter clean
-          rm -rf ios
-          flutter create . --platforms=ios
-          flutter pub get
-          flutter pub get
-
-      - name: Pod Install
+      - name: Flutter clean
+        script: flutter clean
+      - name: Get packages
+        script: flutter pub get
+      - name: Install pods
         script: |
           cd ios
-          pod install --repo-update --verbose
-          cd ..
-
-      - name: Build IPA
+          pod install --repo-update
+      - name: Build iOS app
         script: |
-          flutter build ipa --release --no-codesign
-
+          flutter build ios --release --no-codesign
     artifacts:
-      - build/ios/ipa/*.ipa
-
+      - build/ios/iphoneos/*.app
+      - build/ios/iphoneos/*.ipa
     publishing:
       email:
         recipients:
