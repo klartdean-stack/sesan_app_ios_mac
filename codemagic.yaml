@@ -3,11 +3,8 @@ workflows:
     name: iOS Build
     instance_type: mac_mini_m2
     environment:
-      flutter: 3.24.0  # ✅ Use specific version
-      xcode: 16.0      # ✅ Use Xcode 16 (not latest)
-      vars:
-        XCODE_WORKSPACE: "ios/Runner.xcworkspace"
-        XCODE_SCHEME: "Runner"
+      flutter: 3.19.0  # ✅ ប្រើ 3.19.0
+      xcode: 15.4      # ✅ ប្រើ Xcode 15.4 (មិនមែន latest)
     scripts:
       - name: Flutter clean
         script: flutter clean
