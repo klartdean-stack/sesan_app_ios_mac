@@ -1,11 +1,32 @@
 name: my_app
 description: "A new Flutter project."
-publish_to: 'none'
+# The following line prevents the package from being accidentally published to
+# pub.dev using flutter pub publish. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
 version: 1.0.0+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
 
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running flutter pub upgrade --major-versions. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run flutter pub outdated.
 dependencies:
   flutter:
     sdk: flutter
@@ -32,7 +53,7 @@ dependencies:
   audio_video_progress_bar: ^2.0.3
   flutter_staggered_animations: ^1.0.0
   photo_view: ^0.15.0
-  cached_network_image: ^3.3.0
+  cached_network_image: ^3.4.0
   flutter_image_compress: ^2.3.0
   video_compress: ^3.1.4
   rxdart: ^0.28.0
@@ -49,34 +70,42 @@ dependencies:
   geolocator: ^12.0.0
   math_expressions: ^2.6.0
   mobile_scanner: ^5.1.1
-  google_mlkit_barcode_scanning: ^0.12.1   # ✅ ដាក់ត្រឹមត្រូវ
-  audioplayers: ^6.4.0
+  audioplayers: ^6.3.0
   image_cropper: ^8.0.1
   record: 4.4.4
   flutter_rating_bar: ^4.0.1
   shimmer: ^3.0.0
-  video_thumbnail: ^0.5.6   # ✅ កែត្រឹមត្រូវ
+video_thumbnail: ^0.5.6
 
 dependency_overrides:
   video_player_avfoundation: 2.5.7
   video_player_android: 2.4.3
   video_player_platform_interface: 6.2.2
+  google_mlkit_barcode_scanning: ^0.12.1
   app_links: 6.0.0
-  # ✅ លុប google_mlkit_barcode_scanning ចេញពីទីនេះ
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: ^0.14.4
-  flutter_lints: ^4.0.0
+
 
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/sesan_icon.jpg"
-  adaptive_icon_background: "#FFFFFF"
+  image_path: "assets/sesan_icon.jpg" # 🎯 ដាក់ Path ទៅរូបភាពមេ
+  adaptive_icon_background: "#FFFFFF" # ពណ៌ផ្ទៃក្រោយសម្រាប់ Android
   adaptive_icon_foreground: "assets/sesan_icon.jpg"
 
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the analysis_options.yaml file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^6.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
 flutter:
   uses-material-design: true
   assets:
@@ -95,3 +124,28 @@ flutter:
     - assets/measure_guide.png
     - assets/sesan_icon.jpg
     - assets/json/cambodia_locations.json
+    # An image asset can refer to one or more resolution-specific "variants", see
+    # https://flutter.dev/to/resolution-aware-images
+
+    # For details regarding adding assets from package dependencies, see
+    # https://flutter.dev/to/asset-from-package
+
+    # To add custom fonts to your application, add a fonts section here,
+    # in this "flutter" section. Each entry in this list should have a
+    # "family" key with the font family name, and a "fonts" key with a
+    # list giving the asset and other descriptors for the font. For
+    # example:
+    # fonts:
+    #   - family: Schyler
+    #     fonts:
+    #       - asset: fonts/Schyler-Regular.ttf
+    #       - asset: fonts/Schyler-Italic.ttf
+    #         style: italic
+    #   - family: Trajan Pro
+    #     fonts:
+    #       - asset: fonts/TrajanPro.ttf
+    #       - asset: fonts/TrajanPro_Bold.ttf
+    #         weight: 700
+    #
+    # For details regarding fonts from package dependencies,
+    # see https://flutter.dev/to/font-from-package
