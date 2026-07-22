@@ -36,7 +36,6 @@ target 'Runner' do
     inherit! :search_paths
   end
 end
-
 post_install do |installer|
   # ✅ Patch SDWebImage FIRST
   sd_metadata_path = File.join(Dir.pwd, 'Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m')
@@ -52,9 +51,16 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
 
-    # ✅ Fix deployment target for all pods
+    # ✅ FORCE iOS 14.0 FOR ALL PODS
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+        '$(inherited)',
+        'PERMISSION_CAMERA=1',
+        'PERMISSION_MICROPHONE=1',
+        'PERMISSION_PHOTOS=1',
+        'PERMISSION_LOCATION=1'
+      ]
     end
   end
 end
