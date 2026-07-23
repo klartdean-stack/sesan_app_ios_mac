@@ -4,7 +4,7 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       flutter: 3.19.0
-      xcode: 16.0  # ✅ ប្រើ 16.0 (តម្រូវការតិចបំផុត)
+      xcode: 15.4  # ✅ ប្តូរពី 16.0 មក 15.4
     scripts:
       - name: Flutter clean
         script: flutter clean
