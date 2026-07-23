@@ -4,7 +4,7 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       flutter: 3.19.0
-      xcode: 15.0.1  # ✅ ប្រើ Xcode 15.0.1
+      xcode: 16.0
     scripts:
       - name: Flutter clean
         script: flutter clean
@@ -14,6 +14,11 @@ workflows:
         script: |
           cd ios
           pod install --repo-update
+      - name: Fix BoringSSL-GRPC
+        script: |
+          cd ios
+          find Pods/Target\ Support\ Files -name "*.xcconfig" -exec sed -i '' 's/-G//g' {} \;
+          echo "✅ Fixed BoringSSL-GRPC"
       - name: Build iOS app
         script: |
           flutter build ios --release --no-codesign
