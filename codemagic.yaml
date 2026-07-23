@@ -4,7 +4,7 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       flutter: 3.19.0
-      xcode: 15.0  # ✅ សាកប្រើ 15.0
+      xcode: 16.0  # ✅ ប្រើ 16.0 (តម្រូវការតិចបំផុត)
     scripts:
       - name: Flutter clean
         script: flutter clean
@@ -14,6 +14,9 @@ workflows:
         script: |
           cd ios
           pod install --repo-update
+      - name: Patch SDWebImage
+        script: |
+          sed -i '' 's/isHighDynamicRange/sd_isHighDynamicRange/g' ios/Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m || true
       - name: Build iOS app
         script: |
           flutter build ios --release --no-codesign
