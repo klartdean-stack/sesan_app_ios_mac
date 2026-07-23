@@ -8,18 +8,28 @@ workflows:
     scripts:
       - name: Flutter clean
         script: flutter clean
+
       - name: Get packages
         script: flutter pub get
+
       - name: Install pods
         script: |
           cd ios
           pod install --repo-update
+
       - name: Fix BoringSSL-GRPC
         script: |
           cd ios
-          sed -i '' 's/-G//g' Pods/Target\ Support\ Files/BoringSSL-GRPC/BoringSSL-GRPC.xcconfig || true
-          sed -i '' 's/-G//g' Pods/Target\ Support\ Files/gRPC-C++/gRPC-C++.xcconfig || true
-          sed -i '' 's/-G//g' Pods/Target\ Support\ Files/gRPC-Core/gRPC-Core.xcconfig || true
+          # កែឯកសារ xcconfig ទាំងអស់ដែលមាន -G
+          find Pods/Target\ Support\ Files -name "*.xcconfig" -exec sed -i '' 's/-G//g' {} \;
+          # កែឯកសារ podspec ប្រសិនបើមាន
+          find Pods -name "*.podspec" -exec sed -i '' 's/-G//g' {} \;
+
+      - name: Patch SDWebImage
+        script: |
+          cd ios
+          sed -i '' 's/isHighDynamicRange/sd_isHighDynamicRange/g' Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m || true
+
       - name: Build iOS app
         script: |
           flutter build ios --release --no-codesign

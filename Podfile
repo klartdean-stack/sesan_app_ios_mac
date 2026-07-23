@@ -38,22 +38,15 @@ target 'Runner' do
 end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
-    flutter_additional_ios_build_settings(target)
-
     target.build_configurations.each do |config|
-      # ✅ បង្ខំ iOS 14.0
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-    end
-  end
+      # បង្ខំ iOS 12.0
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
 
-  # ✅ Patch SDWebImage
-  sd_metadata_path = File.join(Dir.pwd, 'Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m')
-  if File.exist?(sd_metadata_path)
-    content = File.read(sd_metadata_path)
-    if content.include?('isHighDynamicRange')
-      content.gsub!('isHighDynamicRange', 'sd_isHighDynamicRange')
-      File.write(sd_metadata_path, content)
-      puts "✅ Patched SDWebImage!"
+      # លុប -G option
+      if target.name.include?('BoringSSL-GRPC') || target.name.include?('gRPC')
+        config.build_settings['OTHER_CFLAGS'] = ['$(inherited)']
+        config.build_settings['OTHER_LDFLAGS'] = ['$(inherited)']
+      end
     end
   end
 end
