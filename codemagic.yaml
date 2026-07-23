@@ -2,29 +2,53 @@ workflows:
   ios-workflow:
     name: iOS Build
     instance_type: mac_mini_m2
+
     environment:
       flutter: 3.19.0
       xcode: 16.0
+
     scripts:
       - name: Flutter clean
-        script: flutter clean
-      - name: Get packages
-        script: flutter pub get
-      - name: Install pods
+        script: |
+          flutter clean
+
+      - name: Flutter pub get
+        script: |
+          flutter pub get
+
+      - name: Install CocoaPods
         script: |
           cd ios
+          pod deintegrate || true
+          rm -rf Pods Podfile.lock
           pod install --repo-update
-      - name: Fix BoringSSL-GRPC
+          cd ..
+
+      - name: Verify SDWebImage patch
         script: |
-          cd ios
-          find Pods/Target\ Support\ Files -name "*.xcconfig" -exec sed -i '' 's/-G//g' {} \;
-          echo "✅ Fixed BoringSSL-GRPC"
-      - name: Build iOS app
+          echo "Checking SDWebImage..."
+
+          if grep -q "self.isHighDynamicRange" ios/Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m; then
+            echo "❌ SDWebImage HDR error still exists"
+            exit 1
+          else
+            echo "✅ SDWebImage HDR issue fixed"
+          fi
+
+          if grep -q "kCGImageSourceDecodeRequest" ios/Pods/SDWebImage/SDWebImage/Core/SDImageIOAnimatedCoder.m; then
+            echo "❌ HDR ImageIO constants still exist"
+            exit 1
+          else
+            echo "✅ HDR ImageIO issue fixed"
+          fi
+
+      - name: Build iOS
         script: |
           flutter build ios --release --no-codesign
+
     artifacts:
-      - build/ios/iphoneos/*.app
-      - build/ios/iphoneos/*.ipa
+      - build/ios/iphoneos/Runner.app
+
     publishing:
       email:
         recipients:
