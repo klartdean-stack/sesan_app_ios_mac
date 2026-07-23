@@ -3,54 +3,22 @@ workflows:
     name: iOS Build
     instance_type: mac_mini_m2
     environment:
-      flutter: 3.19.0
-      xcode: 16.0  # ✅ ប្រើ Xcode 16.0
+      flutter: 3.24.0  # ✅ Codemagic ប្រើ 3.24.0
+      xcode: 16.0
     scripts:
       - name: Flutter clean
         script: flutter clean
-
       - name: Get packages
         script: flutter pub get
-
       - name: Install pods
         script: |
           cd ios
           pod install --repo-update
-
       - name: Fix BoringSSL-GRPC
         script: |
           cd ios
-          # ស្វែងរក និងលុប -G ចេញពីឯកសារ xcconfig ទាំងអស់
-          find Pods/Target\ Support\ Files -type f -name "*.xcconfig" -exec sed -i '' 's/ -G/ /g' {} \;
-          find Pods/Target\ Support\ Files -type f -name "*.xcconfig" -exec sed -i '' 's/-G/ /g' {} \;
-          
-          # កែឯកសារ podspec ប្រសិនបើមាន
-          find Pods -type f -name "*.podspec" -exec sed -i '' 's/-G//g' {} \; 2>/dev/null || true
-          
-          # កែឯកសារ .xcconfig របស់ BoringSSL-GRPC ដោយផ្ទាល់
-          if [ -f "Pods/Target Support Files/BoringSSL-GRPC/BoringSSL-GRPC.xcconfig" ]; then
-            sed -i '' 's/-G//g' "Pods/Target Support Files/BoringSSL-GRPC/BoringSSL-GRPC.xcconfig"
-            echo "✅ Fixed BoringSSL-GRPC.xcconfig"
-          fi
-          
-          # កែឯកសារ .xcconfig របស់ gRPC-C++
-          if [ -f "Pods/Target Support Files/gRPC-C++/gRPC-C++.xcconfig" ]; then
-            sed -i '' 's/-G//g' "Pods/Target Support Files/gRPC-C++/gRPC-C++.xcconfig"
-            echo "✅ Fixed gRPC-C++.xcconfig"
-          fi
-          
-          # កែឯកសារ .xcconfig របស់ gRPC-Core
-          if [ -f "Pods/Target Support Files/gRPC-Core/gRPC-Core.xcconfig" ]; then
-            sed -i '' 's/-G//g' "Pods/Target Support Files/gRPC-Core/gRPC-Core.xcconfig"
-            echo "✅ Fixed gRPC-Core.xcconfig"
-          fi
-
-      - name: Patch SDWebImage
-        script: |
-          cd ios
-          sed -i '' 's/isHighDynamicRange/sd_isHighDynamicRange/g' Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m || true
-          echo "✅ Patched SDWebImage"
-
+          find Pods/Target\ Support\ Files -name "*.xcconfig" -exec sed -i '' 's/-G//g' {} \;
+          echo "✅ Fixed BoringSSL-GRPC"
       - name: Build iOS app
         script: |
           flutter build ios --release --no-codesign

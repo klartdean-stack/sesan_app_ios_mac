@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.1.1+2"
+  app_links:
+    dependency: "direct overridden"
+    description:
+      name: app_links
+      sha256: f57cf3889e11f927fbc92ec1e74079614ff652179d0be06d34f2488873ca3a9f
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.0"
   archive:
     dependency: transitive
     description:
@@ -66,13 +74,13 @@ packages:
     source: hosted
     version: "5.2.0"
   audioplayers_darwin:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: audioplayers_darwin
-      sha256: "405cdbd53ebdb4623f1c5af69f275dad4f930ce895512d5261c07cd95d23e778"
+      sha256: "34e1fb3a88ba02566615c6ca7173aa93b39cf61a38a05a729b60ba14c4899169"
       url: "https://pub.dev"
     source: hosted
-    version: "6.2.0"
+    version: "6.1.0"
   audioplayers_linux:
     dependency: transitive
     description:
@@ -629,6 +637,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.1+4"
+  google_mlkit_barcode_scanning:
+    dependency: "direct overridden"
+    description:
+      name: google_mlkit_barcode_scanning
+      sha256: "1df232be24ae9cb93443d2786681efab71b5964c8c476f6072d8b4d61aa03ecc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.12.1"
+  google_mlkit_commons:
+    dependency: transitive
+    description:
+      name: google_mlkit_commons
+      sha256: "9990a65f407a3ef6bae646bf10143faa93fec126683771465bc6c0b43fb0e6e9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.8.1"
   googleapis_auth:
     dependency: transitive
     description:
@@ -645,6 +669,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.4"
+  gtk:
+    dependency: transitive
+    description:
+      name: gtk
+      sha256: "4ff85b2a16724029dd9e5bbb5a94b6918f9973f74ba571c949d2002801879cf5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   html:
     dependency: transitive
     description:
@@ -1427,7 +1459,7 @@ packages:
     source: hosted
     version: "2.9.2"
   video_player_android:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: video_player_android
       sha256: e7de6fabe5d96048cd8f4d710f25c3df84bb3cab8b22da6c082bd8f39e316984
@@ -1435,7 +1467,7 @@ packages:
     source: hosted
     version: "2.4.3"
   video_player_avfoundation:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: video_player_avfoundation
       sha256: "00c49b1d68071341397cf760b982c1e26ed9232464c8506ee08378a5cca5070d"
@@ -1443,7 +1475,7 @@ packages:
     source: hosted
     version: "2.5.7"
   video_player_platform_interface:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: video_player_platform_interface
       sha256: "236454725fafcacf98f0f39af0d7c7ab2ce84762e3b63f2cbb3ef9a7e0550bc6"
