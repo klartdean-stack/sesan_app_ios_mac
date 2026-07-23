@@ -4,7 +4,7 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       flutter: 3.19.0
-      xcode: 15.3  # ✅ ប្រើ 15.3 (មិនមែន 15.4)
+      xcode: 16.0  # ✅ ប្រើ Xcode 16.0
     scripts:
       - name: Flutter clean
         script: flutter clean
@@ -14,9 +14,12 @@ workflows:
         script: |
           cd ios
           pod install --repo-update
-      - name: Patch SDWebImage
+      - name: Fix BoringSSL-GRPC
         script: |
-          sed -i '' 's/isHighDynamicRange/sd_isHighDynamicRange/g' ios/Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m
+          cd ios
+          sed -i '' 's/-G//g' Pods/Target\ Support\ Files/BoringSSL-GRPC/BoringSSL-GRPC.xcconfig || true
+          sed -i '' 's/-G//g' Pods/Target\ Support\ Files/gRPC-C++/gRPC-C++.xcconfig || true
+          sed -i '' 's/-G//g' Pods/Target\ Support\ Files/gRPC-Core/gRPC-Core.xcconfig || true
       - name: Build iOS app
         script: |
           flutter build ios --release --no-codesign
