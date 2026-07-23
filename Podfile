@@ -36,30 +36,18 @@ target 'Runner' do
     inherit! :search_paths
   end
 end
-
 post_install do |installer|
-  # Patch SDWebImage
-  sd_metadata_path = File.join(Dir.pwd, 'Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m')
-  if File.exist?(sd_metadata_path)
-    content = File.read(sd_metadata_path)
-    if content.include?('isHighDynamicRange')
-      content.gsub!('isHighDynamicRange', 'sd_isHighDynamicRange')
-      File.write(sd_metadata_path, content)
-      puts "✅ Patched SDWebImage!"
-    end
-  end
-
   installer.pods_project.targets.each do |target|
-    flutter_additional_ios_build_settings(target)
-
     target.build_configurations.each do |config|
-      # Force iOS 12.0 minimum (Xcode 16.0 requirement)
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
-      config.build_settings['SWIFT_VERSION'] = '5.0'
+      # បង្ខំ iOS 14.0
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
 
-      # Fix for video_compress
-      config.build_settings['OTHER_CFLAGS'] ||= '$(inherited)'
-      config.build_settings['OTHER_CPLUSPLUSFLAGS'] ||= '$(inherited)'
+      # បិទ -G option សម្រាប់ BoringSSL-GRPC
+      if target.name.include?('BoringSSL-GRPC') || target.name.include?('gRPC')
+        config.build_settings['OTHER_CFLAGS'] = ['$(inherited)']
+        config.build_settings['OTHER_LDFLAGS'] = ['$(inherited)']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+      end
     end
   end
 end
