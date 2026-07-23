@@ -97,13 +97,15 @@ dependencies:
     sdk: flutter
 
 dependency_overrides:
-  video_compress: 3.1.0
-  video_player_avfoundation: 2.5.7
-  video_player_android: 2.4.3
-  video_player_platform_interface: 6.2.2
-  google_mlkit_barcode_scanning: ^0.12.1
-  app_links: 6.0.0
-  audioplayers_darwin: 6.1.0
+  #video_compress: 3.1.0
+  #video_player_avfoundation: 2.5.7
+  #video_player_android: 2.4.3
+  #video_player_platform_interface: 6.2.2
+  #google_mlkit_barcode_scanning: ^0.12.1
+  #app_links: 6.0.0
+  #audioplayers_darwin: 6.1.0
+  grpc: ^3.2.0
+  protobuf: ^3.1.0
 
 dev_dependencies:
   flutter_test:
