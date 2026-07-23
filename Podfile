@@ -1,68 +1,62 @@
 post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
 
-installer.pods_project.targets.each do |target|
-
-```
-flutter_additional_ios_build_settings(target)
-
-target.build_configurations.each do |config|
-  # Force all Pods to iOS 14.0
-  config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-end
-
-# Fix BoringSSL-GRPC for Xcode 16
-if target.name.include?('BoringSSL-GRPC')
-
-  target.source_build_phase.files.each do |build_file|
-    next unless build_file.settings
-
-    compiler_flags = build_file.settings['COMPILER_FLAGS']
-    next unless compiler_flags
-
-    # Remove the invalid GCC warning flag
-    compiler_flags = compiler_flags.gsub(
-      '-GCC_WARN_INHIBIT_ALL_WARNINGS',
-      ''
-    )
-
-    build_file.settings['COMPILER_FLAGS'] = compiler_flags
-
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+    end
   end
 
-  puts "✅ Fixed BoringSSL-GRPC compiler flags"
-end
-```
+  # ============================================================
+  # PATCH SDWebImage UIImage+Metadata.m
+  # ============================================================
 
-end
-
-# Patch SDWebImage
-
-sd_metadata_path = File.join(
-Dir.pwd,
-'Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m'
-)
-
-if File.exist?(sd_metadata_path)
-
-```
-content = File.read(sd_metadata_path)
-
-if content.include?('isHighDynamicRange')
-
-  content.gsub!(
-    'isHighDynamicRange',
-    'sd_isHighDynamicRange'
+  sd_metadata_path = File.join(
+    installer.sandbox.root.to_s,
+    'SDWebImage/SDWebImage/Core/UIImage+Metadata.m'
   )
 
-  File.write(
-    sd_metadata_path,
-    content
+  if File.exist?(sd_metadata_path)
+    content = File.read(sd_metadata_path)
+
+    old_code = 'return self.isHighDynamicRange;'
+    new_code = 'return [SDImageCoderHelper CGImageIsHDR:self.CGImage];'
+
+    if content.include?(old_code)
+      content = content.gsub(old_code, new_code)
+      File.write(sd_metadata_path, content)
+      puts "✅ PATCHED UIImage+Metadata.m"
+    else
+      puts "ℹ️ UIImage+Metadata.m already patched"
+    end
+  else
+    puts "❌ UIImage+Metadata.m NOT FOUND"
+  end
+
+  # ============================================================
+  # PATCH SDImageIOAnimatedCoder.m
+  # ============================================================
+
+  sd_animated_path = File.join(
+    installer.sandbox.root.to_s,
+    'SDWebImage/SDWebImage/Core/SDImageIOAnimatedCoder.m'
   )
 
-  puts "✅ Patched SDWebImage!"
-end
-```
+  if File.exist?(sd_animated_path)
+    content = File.read(sd_animated_path)
 
-end
+    if content.include?('kCGImageSourceDecodeRequest')
+      content = content.gsub(
+        /.*kCGImageSourceDecodeRequest.*\n/,
+        ''
+      )
 
+      File.write(sd_animated_path, content)
+      puts "✅ PATCHED SDImageIOAnimatedCoder.m"
+    else
+      puts "ℹ️ SDImageIOAnimatedCoder.m already patched"
+    end
+  else
+    puts "❌ SDImageIOAnimatedCoder.m NOT FOUND"
+  end
 end
