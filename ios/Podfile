@@ -45,91 +45,31 @@ target 'Runner' do
 end
 
 post_install do |installer|
-
   installer.pods_project.targets.each do |target|
-
     flutter_additional_ios_build_settings(target)
 
     target.build_configurations.each do |config|
-
-      # ============================================================
-      # iOS Deployment Target
-      # ============================================================
-
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
 
-      # ============================================================
-      # FIX BoringSSL-GRPC
-      # Remove unsupported -G compiler flag
-      # Xcode 16 / Apple Silicon
-      # ============================================================
-
       if target.name == 'BoringSSL-GRPC'
-
         %w[
           OTHER_CFLAGS
           OTHER_CPLUSPLUSFLAGS
-          GCC_PREPROCESSOR_DEFINITIONS
         ].each do |setting_name|
-
           flags = config.build_settings[setting_name]
-
           next if flags.nil?
 
-          if flags.is_a?(String)
-            flags = flags.split
-          else
-            flags = Array(flags).flatten
-          end
+          flags = flags.is_a?(String) ? flags.split : Array(flags).flatten
 
           flags = flags.reject do |flag|
-            flag == '-G' ||
-            flag.to_s.start_with?('-G')
+            flag.to_s == '-G'
           end
 
           config.build_settings[setting_name] = flags
-
         end
-
       end
-
     end
-
-    # ============================================================
-    # REMOVE -G FROM SOURCE FILE COMPILER FLAGS
-    # ============================================================
-
-    if target.name == 'BoringSSL-GRPC'
-
-      target.source_build_phase.files.each do |file|
-
-        next unless file.settings
-        next unless file.settings['COMPILER_FLAGS']
-
-        flags = file.settings['COMPILER_FLAGS']
-
-        if flags.is_a?(String)
-          flags = flags.split
-        else
-          flags = Array(flags).flatten
-        end
-
-        flags = flags.reject do |flag|
-          flag == '-G' ||
-          flag.to_s.start_with?('-G')
-        end
-
-        file.settings['COMPILER_FLAGS'] = flags
-
-      end
-
-    end
-
   end
-
-  # ============================================================
-  # PATCH SDWebImage UIImage+Metadata.m
-  # ============================================================
 
   sd_metadata_path = File.join(
     installer.sandbox.root.to_s,
@@ -137,36 +77,21 @@ post_install do |installer|
   )
 
   if File.exist?(sd_metadata_path)
-
     content = File.read(sd_metadata_path)
 
     old_code = 'return self.isHighDynamicRange;'
     new_code = 'return [SDImageCoderHelper CGImageIsHDR:self.CGImage];'
 
     if content.include?(old_code)
-
       content = content.gsub(old_code, new_code)
-
       File.write(sd_metadata_path, content)
-
-      puts "✅ PATCHED UIImage+Metadata.m"
-
+      puts "PATCHED UIImage+Metadata.m"
     else
-
-      puts "ℹ️ UIImage+Metadata.m already patched"
-
+      puts "UIImage+Metadata.m already patched"
     end
-
   else
-
-    puts "ℹ️ UIImage+Metadata.m NOT FOUND"
-
+    puts "UIImage+Metadata.m NOT FOUND"
   end
-
-  # ============================================================
-  # PATCH SDImageIOAnimatedCoder.m
-  # Remove unsupported ImageIO constant
-  # ============================================================
 
   sd_animated_path = File.join(
     installer.sandbox.root.to_s,
@@ -174,30 +99,20 @@ post_install do |installer|
   )
 
   if File.exist?(sd_animated_path)
-
     content = File.read(sd_animated_path)
 
     if content.include?('kCGImageSourceDecodeRequest')
-
       content = content.gsub(
         /^.*kCGImageSourceDecodeRequest.*\n/,
         ''
       )
 
       File.write(sd_animated_path, content)
-
-      puts "✅ PATCHED SDImageIOAnimatedCoder.m"
-
+      puts "PATCHED SDImageIOAnimatedCoder.m"
     else
-
-      puts "ℹ️ SDImageIOAnimatedCoder.m already patched"
-
+      puts "SDImageIOAnimatedCoder.m already patched"
     end
-
   else
-
-    puts "ℹ️ SDImageIOAnimatedCoder.m NOT FOUND"
-
+    puts "SDImageIOAnimatedCoder.m NOT FOUND"
   end
-
 end
