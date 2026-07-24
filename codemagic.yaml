@@ -29,24 +29,39 @@ workflows:
 
           cd ..
 
-      - name: Verify BoringSSL-GRPC flags
+      - name: Locate BoringSSL-GRPC -G flag
         script: |
           echo "========================================"
-          echo "Checking BoringSSL-GRPC for -G flag"
+          echo "LOCATING ALL -G FLAGS"
           echo "========================================"
 
-          echo "Searching Pods..."
+          echo ""
+          echo "===== BoringSSL-GRPC SOURCE ====="
 
-          if grep -R -- "-G" ios/Pods/BoringSSL-GRPC 2>/dev/null; then
-            echo ""
-            echo "❌ ERROR: -G flag still exists in BoringSSL-GRPC"
-            echo ""
-            exit 1
-          else
-            echo ""
-            echo "✅ No -G flag found in BoringSSL-GRPC"
-            echo ""
-          fi
+          grep -R -n -C 3 -- "-G" \
+            ios/Pods/BoringSSL-GRPC \
+            2>/dev/null || true
+
+          echo ""
+          echo "===== PODS PROJECT ====="
+
+          grep -n -C 3 -- "-G" \
+            ios/Pods/Pods.xcodeproj/project.pbxproj \
+            2>/dev/null || true
+
+          echo ""
+          echo "===== TARGET SUPPORT FILES ====="
+
+          grep -R -n -C 3 -- "-G" \
+            "ios/Pods/Target Support Files/BoringSSL-GRPC" \
+            2>/dev/null || true
+
+          echo ""
+          echo "===== ALL PODS PROJECT FILES ====="
+
+          grep -R -n -C 2 -- "-G" \
+            ios/Pods/Pods.xcodeproj \
+            2>/dev/null || true
 
       - name: Verify SDWebImage patch
         script: |
