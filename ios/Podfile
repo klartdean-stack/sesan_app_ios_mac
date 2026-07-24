@@ -9,7 +9,8 @@ project 'Runner', {
 }
 
 def flutter_root
-  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __dir__)
+  # ✅ កែ Path ឲ្យត្រឹមត្រូវ
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', '..', 'Flutter', 'Generated.xcconfig'), __dir__)
   unless File.exist?(generated_xcode_build_settings_path)
     raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
   end
@@ -38,15 +39,19 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
 
-    # ✅ បង្ខំ iOS 14.0
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+    end
+  end
 
-      # ✅ លុប -G flag សម្រាប់ Xcode 16.0
-      if target.name.include?('BoringSSL-GRPC') || target.name.include?('gRPC')
-        config.build_settings['OTHER_CFLAGS'] = ['$(inherited)']
-        config.build_settings['OTHER_LDFLAGS'] = ['$(inherited)']
-      end
+  # ✅ Patch SDWebImage
+  sd_metadata_path = File.join(File.dirname(__FILE__), 'Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m')
+  if File.exist?(sd_metadata_path)
+    content = File.read(sd_metadata_path)
+    if content.include?('isHighDynamicRange')
+      content.gsub!('isHighDynamicRange', 'sd_isHighDynamicRange')
+      File.write(sd_metadata_path, content)
+      puts "✅ Patched SDWebImage!"
     end
   end
 end
