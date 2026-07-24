@@ -29,39 +29,24 @@ workflows:
 
           cd ..
 
-      - name: Locate BoringSSL-GRPC -G flag
+      - name: Verify BoringSSL-GRPC build settings
         script: |
           echo "========================================"
-          echo "LOCATING ALL -G FLAGS"
+          echo "VERIFY BoringSSL-GRPC"
           echo "========================================"
 
-          echo ""
-          echo "===== BoringSSL-GRPC SOURCE ====="
-
-          grep -R -n -C 3 -- "-G" \
-            ios/Pods/BoringSSL-GRPC \
-            2>/dev/null || true
+          grep -n -- "-G" ios/Pods/Pods.xcodeproj/project.pbxproj || true
 
           echo ""
-          echo "===== PODS PROJECT ====="
+          echo "Checking BoringSSL-GRPC target settings..."
 
-          grep -n -C 3 -- "-G" \
-            ios/Pods/Pods.xcodeproj/project.pbxproj \
-            2>/dev/null || true
-
-          echo ""
-          echo "===== TARGET SUPPORT FILES ====="
-
-          grep -R -n -C 3 -- "-G" \
-            "ios/Pods/Target Support Files/BoringSSL-GRPC" \
-            2>/dev/null || true
-
-          echo ""
-          echo "===== ALL PODS PROJECT FILES ====="
-
-          grep -R -n -C 2 -- "-G" \
-            ios/Pods/Pods.xcodeproj \
-            2>/dev/null || true
+          xcodebuild \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -showBuildSettings 2>/dev/null \
+            | grep -E "BoringSSL|OTHER_CFLAGS|OTHER_CPLUSPLUSFLAGS" \
+            || true
 
       - name: Verify SDWebImage patch
         script: |
@@ -83,7 +68,9 @@ workflows:
 
       - name: Build iOS
         script: |
-          flutter build ios --release --no-codesign
+          flutter build ios \
+            --release \
+            --no-codesign
 
     artifacts:
       - build/ios/iphoneos/Runner.app
