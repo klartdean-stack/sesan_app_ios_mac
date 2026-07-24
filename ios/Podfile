@@ -45,31 +45,97 @@ target 'Runner' do
 end
 
 post_install do |installer|
+
   installer.pods_project.targets.each do |target|
+
     flutter_additional_ios_build_settings(target)
 
+    # ==========================================================
+    # REMOVE INVALID -G FLAGS FROM POD BUILD SETTINGS
+    # Fix Xcode 16 / Clang:
+    # error: unsupported option '-G'
+    # ==========================================================
+
     target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
 
-      if target.name == 'BoringSSL-GRPC'
-        %w[
-          OTHER_CFLAGS
-          OTHER_CPLUSPLUSFLAGS
-        ].each do |setting_name|
-          flags = config.build_settings[setting_name]
-          next if flags.nil?
+      config.build_settings.each do |key, value|
 
-          flags = flags.is_a?(String) ? flags.split : Array(flags).flatten
+        if value.is_a?(String)
 
-          flags = flags.reject do |flag|
-            flag.to_s == '-G'
-          end
+          value = value
+            .gsub('-GCC_WARN_INHIBIT_ALL_WARNINGS', '')
+            .gsub(/(^|\s)-G(?=\s|$)/, ' ')
+            .gsub(/\s+/, ' ')
+            .strip
 
-          config.build_settings[setting_name] = flags
+          config.build_settings[key] = value
+
+        elsif value.is_a?(Array)
+
+          config.build_settings[key] =
+            value.flatten.reject do |flag|
+
+              flag.to_s == '-G' ||
+              flag.to_s == '-GCC_WARN_INHIBIT_ALL_WARNINGS'
+
+            end
+
         end
+
       end
+
     end
+
+    # ==========================================================
+    # REMOVE -G FROM INDIVIDUAL SOURCE FILE COMPILER FLAGS
+    # IMPORTANT:
+    # PBXAggregateTarget does NOT have source_build_phase
+    # ==========================================================
+
+    if target.respond_to?(:source_build_phase)
+
+      target.source_build_phase.files.each do |file|
+
+        next unless file.settings
+
+        compiler_flags = file.settings['COMPILER_FLAGS']
+
+        next if compiler_flags.nil?
+
+        if compiler_flags.is_a?(String)
+
+          file.settings['COMPILER_FLAGS'] =
+            compiler_flags
+              .split
+              .reject do |flag|
+
+                flag.to_s == '-G' ||
+                flag.to_s == '-GCC_WARN_INHIBIT_ALL_WARNINGS'
+
+              end
+              .join(' ')
+
+        elsif compiler_flags.is_a?(Array)
+
+          file.settings['COMPILER_FLAGS'] =
+            compiler_flags.flatten.reject do |flag|
+
+              flag.to_s == '-G' ||
+              flag.to_s == '-GCC_WARN_INHIBIT_ALL_WARNINGS'
+
+            end
+
+        end
+
+      end
+
+    end
+
   end
+
+  # ==========================================================
+  # PATCH SDWebImage UIImage+Metadata.m
+  # ==========================================================
 
   sd_metadata_path = File.join(
     installer.sandbox.root.to_s,
@@ -77,21 +143,36 @@ post_install do |installer|
   )
 
   if File.exist?(sd_metadata_path)
+
     content = File.read(sd_metadata_path)
 
     old_code = 'return self.isHighDynamicRange;'
     new_code = 'return [SDImageCoderHelper CGImageIsHDR:self.CGImage];'
 
     if content.include?(old_code)
+
       content = content.gsub(old_code, new_code)
+
       File.write(sd_metadata_path, content)
+
       puts "PATCHED UIImage+Metadata.m"
+
     else
+
       puts "UIImage+Metadata.m already patched"
+
     end
+
   else
+
     puts "UIImage+Metadata.m NOT FOUND"
+
   end
+
+  # ==========================================================
+  # PATCH SDImageIOAnimatedCoder.m
+  # Remove unsupported ImageIO constant
+  # ==========================================================
 
   sd_animated_path = File.join(
     installer.sandbox.root.to_s,
@@ -99,20 +180,30 @@ post_install do |installer|
   )
 
   if File.exist?(sd_animated_path)
+
     content = File.read(sd_animated_path)
 
     if content.include?('kCGImageSourceDecodeRequest')
+
       content = content.gsub(
         /^.*kCGImageSourceDecodeRequest.*\n/,
         ''
       )
 
       File.write(sd_animated_path, content)
+
       puts "PATCHED SDImageIOAnimatedCoder.m"
+
     else
+
       puts "SDImageIOAnimatedCoder.m already patched"
+
     end
+
   else
+
     puts "SDImageIOAnimatedCoder.m NOT FOUND"
+
   end
+
 end
