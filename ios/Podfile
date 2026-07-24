@@ -38,9 +38,15 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
 
-    # ✅ បង្ខំ iOS 14.0 សម្រាប់ Pods ទាំងអស់
+    # ✅ បង្ខំ iOS 14.0
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+
+      # ✅ លុប -G flag សម្រាប់ Xcode 16.0
+      if target.name.include?('BoringSSL-GRPC') || target.name.include?('gRPC')
+        config.build_settings['OTHER_CFLAGS'] = ['$(inherited)']
+        config.build_settings['OTHER_LDFLAGS'] = ['$(inherited)']
+      end
     end
   end
 end
