@@ -19,10 +19,34 @@ workflows:
       - name: Install CocoaPods
         script: |
           cd ios
+
           pod deintegrate || true
-          rm -rf Pods Podfile.lock
+
+          rm -rf Pods
+          rm -f Podfile.lock
+
           pod install --repo-update
+
           cd ..
+
+      - name: Verify BoringSSL-GRPC flags
+        script: |
+          echo "========================================"
+          echo "Checking BoringSSL-GRPC for -G flag"
+          echo "========================================"
+
+          echo "Searching Pods..."
+
+          if grep -R -- "-G" ios/Pods/BoringSSL-GRPC 2>/dev/null; then
+            echo ""
+            echo "❌ ERROR: -G flag still exists in BoringSSL-GRPC"
+            echo ""
+            exit 1
+          else
+            echo ""
+            echo "✅ No -G flag found in BoringSSL-GRPC"
+            echo ""
+          fi
 
       - name: Verify SDWebImage patch
         script: |
