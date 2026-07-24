@@ -9,32 +9,22 @@ project 'Runner', {
 }
 
 def flutter_root
-  generated_xcode_build_settings_path = File.expand_path(
-    File.join('..', 'Flutter', 'Generated.xcconfig'),
-    __FILE__
-  )
-
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __dir__)
   unless File.exist?(generated_xcode_build_settings_path)
-    raise "#{generated_xcode_build_settings_path} must exist. Run flutter pub get first."
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
   end
 
   File.foreach(generated_xcode_build_settings_path) do |line|
     matches = line.match(/FLUTTER_ROOT\=(.*)/)
     return matches[1].strip if matches
   end
-
-  raise "FLUTTER_ROOT not found in Generated.xcconfig"
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
 end
 
-require File.expand_path(
-  File.join('packages', 'flutter_tools', 'bin', 'podhelper'),
-  flutter_root
-)
-
-flutter_ios_podfile_setup
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
 target 'Runner' do
-  use_frameworks!
+  use_frameworks! :linkage => :static
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
@@ -45,165 +35,12 @@ target 'Runner' do
 end
 
 post_install do |installer|
-
   installer.pods_project.targets.each do |target|
-
     flutter_additional_ios_build_settings(target)
 
-    # ==========================================================
-    # REMOVE INVALID -G FLAGS FROM POD BUILD SETTINGS
-    # Fix Xcode 16 / Clang:
-    # error: unsupported option '-G'
-    # ==========================================================
-
+    # ✅ បង្ខំ iOS 14.0 សម្រាប់ Pods ទាំងអស់
     target.build_configurations.each do |config|
-
-      config.build_settings.each do |key, value|
-
-        if value.is_a?(String)
-
-          value = value
-            .gsub('-GCC_WARN_INHIBIT_ALL_WARNINGS', '')
-            .gsub(/(^|\s)-G(?=\s|$)/, ' ')
-            .gsub(/\s+/, ' ')
-            .strip
-
-          config.build_settings[key] = value
-
-        elsif value.is_a?(Array)
-
-          config.build_settings[key] =
-            value.flatten.reject do |flag|
-
-              flag.to_s == '-G' ||
-              flag.to_s == '-GCC_WARN_INHIBIT_ALL_WARNINGS'
-
-            end
-
-        end
-
-      end
-
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
     end
-
-    # ==========================================================
-    # REMOVE -G FROM INDIVIDUAL SOURCE FILE COMPILER FLAGS
-    # IMPORTANT:
-    # PBXAggregateTarget does NOT have source_build_phase
-    # ==========================================================
-
-    if target.respond_to?(:source_build_phase)
-
-      target.source_build_phase.files.each do |file|
-
-        next unless file.settings
-
-        compiler_flags = file.settings['COMPILER_FLAGS']
-
-        next if compiler_flags.nil?
-
-        if compiler_flags.is_a?(String)
-
-          file.settings['COMPILER_FLAGS'] =
-            compiler_flags
-              .split
-              .reject do |flag|
-
-                flag.to_s == '-G' ||
-                flag.to_s == '-GCC_WARN_INHIBIT_ALL_WARNINGS'
-
-              end
-              .join(' ')
-
-        elsif compiler_flags.is_a?(Array)
-
-          file.settings['COMPILER_FLAGS'] =
-            compiler_flags.flatten.reject do |flag|
-
-              flag.to_s == '-G' ||
-              flag.to_s == '-GCC_WARN_INHIBIT_ALL_WARNINGS'
-
-            end
-
-        end
-
-      end
-
-    end
-
   end
-
-  # ==========================================================
-  # PATCH SDWebImage UIImage+Metadata.m
-  # ==========================================================
-
-  sd_metadata_path = File.join(
-    installer.sandbox.root.to_s,
-    'SDWebImage/SDWebImage/Core/UIImage+Metadata.m'
-  )
-
-  if File.exist?(sd_metadata_path)
-
-    content = File.read(sd_metadata_path)
-
-    old_code = 'return self.isHighDynamicRange;'
-    new_code = 'return [SDImageCoderHelper CGImageIsHDR:self.CGImage];'
-
-    if content.include?(old_code)
-
-      content = content.gsub(old_code, new_code)
-
-      File.write(sd_metadata_path, content)
-
-      puts "PATCHED UIImage+Metadata.m"
-
-    else
-
-      puts "UIImage+Metadata.m already patched"
-
-    end
-
-  else
-
-    puts "UIImage+Metadata.m NOT FOUND"
-
-  end
-
-  # ==========================================================
-  # PATCH SDImageIOAnimatedCoder.m
-  # Remove unsupported ImageIO constant
-  # ==========================================================
-
-  sd_animated_path = File.join(
-    installer.sandbox.root.to_s,
-    'SDWebImage/SDWebImage/Core/SDImageIOAnimatedCoder.m'
-  )
-
-  if File.exist?(sd_animated_path)
-
-    content = File.read(sd_animated_path)
-
-    if content.include?('kCGImageSourceDecodeRequest')
-
-      content = content.gsub(
-        /^.*kCGImageSourceDecodeRequest.*\n/,
-        ''
-      )
-
-      File.write(sd_animated_path, content)
-
-      puts "PATCHED SDImageIOAnimatedCoder.m"
-
-    else
-
-      puts "SDImageIOAnimatedCoder.m already patched"
-
-    end
-
-  else
-
-    puts "SDImageIOAnimatedCoder.m NOT FOUND"
-
-  end
-
 end

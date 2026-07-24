@@ -2,79 +2,27 @@ workflows:
   ios-workflow:
     name: iOS Build
     instance_type: mac_mini_m2
-
     environment:
       flutter: 3.19.0
-      xcode: 16.0
-
+      xcode: 14.3.1  # ✅ ប្រើ Xcode 14.3.1 (ឬ 15.0.1)
     scripts:
       - name: Flutter clean
-        script: |
-          flutter clean
-
+        script: flutter clean
       - name: Flutter pub get
-        script: |
-          flutter pub get
-
+        script: flutter pub get
       - name: Install CocoaPods
         script: |
           cd ios
-
           pod deintegrate || true
-
           rm -rf Pods
           rm -f Podfile.lock
-
           pod install --repo-update
-
           cd ..
-
-      - name: Verify BoringSSL-GRPC build settings
-        script: |
-          echo "========================================"
-          echo "VERIFY BoringSSL-GRPC"
-          echo "========================================"
-
-          grep -n -- "-G" ios/Pods/Pods.xcodeproj/project.pbxproj || true
-
-          echo ""
-          echo "Checking BoringSSL-GRPC target settings..."
-
-          xcodebuild \
-            -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -showBuildSettings 2>/dev/null \
-            | grep -E "BoringSSL|OTHER_CFLAGS|OTHER_CPLUSPLUSFLAGS" \
-            || true
-
-      - name: Verify SDWebImage patch
-        script: |
-          echo "Checking SDWebImage..."
-
-          if grep -q "self.isHighDynamicRange" ios/Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m; then
-            echo "❌ SDWebImage HDR error still exists"
-            exit 1
-          else
-            echo "✅ SDWebImage HDR issue fixed"
-          fi
-
-          if grep -q "kCGImageSourceDecodeRequest" ios/Pods/SDWebImage/SDWebImage/Core/SDImageIOAnimatedCoder.m; then
-            echo "❌ HDR ImageIO constants still exist"
-            exit 1
-          else
-            echo "✅ HDR ImageIO issue fixed"
-          fi
-
       - name: Build iOS
         script: |
-          flutter build ios \
-            --release \
-            --no-codesign
-
+          flutter build ios --release --no-codesign
     artifacts:
       - build/ios/iphoneos/Runner.app
-
     publishing:
       email:
         recipients:
