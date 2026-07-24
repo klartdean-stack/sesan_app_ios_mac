@@ -9,8 +9,8 @@ project 'Runner', {
 }
 
 def flutter_root
-  # ✅ កែ Path ឲ្យត្រឹមត្រូវ
-  generated_xcode_build_settings_path = File.expand_path(File.join('..', '..', 'Flutter', 'Generated.xcconfig'), __dir__)
+  # ✅ Path ត្រឹមត្រូវសម្រាប់ Codemagic
+  generated_xcode_build_settings_path = File.join(__dir__, '..', 'Flutter', 'Generated.xcconfig')
   unless File.exist?(generated_xcode_build_settings_path)
     raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
   end
@@ -44,8 +44,8 @@ post_install do |installer|
     end
   end
 
-  # ✅ Patch SDWebImage
-  sd_metadata_path = File.join(File.dirname(__FILE__), 'Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m')
+  # Patch SDWebImage
+  sd_metadata_path = File.join(__dir__, 'Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m')
   if File.exist?(sd_metadata_path)
     content = File.read(sd_metadata_path)
     if content.include?('isHighDynamicRange')
