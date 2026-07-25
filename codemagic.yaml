@@ -1,103 +1,102 @@
 workflows:
-ios-workflow:
-name: iOS Build
-instance_type: mac_mini_m2
-  
-  ```
-environment:
-  flutter: 3.19.0
-  xcode: 16.0
+  ios-workflow:
+    name: iOS Build
+    instance_type: mac_mini_m2
 
-scripts:
+    environment:
+      flutter: 3.19.0
+      xcode: 16.0
 
-  # ========================================
-  # 1. Flutter Clean
-  # ========================================
-  - name: Flutter clean
-    script: |
-      set -e
-      cd "$CM_BUILD_DIR"
+    scripts:
 
-      flutter clean
+      # ========================================
+      # 1. Flutter Clean
+      # ========================================
+      - name: Flutter clean
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR"
 
-  # ========================================
-  # 2. Flutter Pub Get
-  # ========================================
-  - name: Flutter pub get
-    script: |
-      set -e
-      cd "$CM_BUILD_DIR"
+          flutter clean
 
-      flutter pub get
+      # ========================================
+      # 2. Flutter Pub Get
+      # ========================================
+      - name: Flutter pub get
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR"
 
-      echo "========================================"
-      echo "Checking Generated.xcconfig"
-      echo "========================================"
+          flutter pub get
 
-      if [ ! -f "ios/Flutter/Generated.xcconfig" ]; then
-        echo "ERROR: ios/Flutter/Generated.xcconfig NOT FOUND"
-        exit 1
-      fi
+          echo "========================================"
+          echo "Checking Generated.xcconfig"
+          echo "========================================"
 
-      echo "Generated.xcconfig exists"
+          if [ ! -f "ios/Flutter/Generated.xcconfig" ]; then
+            echo "ERROR: ios/Flutter/Generated.xcconfig NOT FOUND"
+            exit 1
+          fi
 
-      grep "FLUTTER_ROOT" \
-        ios/Flutter/Generated.xcconfig || true
+          echo "Generated.xcconfig exists"
 
-  # ========================================
-  # 3. Install CocoaPods
-  # ========================================
-  - name: Install CocoaPods
-    script: |
-      set -e
-      cd "$CM_BUILD_DIR/ios"
+          grep "FLUTTER_ROOT" \
+            ios/Flutter/Generated.xcconfig || true
 
-      echo "========================================"
-      echo "Checking Podfile syntax"
-      echo "========================================"
+      # ========================================
+      # 3. Install CocoaPods
+      # ========================================
+      - name: Install CocoaPods
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR/ios"
 
-      ruby -c Podfile
+          echo "========================================"
+          echo "Checking Podfile syntax"
+          echo "========================================"
 
-      echo "========================================"
-      echo "Installing CocoaPods"
-      echo "========================================"
+          ruby -c Podfile
 
-      pod install --repo-update
+          echo "========================================"
+          echo "Installing CocoaPods"
+          echo "========================================"
 
-      echo "========================================"
-      echo "Checking SDWebImage version"
-      echo "========================================"
+          pod install --repo-update
 
-      grep -A3 -B1 "SDWebImage (" Podfile.lock || true
+          echo "========================================"
+          echo "Checking SDWebImage version"
+          echo "========================================"
 
-      echo "========================================"
-      echo "CocoaPods installation completed"
-      echo "========================================"
+          grep -A3 -B1 "SDWebImage (" Podfile.lock || true
 
-  # ========================================
-  # 4. Build iOS
-  # ========================================
-  - name: Build iOS
-    script: |
-      set -e
-      cd "$CM_BUILD_DIR"
+          echo "========================================"
+          echo "CocoaPods installation completed"
+          echo "========================================"
 
-      echo "========================================"
-      echo "Building iOS Release"
-      echo "========================================"
+      # ========================================
+      # 4. Build iOS
+      # ========================================
+      - name: Build iOS
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR"
 
-      flutter build ios \
-        --release \
-        --no-codesign
+          echo "========================================"
+          echo "Building iOS Release"
+          echo "========================================"
 
-      echo "========================================"
-      echo "BUILD COMPLETED"
-      echo "========================================"
+          flutter build ios \
+            --release \
+            --no-codesign
 
-artifacts:
-  - build/ios/iphoneos/Runner.app
+          echo "========================================"
+          echo "BUILD COMPLETED"
+          echo "========================================"
 
-publishing:
-  email:
-    recipients:
-      - klartdean@gmail.com
+    artifacts:
+      - build/ios/iphoneos/Runner.app
+
+    publishing:
+      email:
+        recipients:
+          - klartdean@gmail.com
