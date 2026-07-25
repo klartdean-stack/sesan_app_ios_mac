@@ -50,37 +50,29 @@ workflows:
         script: |
           set -e
           cd "$CM_BUILD_DIR/ios"
-
+          
           echo "========================================"
           echo "Installing CocoaPods"
           echo "========================================"
-
+          
+          pod deintegrate || true
+          rm -rf Pods
+          rm -f Podfile.lock
+          
           pod install --repo-update
-
+          
           echo "========================================"
-          echo "Checking BoringSSL-GRPC"
+          echo "Checking BoringSSL-GRPC build settings"
           echo "========================================"
-
-          if [ ! -d "Pods/BoringSSL-GRPC" ]; then
-            echo "ERROR: BoringSSL-GRPC not found"
-            exit 1
-          fi
-
-          echo "BoringSSL-GRPC exists"
-
-          echo "========================================"
-          echo "Checking for unsupported -G flag"
-          echo "========================================"
-
-          grep -R -- "-G" \
+          
+          grep -R --line-number -- "-G" \
             "Pods/Target Support Files/BoringSSL-GRPC" \
             "Pods/Pods.xcodeproj/project.pbxproj" \
             2>/dev/null || true
-
+          
           echo "========================================"
           echo "CocoaPods completed"
           echo "========================================"
-
       # ========================================
       # 4. Build iOS
       # ========================================
@@ -88,19 +80,24 @@ workflows:
         script: |
           set -e
           cd "$CM_BUILD_DIR"
-
+          
+          echo "========================================"
+          echo "Flutter version"
+          echo "========================================"
+          
+          flutter --version
+          
           echo "========================================"
           echo "Building iOS Release"
           echo "========================================"
-
+          
           flutter build ios \
             --release \
             --no-codesign
-
+          
           echo "========================================"
           echo "BUILD COMPLETED"
           echo "========================================"
-
     artifacts:
       - build/ios/iphoneos/Runner.app
 
