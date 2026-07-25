@@ -1,201 +1,103 @@
 workflows:
-  ios-workflow:
-    name: iOS Build
-    instance_type: mac_mini_m2
+ios-workflow:
+name: iOS Build
+instance_type: mac_mini_m2
+  
+  ```
+environment:
+  flutter: 3.19.0
+  xcode: 16.0
 
-    environment:
-      flutter: 3.19.0
-      xcode: 16.0
+scripts:
 
-    scripts:
+  # ========================================
+  # 1. Flutter Clean
+  # ========================================
+  - name: Flutter clean
+    script: |
+      set -e
+      cd "$CM_BUILD_DIR"
 
-      # ========================================
-      # 1. Flutter Clean
-      # ========================================
-      - name: Flutter clean
-        script: |
-          set -e
-          cd "$CM_BUILD_DIR"
+      flutter clean
 
-          flutter clean
+  # ========================================
+  # 2. Flutter Pub Get
+  # ========================================
+  - name: Flutter pub get
+    script: |
+      set -e
+      cd "$CM_BUILD_DIR"
 
-      # ========================================
-      # 2. Flutter Pub Get
-      # ========================================
-      - name: Flutter pub get
-        script: |
-          set -e
-          cd "$CM_BUILD_DIR"
+      flutter pub get
 
-          flutter pub get
+      echo "========================================"
+      echo "Checking Generated.xcconfig"
+      echo "========================================"
 
-          echo "========================================"
-          echo "Checking Generated.xcconfig"
-          echo "========================================"
+      if [ ! -f "ios/Flutter/Generated.xcconfig" ]; then
+        echo "ERROR: ios/Flutter/Generated.xcconfig NOT FOUND"
+        exit 1
+      fi
 
-          if [ ! -f "ios/Flutter/Generated.xcconfig" ]; then
-            echo "❌ ERROR: ios/Flutter/Generated.xcconfig NOT FOUND"
-            echo "Current directory:"
-            pwd
+      echo "Generated.xcconfig exists"
 
-            echo "Project files:"
-            ls -la
+      grep "FLUTTER_ROOT" \
+        ios/Flutter/Generated.xcconfig || true
 
-            echo "Flutter directory:"
-            ls -la ios/Flutter || true
+  # ========================================
+  # 3. Install CocoaPods
+  # ========================================
+  - name: Install CocoaPods
+    script: |
+      set -e
+      cd "$CM_BUILD_DIR/ios"
 
-            exit 1
-          fi
+      echo "========================================"
+      echo "Checking Podfile syntax"
+      echo "========================================"
 
-          echo "✅ ios/Flutter/Generated.xcconfig exists"
+      ruby -c Podfile
 
-          grep "FLUTTER_ROOT" \
-            ios/Flutter/Generated.xcconfig || true
+      echo "========================================"
+      echo "Installing CocoaPods"
+      echo "========================================"
 
-      # ========================================
-      # 3. Verify Flutter app_links plugin
-      # ========================================
-      - name: Verify Flutter plugins
-        script: |
-          set -e
-          cd "$CM_BUILD_DIR"
+      pod install --repo-update
 
-          echo "========================================"
-          echo "Checking app_links plugin"
-          echo "========================================"
+      echo "========================================"
+      echo "Checking SDWebImage version"
+      echo "========================================"
 
-          if [ ! -d "ios/.symlinks/plugins/app_links/ios" ]; then
-            echo "❌ ERROR: app_links iOS plugin not found"
-            exit 1
-          fi
+      grep -A3 -B1 "SDWebImage (" Podfile.lock || true
 
-          echo "✅ app_links iOS plugin exists"
+      echo "========================================"
+      echo "CocoaPods installation completed"
+      echo "========================================"
 
-          ls -la ios/.symlinks/plugins/app_links/ios
+  # ========================================
+  # 4. Build iOS
+  # ========================================
+  - name: Build iOS
+    script: |
+      set -e
+      cd "$CM_BUILD_DIR"
 
-          if [ ! -f "ios/.symlinks/plugins/app_links/ios/app_links.podspec" ]; then
-            echo "❌ ERROR: app_links.podspec NOT FOUND"
-            exit 1
-          fi
+      echo "========================================"
+      echo "Building iOS Release"
+      echo "========================================"
 
-          echo "✅ app_links.podspec exists"
+      flutter build ios \
+        --release \
+        --no-codesign
 
-      # ========================================
-      # 4. Install CocoaPods
-      # ========================================
-      - name: Install CocoaPods
-        script: |
-          set -e
-          cd "$CM_BUILD_DIR/ios"
+      echo "========================================"
+      echo "BUILD COMPLETED"
+      echo "========================================"
 
-          echo "========================================"
-          echo "Installing CocoaPods"
-          echo "========================================"
+artifacts:
+  - build/ios/iphoneos/Runner.app
 
-          ruby -c Podfile
-
-          pod install --repo-update
-
-          echo "========================================"
-          echo "Checking app_links Pod"
-          echo "========================================"
-
-          if ! grep -q "app_links" Podfile.lock; then
-            echo "❌ ERROR: app_links is NOT in Podfile.lock"
-            exit 1
-          fi
-
-          echo "✅ app_links found in Podfile.lock"
-
-          if [ ! -d "Pods/Target Support Files/app_links" ]; then
-            echo "❌ ERROR: app_links Target Support Files NOT FOUND"
-            exit 1
-          fi
-
-          echo "✅ app_links Target Support Files exist"
-
-          echo "========================================"
-          echo "CocoaPods installation completed"
-          echo "========================================"
-
-      # ========================================
-      # 5. Verify BoringSSL
-      # ========================================
-      - name: Verify BoringSSL-GRPC configuration
-        script: |
-          set -e
-          cd "$CM_BUILD_DIR/ios"
-
-          echo "========================================"
-          echo "Checking BoringSSL-GRPC configuration"
-          echo "========================================"
-
-          if [ ! -d "Pods/BoringSSL-GRPC" ]; then
-            echo "❌ ERROR: BoringSSL-GRPC not found"
-            exit 1
-          fi
-
-          echo "✅ BoringSSL-GRPC exists"
-
-      # ========================================
-      # 6. Patch SDWebImage
-      # ========================================
-      - name: Patch SDWebImage
-        script: |
-          set -e
-          cd "$CM_BUILD_DIR/ios"
-
-          SD_FILE="Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m"
-
-          if [ -f "$SD_FILE" ]; then
-
-            echo "Patching SDWebImage..."
-
-            python3 <<'PY'
-          from pathlib import Path
-
-          path = Path("Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m")
-          content = path.read_text()
-
-          old = "return self.isHighDynamicRange;"
-          new = "return [SDImageCoderHelper CGImageIsHDR:self.CGImage];"
-
-          if old in content:
-              content = content.replace(old, new)
-              path.write_text(content)
-              print("✅ SDWebImage patched")
-          else:
-              print("ℹ️ SDWebImage already patched or source changed")
-          PY
-
-          else
-            echo "ℹ️ SDWebImage UIImage+Metadata.m not found"
-          fi
-
-      # ========================================
-      # 7. Build iOS
-      # ========================================
-      - name: Build iOS
-        script: |
-          set -e
-          cd "$CM_BUILD_DIR"
-
-          echo "========================================"
-          echo "Building iOS Release"
-          echo "========================================"
-
-          flutter build ios \
-            --release \
-            --no-codesign
-
-          echo "========================================"
-          echo "BUILD COMPLETED"
-          echo "========================================"
-
-    artifacts:
-      - build/ios/iphoneos/*.app
-
-    publishing:
-      email:
-        recipients:
-          - klartdean@gmail.com
+publishing:
+  email:
+    recipients:
+      - klartdean@gmail.com
