@@ -51,20 +51,20 @@ post_install do |installer|
 
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-    end
 
-    if target.name == 'BoringSSL-GRPC'
-      target.build_configurations.each do |config|
-        if config.build_settings['OTHER_CFLAGS']
-          config.build_settings['OTHER_CFLAGS'] =
-            config.build_settings['OTHER_CFLAGS']
-              .reject { |flag| flag == '-G' }
-        end
+      # Fix BoringSSL-GRPC / Xcode 16 unsupported -G flag
+      if target.name == 'BoringSSL-GRPC'
+        ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |key|
+          flags = config.build_settings[key]
 
-        if config.build_settings['OTHER_CPLUSPLUSFLAGS']
-          config.build_settings['OTHER_CPLUSPLUSFLAGS'] =
-            config.build_settings['OTHER_CPLUSPLUSFLAGS']
-              .reject { |flag| flag == '-G' }
+          if flags.is_a?(String)
+            flags = flags.split
+          end
+
+          if flags.is_a?(Array)
+            flags.delete('-G')
+            config.build_settings[key] = flags
+          end
         end
       end
     end

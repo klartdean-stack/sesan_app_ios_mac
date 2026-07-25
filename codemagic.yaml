@@ -52,27 +52,25 @@ workflows:
           cd "$CM_BUILD_DIR/ios"
 
           echo "========================================"
-          echo "Checking Podfile syntax"
-          echo "========================================"
-
-          ruby -c Podfile
-
-          echo "========================================"
           echo "Installing CocoaPods"
           echo "========================================"
 
           pod install --repo-update
 
           echo "========================================"
-          echo "Checking SDWebImage version"
+          echo "Removing unsupported -G flag from BoringSSL-GRPC"
           echo "========================================"
 
-          grep -A3 -B1 "SDWebImage (" Podfile.lock || true
+          find Pods -type f \( -name "*.xcconfig" -o -name "project.pbxproj" \) \
+            -print0 | xargs -0 sed -i '' 's/ -G / /g; s/-G / /g'
+
+          echo "Checking remaining -G flags..."
+
+          grep -R -- "-G" Pods/BoringSSL-GRPC 2>/dev/null || true
 
           echo "========================================"
-          echo "CocoaPods installation completed"
+          echo "CocoaPods completed"
           echo "========================================"
-
       # ========================================
       # 4. Build iOS
       # ========================================
