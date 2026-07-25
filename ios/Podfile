@@ -9,26 +9,37 @@ project 'Runner', {
 }
 
 def flutter_root
-  # ✅ Path ត្រឹមត្រូវសម្រាប់ Codemagic
-  generated_xcode_build_settings_path = File.join(__dir__, '..', 'Flutter', 'Generated.xcconfig')
+  generated_xcode_build_settings_path = File.expand_path(
+    File.join('Flutter', 'Generated.xcconfig'),
+    __dir__
+  )
+
   unless File.exist?(generated_xcode_build_settings_path)
-    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+    raise "#{generated_xcode_build_settings_path} must exist. Run flutter pub get first."
   end
 
   File.foreach(generated_xcode_build_settings_path) do |line|
     matches = line.match(/FLUTTER_ROOT\=(.*)/)
     return matches[1].strip if matches
   end
-  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}"
 end
 
-require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+require File.expand_path(
+  File.join('packages', 'flutter_tools', 'bin', 'podhelper'),
+  flutter_root
+)
 
 target 'Runner' do
   use_frameworks! :linkage => :static
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+
+  # Pin SDWebImage versions for Xcode 16 / iOS SDK compatibility
+  pod 'SDWebImage', '5.19.0'
+  pod 'SDWebImageWebPCoder', '0.14.0'
 
   target 'RunnerTests' do
     inherit! :search_paths
@@ -41,17 +52,6 @@ post_install do |installer|
 
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-    end
-  end
-
-  # Patch SDWebImage
-  sd_metadata_path = File.join(__dir__, 'Pods/SDWebImage/SDWebImage/Core/UIImage+Metadata.m')
-  if File.exist?(sd_metadata_path)
-    content = File.read(sd_metadata_path)
-    if content.include?('isHighDynamicRange')
-      content.gsub!('isHighDynamicRange', 'sd_isHighDynamicRange')
-      File.write(sd_metadata_path, content)
-      puts "✅ Patched SDWebImage!"
     end
   end
 end
