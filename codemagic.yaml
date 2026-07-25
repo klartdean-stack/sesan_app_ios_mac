@@ -58,19 +58,29 @@ workflows:
           pod install --repo-update
 
           echo "========================================"
-          echo "Removing unsupported -G flag from BoringSSL-GRPC"
+          echo "Checking BoringSSL-GRPC"
           echo "========================================"
 
-          find Pods -type f \( -name "*.xcconfig" -o -name "project.pbxproj" \) \
-            -print0 | xargs -0 sed -i '' 's/ -G / /g; s/-G / /g'
+          if [ ! -d "Pods/BoringSSL-GRPC" ]; then
+            echo "ERROR: BoringSSL-GRPC not found"
+            exit 1
+          fi
 
-          echo "Checking remaining -G flags..."
+          echo "BoringSSL-GRPC exists"
 
-          grep -R -- "-G" Pods/BoringSSL-GRPC 2>/dev/null || true
+          echo "========================================"
+          echo "Checking for unsupported -G flag"
+          echo "========================================"
+
+          grep -R -- "-G" \
+            "Pods/Target Support Files/BoringSSL-GRPC" \
+            "Pods/Pods.xcodeproj/project.pbxproj" \
+            2>/dev/null || true
 
           echo "========================================"
           echo "CocoaPods completed"
           echo "========================================"
+
       # ========================================
       # 4. Build iOS
       # ========================================

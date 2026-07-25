@@ -37,7 +37,7 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
-  # Pin SDWebImage versions for Xcode 16 / iOS SDK compatibility
+  # Pin SDWebImage versions
   pod 'SDWebImage', '5.19.0'
   pod 'SDWebImageWebPCoder', '0.14.0'
 
@@ -45,28 +45,37 @@ target 'Runner' do
     inherit! :search_paths
   end
 end
+
 post_install do |installer|
   installer.pods_project.targets.each do |target|
+
     flutter_additional_ios_build_settings(target)
 
     target.build_configurations.each do |config|
+
+      # iOS Deployment Target
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
 
-      # Fix BoringSSL-GRPC / Xcode 16 unsupported -G flag
-      if target.name == 'BoringSSL-GRPC'
-        ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |key|
-          flags = config.build_settings[key]
+      # ============================================
+      # Fix BoringSSL-GRPC Xcode 16 unsupported -G
+      # ============================================
+     if target.name == 'BoringSSL-GRPC'
+       ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |key|
+         flags = config.build_settings[key]
 
-          if flags.is_a?(String)
-            flags = flags.split
-          end
+         if flags.is_a?(String)
+           flags = flags.split
+         end
 
-          if flags.is_a?(Array)
-            flags.delete('-G')
-            config.build_settings[key] = flags
-          end
-        end
+         if flags.is_a?(Array)
+           flags = flags.reject { |flag| flag == '-G' }
+           config.build_settings[key] = flags
+         end
+       end
+        puts "✅ Fixed BoringSSL-GRPC -G flag for #{config.name}"
+
       end
+
     end
   end
 end
