@@ -28,15 +28,16 @@ workflows:
           rm -rf Pods Podfile.lock
           pod install --repo-update
 
-      - name: Build iOS IPA
+      - name: Build iOS App
         script: |
           set -e
           cd "$CM_BUILD_DIR"
-          # ប្ដូរមកប្រើ flutter build ipa ព្រោះ --no-codesign ត្រូវស៊ីសង្វាក់ជាមួយ ipa command
-          flutter build ipa --release --no-codesign
+          # ใช้ flutter build ios ដើម្បីរំលងការទាមទារ Archive និង Provisioning Profile
+          flutter build ios --release --no-codesign
 
     artifacts:
-      - build/ios/ipa/*.ipa
+      # ទាញយក Runner.app ដែលបាន பిల్សរួចរាល់
+      - build/ios/iphoneos/Runner.app
 
     publishing:
       email:
