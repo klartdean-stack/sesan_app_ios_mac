@@ -4,11 +4,17 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      flutter: stable          # ឬ 3.24.0+
+      flutter: stable
       xcode: 16.0
       ios_signing:
         distribution_type: app_store
         bundle_identifier: "com.sesan.app"
+
+    integrations:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_KEY_ID
+        key_id: $APP_STORE_CONNECT_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
 
     scripts:
       - name: Flutter clean
