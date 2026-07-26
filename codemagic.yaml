@@ -25,33 +25,13 @@ workflows:
         script: |
           set -e
           cd "$CM_BUILD_DIR/ios"
-          
-          # ដក -G ពីឯកសារ xcconfig
-          find Pods -name "*.xcconfig" -type f -exec sed -i '' 's/-G //g' {} \;
-          
-          # ដក -G ពីឯកសារ pbxproj
-          find Pods -name "*.pbxproj" -type f -exec sed -i '' 's/-G //g' {} \;
-
-      - name: Verify BoringSSL-GRPC flags
-        script: |
-          set -e
-          cd "$CM_BUILD_DIR"
-
-          echo "Checking BoringSSL-GRPC..."
-
-          grep -R --line-number -- "-G" \
-            ios/Pods/Target\ Support\ Files/BoringSSL-GRPC \
-            ios/Pods/Pods.xcodeproj/project.pbxproj \
-            2>/dev/null || true
+          pod install --repo-update
 
       - name: Build iOS
         script: |
           set -e
           cd "$CM_BUILD_DIR"
-
-          flutter build ios \
-            --release \
-            --no-codesign
+          flutter build ios --release --no-codesign
 
     artifacts:
       - build/ios/iphoneos/Runner.app
