@@ -25,8 +25,12 @@ workflows:
         script: |
           set -e
           cd "$CM_BUILD_DIR/ios"
-
-          pod install --repo-update
+          
+          # ដក -G ពីឯកសារ xcconfig
+          find Pods -name "*.xcconfig" -type f -exec sed -i '' 's/-G //g' {} \;
+          
+          # ដក -G ពីឯកសារ pbxproj
+          find Pods -name "*.pbxproj" -type f -exec sed -i '' 's/-G //g' {} \;
 
       - name: Verify BoringSSL-GRPC flags
         script: |
