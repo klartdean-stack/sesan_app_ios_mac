@@ -4,11 +4,13 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      flutter: 3.19.0
+      flutter: stable          # ឬ 3.24.0+
       xcode: 16.0
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: "com.sesan.app"
 
     scripts:
-
       - name: Flutter clean
         script: |
           set -e
@@ -28,18 +30,19 @@ workflows:
           rm -rf Pods Podfile.lock
           pod install --repo-update
 
-      - name: Build iOS App
+      - name: Build iOS IPA
         script: |
           set -e
           cd "$CM_BUILD_DIR"
-          # ใช้ flutter build ios ដើម្បីរំលងការទាមទារ Archive និង Provisioning Profile
-          flutter build ios --release --no-codesign
+          flutter build ipa --release
 
     artifacts:
-      # ទាញយក Runner.app ដែលបាន பిల్សរួចរាល់
-      - build/ios/iphoneos/Runner.app
+      - build/ios/ipa/*.ipa
 
     publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
       email:
         recipients:
           - klartdean@gmail.com
