@@ -46,13 +46,11 @@ target 'Runner' do
   end
 end
 
-
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
 
     target.build_configurations.each do |config|
-      # Set minimum iOS version
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
 
       # Fix Xcode 16 / BoringSSL-GRPC unsupported -G flag
@@ -60,26 +58,23 @@ post_install do |installer|
         %w[
           OTHER_CFLAGS
           OTHER_CPLUSPLUSFLAGS
-          GCC_PREPROCESSOR_DEFINITIONS
           OTHER_LDFLAGS
+          GCC_PREPROCESSOR_DEFINITIONS
         ].each do |key|
           value = config.build_settings[key]
 
-          next if value.nil?
-
           if value.is_a?(String)
-            value = value.split
-          end
-
-          if value.is_a?(Array)
-            value = value.reject { |flag| flag == '-G' }
-            config.build_settings[key] = value
+            config.build_settings[key] =
+              value.split.reject { |flag| flag == '-G' }.join(' ')
+          elsif value.is_a?(Array)
+            config.build_settings[key] =
+              value.reject { |flag| flag == '-G' }
           end
         end
       end
     end
 
-    # Remove -G directly from all build files of BoringSSL-GRPC
+    # Remove -G from every source file build setting
     if target.name == 'BoringSSL-GRPC'
       target.source_build_phase.files.each do |build_file|
         next unless build_file.settings
@@ -87,18 +82,17 @@ post_install do |installer|
         %w[
           OTHER_CFLAGS
           OTHER_CPLUSPLUSFLAGS
+          OTHER_LDFLAGS
+          GCC_PREPROCESSOR_DEFINITIONS
         ].each do |key|
-          flags = build_file.settings[key]
+          value = build_file.settings[key]
 
-          next if flags.nil?
-
-          if flags.is_a?(String)
-            flags = flags.split
-          end
-
-          if flags.is_a?(Array)
-            flags = flags.reject { |flag| flag == '-G' }
-            build_file.settings[key] = flags
+          if value.is_a?(String)
+            build_file.settings[key] =
+              value.split.reject { |flag| flag == '-G' }.join(' ')
+          elsif value.is_a?(Array)
+            build_file.settings[key] =
+              value.reject { |flag| flag == '-G' }
           end
         end
       end
