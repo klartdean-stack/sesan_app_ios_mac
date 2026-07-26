@@ -25,18 +25,18 @@ workflows:
         script: |
           set -e
           cd "$CM_BUILD_DIR/ios"
-          # ✅ លុប Pods ចាស់ និង Podfile.lock ចោល ដើម្បីកុំឱ្យវាប្រើប្រាស់ Cache ចាស់ដែលបង្ក Error
           rm -rf Pods Podfile.lock
           pod install --repo-update
 
-      - name: Build iOS
+      - name: Build iOS IPA
         script: |
           set -e
           cd "$CM_BUILD_DIR"
-          flutter build ios --release --no-codesign
+          # ប្ដូរមកប្រើ flutter build ipa ព្រោះ --no-codesign ត្រូវស៊ីសង្វាក់ជាមួយ ipa command
+          flutter build ipa --release --no-codesign
 
     artifacts:
-      - build/ios/iphoneos/Runner.app
+      - build/ios/ipa/*.ipa
 
     publishing:
       email:
