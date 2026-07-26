@@ -9,169 +9,45 @@ workflows:
 
     scripts:
 
-      # ========================================
-      # 1. Flutter Clean
-      # ========================================
       - name: Flutter clean
         script: |
           set -e
           cd "$CM_BUILD_DIR"
-
           flutter clean
 
-      # ========================================
-      # 2. Flutter Pub Get
-      # ========================================
       - name: Flutter pub get
         script: |
           set -e
           cd "$CM_BUILD_DIR"
-
           flutter pub get
 
-          echo "========================================"
-          echo "Checking Generated.xcconfig"
-          echo "========================================"
-
-          if [ ! -f "ios/Flutter/Generated.xcconfig" ]; then
-            echo "ERROR: ios/Flutter/Generated.xcconfig NOT FOUND"
-            exit 1
-          fi
-
-          echo "Generated.xcconfig exists"
-
-          grep "FLUTTER_ROOT" \
-            ios/Flutter/Generated.xcconfig || true
-
-      # ========================================
-      # 3. Install CocoaPods
-      # ========================================
       - name: Install CocoaPods
         script: |
           set -e
           cd "$CM_BUILD_DIR/ios"
 
-          echo "========================================"
-          echo "Installing CocoaPods"
-          echo "========================================"
-
-          pod deintegrate || true
-
-          rm -rf Pods
-          rm -f Podfile.lock
-
           pod install --repo-update
 
-          echo "========================================"
-          echo "CocoaPods completed"
-          echo "========================================"
-
-      # ========================================
-      # 4. Remove BoringSSL-GRPC -G flag
-      # ========================================
-      - name: Fix BoringSSL-GRPC for Xcode 16
+      - name: Verify BoringSSL-GRPC flags
         script: |
           set -e
-          cd "$CM_BUILD_DIR/ios"
+          cd "$CM_BUILD_DIR"
 
-          echo "========================================"
-          echo "Removing unsupported -G flag"
-          echo "========================================"
-
-          PBXPROJ="Pods/Pods.xcodeproj/project.pbxproj"
-
-          if [ -f "$PBXPROJ" ]; then
-
-            echo "Before patch:"
-            grep -n -- "-G" "$PBXPROJ" || true
-
-            python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path("Pods/Pods.xcodeproj/project.pbxproj")
-
-          if path.exists():
-              text = path.read_text()
-
-              # Remove standalone -G flag
-              text = text.replace(" -G ", " ")
-              text = text.replace(" '-G' ", " ")
-              text = text.replace(' "-G" ', " ")
-
-              # Remove beginning/end cases
-              text = text.replace(" -G;", ";")
-              text = text.replace(" -G\n", "\n")
-
-              path.write_text(text)
-
-              print("Patched:", path)
-          else:
-              print("WARNING: project.pbxproj not found")
-          PY
-
-            echo "After patch:"
-            grep -n -- "-G" "$PBXPROJ" || true
-
-          else
-            echo "WARNING: Pods.xcodeproj/project.pbxproj not found"
-          fi
-
-          echo "========================================"
-          echo "Checking BoringSSL-GRPC xcconfig files"
-          echo "========================================"
-
-          find "Pods/Target Support Files/BoringSSL-GRPC" \
-            -type f \
-            \( -name "*.xcconfig" -o -name "*.pbxproj" \) \
-            -print 2>/dev/null || true
-
-          echo "========================================"
-          echo "Searching all Pods for -G"
-          echo "========================================"
+          echo "Checking BoringSSL-GRPC..."
 
           grep -R --line-number -- "-G" \
-            "Pods/Target Support Files/BoringSSL-GRPC" \
-            "Pods/Pods.xcodeproj" \
+            ios/Pods/Target\ Support\ Files/BoringSSL-GRPC \
+            ios/Pods/Pods.xcodeproj/project.pbxproj \
             2>/dev/null || true
 
-          echo "========================================"
-          echo "BoringSSL-GRPC patch completed"
-          echo "========================================"
-
-      # ========================================
-      # 5. Build iOS
-      # ========================================
       - name: Build iOS
         script: |
           set -e
           cd "$CM_BUILD_DIR"
 
-          echo "========================================"
-          echo "Flutter version"
-          echo "========================================"
-
-          flutter --version
-
-          echo "========================================"
-          echo "Final BoringSSL-GRPC check"
-          echo "========================================"
-
-          grep -R --line-number -- "-G" \
-            ios/Pods/Target\ Support\ Files/BoringSSL-GRPC \
-            ios/Pods/Pods.xcodeproj \
-            2>/dev/null || true
-
-          echo "========================================"
-          echo "Building iOS Release"
-          echo "========================================"
-
           flutter build ios \
             --release \
             --no-codesign
-
-          echo "========================================"
-          echo "BUILD COMPLETED"
-          echo "========================================"
 
     artifacts:
       - build/ios/iphoneos/Runner.app
