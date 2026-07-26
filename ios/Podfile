@@ -36,7 +36,7 @@ post_install do |installer|
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
       config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
 
-      # ដោះស្រាយរឿងរក Flutter/Flutter.h មិនឃើញសម្រាប់ Pods
+      # បន្ថែម Header Search Paths ឱ្យ Pods ទាំងអស់ស្គាល់ Flutter headers
       config.build_settings['HEADER_SEARCH_PATHS'] ||= '$(inherited)'
       config.build_settings['HEADER_SEARCH_PATHS'] << ' "${PODS_ROOT}/Headers/Public/Flutter"'
     end
