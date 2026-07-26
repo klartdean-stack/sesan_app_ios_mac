@@ -1,6 +1,5 @@
 platform :ios, '14.0'
 
-# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = '1'
 
 project 'Runner', {
@@ -28,7 +27,8 @@ target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
-  flutter_install_ios_engine_pods
+  # ប្រើប្រាស់មុខងារដើមស្តង់ដារដែលមានសព្វវង្សរបស់ Flutter
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
 post_install do |installer|
