@@ -1,6 +1,6 @@
 platform :ios, '14.0'
 
-ENV['COCOAPODS_DISABLE_STATS'] = '1'
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 project 'Runner', {
   'Debug' => :debug,
@@ -9,7 +9,7 @@ project 'Runner', {
 }
 
 def flutter_root
-  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __dir__)
   unless File.exist?(generated_xcode_build_settings_path)
     raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
   end
@@ -23,30 +23,32 @@ end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
+flutter_ios_podfile_setup
+
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
 end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+
     target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
 
-      # បន្ថែម Header Search Paths ឱ្យ Pods ទាំងអស់ស្គាល់ Flutter headers
+      # ដំណោះស្រាយ Flutter/Flutter.h not found
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= '$(inherited)'
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] << ' "${PODS_CONFIGURATION_BUILD_DIR}/Flutter"'
+
       config.build_settings['HEADER_SEARCH_PATHS'] ||= '$(inherited)'
-      config.build_settings['HEADER_SEARCH_PATHS'] << ' "${PODS_ROOT}/Headers/Public/Flutter"'
-    end
-  end
-
-  installer.generated_projects.each do |project|
-    project.targets.each do |target|
-      target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-      end
+      config.build_settings['HEADER_SEARCH_PATHS'] << ' "${PODS_ROOT}/Headers/Public"'
     end
   end
 end
