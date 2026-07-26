@@ -45,32 +45,18 @@ target 'Runner' do
     inherit! :search_paths
   end
 end
-
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
 
-    if target.name == 'BoringSSL-GRPC'
-      target.build_configurations.each do |config|
-        flags = config.build_settings['OTHER_CFLAGS']
-
-        if flags.is_a?(String)
-          config.build_settings['OTHER_CFLAGS'] =
-            flags.split.reject { |flag| flag == '-G' }.join(' ')
-        elsif flags.is_a?(Array)
-          config.build_settings['OTHER_CFLAGS'] =
-            flags.reject { |flag| flag == '-G' }
-        end
-
-        cxxflags = config.build_settings['OTHER_CPLUSPLUSFLAGS']
-
-        if cxxflags.is_a?(String)
-          config.build_settings['OTHER_CPLUSPLUSFLAGS'] =
-            cxxflags.split.reject { |flag| flag == '-G' }.join(' ')
-        elsif cxxflags.is_a?(Array)
-          config.build_settings['OTHER_CPLUSPLUSFLAGS'] =
-            cxxflags.reject { |flag| flag == '-G' }
-        end
+      # ✅ Force ដក -G ពី BoringSSL-GRPC
+      if target.name == 'BoringSSL-GRPC'
+        config.build_settings['OTHER_CFLAGS'] = '$(inherited)'
+        config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '$(inherited)'
+        # ដក -G ប្រាកដ
+        config.build_settings['WARNING_CFLAGS'] = '-Wno-unknown-warning-option'
       end
     end
   end
