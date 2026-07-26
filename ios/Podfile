@@ -27,7 +27,6 @@ target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
-  # ប្រើប្រាស់មុខងារដើមស្តង់ដារដែលមានសព្វវង្សរបស់ Flutter
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
@@ -38,6 +37,8 @@ post_install do |installer|
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       config.build_settings['SWIFT_VERSION'] = '5.0'
+
+      # បិទកុំឱ្យវាចាត់ទុករឿង Sendable/Concurrency ក្នុង Swift 6 ជា Error ស្របពេលប្រើ Xcode 16
       config.build_settings['SWIFT_STRICT_CONCURRENCYING'] = 'minimal'
     end
   end
