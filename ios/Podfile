@@ -50,8 +50,9 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
 
-    # ✅ បិទ Swift 6 Strict Concurrency Checking សម្រាប់ Pods ទាំងអស់ ដើម្បីកុំឱ្យ Error លើ video_compress
+    # ✅ បង្ខំដំឡើង iOS Deployment Target យ៉ាងតិច 14.0 ដើម្បីកុំឱ្យទติด Error លើ BoringSSL-GRPC និង Xcode 16
     target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       config.build_settings['SWIFT_VERSION'] = '5.0'
       config.build_settings['SWIFT_STRICT_CONCURRENCY_CHECKING'] = 'minimal'
     end
