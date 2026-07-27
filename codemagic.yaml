@@ -5,7 +5,6 @@ workflows:
     environment:
       flutter: 3.19.1
       xcode: 16.2
-      cocoapods: 1.15.2
       groups:
         - appstore_credentials
 
@@ -16,15 +15,6 @@ workflows:
           which flutter
           flutter --version
 
-          echo "===== DART ====="
-          dart --version
-
-          echo "===== GOOGLE ML KIT ====="
-          flutter pub deps | grep -A8 -B5 "google_mlkit"
-
-          echo "===== MOBILE SCANNER ====="
-          flutter pub deps | grep -A8 -B5 "mobile_scanner"
-
       - name: Get Flutter packages
         script: |
           flutter pub get
@@ -34,68 +24,22 @@ workflows:
           cd ios
           rm -rf Pods
           rm -f Podfile.lock
-          pod install --repo-update --verbose
+          pod install --repo-update
           cd ..
 
       - name: Build IPA for App Store
         script: |
-          # ពិនិត្យមើល ExportOptions.plist
-          if [ ! -f "ios/ExportOptions.plist" ]; then
-            echo "❌ Error: ios/ExportOptions.plist not found!"
-            exit 1
-          fi
-
-          echo "📦 Building IPA for App Store..."
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist
 
-          # បង្ហាញលទ្ធផល
-          echo "✅ Build completed!"
-          echo "📁 IPA location:"
-          ls -la build/ios/ipa/ || echo "No IPA found"
-
-      - name: Verify IPA
-        script: |
-          if [ -f "build/ios/ipa/*.ipa" ]; then
-            echo "📱 IPA file found!"
-            echo "🔍 Checking IPA..."
-            codesign -dv build/ios/ipa/*.ipa || true
-            echo "📊 IPA size:"
-            du -sh build/ios/ipa/*.ipa
-          else
-            echo "❌ No IPA file found!"
-            exit 1
-          fi
-
     artifacts:
       - build/ios/ipa/*.ipa
-      - build/ios/ipa/manifest.plist
-      - build/Runner.xcarchive
 
     publishing:
-      email:
-        recipients:
-          - klartdean@gmail.com
-        notify:
-          success: true
-          failure: true
-
-      # App Store Connect Upload
       app_store_connect:
-        auth: integration
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
         beta_groups:
           - "Internal Testers"
-        # submit_to_app_store: true  # បើចង់ដាក់ App Review ដោយស្វ័យប្រវត្តិ
-        # release_type: MANUAL  # MANUAL, AFTER_APPROVAL, ឬ SCHEDULED
-
-      # Slack Notification (ស្រេចចិត្ត)
-      # slack:
-      #   channel: '#builds'
-      #   notify_on_build_start: true
-
-      # Webhook (ស្រេចចិត្ត)
-      # webhook:
-      #   url: https://your-webhook-url.com
-      #   headers:
-      #     - "Content-Type: application/json"
