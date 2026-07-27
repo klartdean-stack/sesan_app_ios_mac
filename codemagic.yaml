@@ -1,21 +1,96 @@
 workflows:
   ios-workflow:
     name: iOS Workflow
+
     environment:
       flutter: stable
       xcode: latest
+
     scripts:
-      - name: Get Flutter packages
+
+      # ========================================
+      # 1. Get Flutter packages
+      # ========================================
+      - name: Flutter pub get
         script: |
+          set -e
+
+          echo "========================================"
+          echo "Flutter version"
+          echo "========================================"
+          flutter --version
+
+          echo "========================================"
+          echo "Flutter pub get"
+          echo "========================================"
+
           flutter pub get
-      - name: Install pods
+
+      # ========================================
+      # 2. Verify Generated.xcconfig
+      # ========================================
+      - name: Verify Generated.xcconfig
         script: |
-          find . -name "Podfile" -execdir pod install \;
+          set -e
+
+          echo "========================================"
+          echo "Checking Generated.xcconfig"
+          echo "========================================"
+
+          if [ ! -f "ios/Flutter/Generated.xcconfig" ]; then
+            echo "ERROR: ios/Flutter/Generated.xcconfig NOT FOUND"
+            echo ""
+            echo "Files in ios/Flutter:"
+            ls -la ios/Flutter || true
+            exit 1
+          fi
+
+          echo "SUCCESS: Generated.xcconfig exists"
+
+          grep "FLUTTER_ROOT" \
+            ios/Flutter/Generated.xcconfig || true
+
+      # ========================================
+      # 3. Install CocoaPods
+      # ========================================
+      - name: Install CocoaPods
+        script: |
+          set -e
+
+          cd ios
+
+          echo "========================================"
+          echo "Installing CocoaPods"
+          echo "========================================"
+
+          if [ ! -f "Flutter/Generated.xcconfig" ]; then
+            echo "ERROR: Flutter/Generated.xcconfig NOT FOUND"
+            exit 1
+          fi
+
+          pod install --repo-update
+
+      # ========================================
+      # 4. Build IPA
+      # ========================================
       - name: Build IPA
         script: |
-          flutter build ipa --release
+          set -e
+
+          echo "========================================"
+          echo "Building IPA"
+          echo "========================================"
+
+          flutter build ipa \
+            --release
+
+          echo "========================================"
+          echo "IPA BUILD COMPLETED"
+          echo "========================================"
+
     artifacts:
       - build/ios/ipa/*.ipa
+
     publishing:
       email:
         recipients:
