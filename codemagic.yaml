@@ -6,22 +6,15 @@ workflows:
       flutter: stable
       cocoapods: default
     scripts:
-      - name: Set up local properties
-        script: |
-          echo "flutter.sdk=$HOME/programs/flutter" > android/local.properties
       - name: Get Flutter packages
         script: |
           flutter pub get
-      - name: Install CocoaPods dependencies
-        script: |
-          cd ios && pod install
       - name: Build IPA
         script: |
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist
     artifacts:
       - build/ios/ipa/*.ipa
-
     publishing:
       email:
         recipients:
