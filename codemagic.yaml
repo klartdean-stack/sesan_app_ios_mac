@@ -3,7 +3,7 @@ workflows:
     name: iOS Workflow
 
     environment:
-      flutter: stable
+      flutter: 3.19.1
       xcode: 16.2
 
     scripts:
