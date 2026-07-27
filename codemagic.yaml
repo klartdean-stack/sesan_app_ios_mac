@@ -9,18 +9,18 @@ workflows:
     scripts:
       - name: Check Flutter and Dart version
         script: |
-          echo "===== FLUTTER VERSION ====="
+          echo "===== FLUTTER ====="
           which flutter
           flutter --version
 
-          echo "===== DART VERSION ====="
+          echo "===== DART ====="
           dart --version
 
-          echo "===== WIN32 ====="
-          flutter pub deps | grep -A5 -B5 "win32" || true
+          echo "===== GOOGLE ML KIT ====="
+          flutter pub deps | grep -A8 -B5 "google_mlkit"
 
-          echo "===== SCREENSHOT ====="
-          flutter pub deps | grep -A5 -B5 "screenshot" || true
+          echo "===== MOBILE SCANNER ====="
+          flutter pub deps | grep -A8 -B5 "mobile_scanner"
 
       - name: Get Flutter packages
         script: |
