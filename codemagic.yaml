@@ -9,9 +9,12 @@ workflows:
       - name: Get Flutter packages
         script: |
           flutter pub get
+      - name: Install CocoaPods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
       - name: Build IPA
         script: |
-          flutter build ipa --release
+          flutter build ipa --release --no-codesign
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
