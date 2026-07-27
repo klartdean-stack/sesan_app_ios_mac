@@ -2,53 +2,30 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <dict>
-        <!-- Release Method: app-store, ad-hoc, development, enterprise -->
         <key>method</key>
         <string>app-store</string>
 
-        <!-- Signing: automatic ឬ manual -->
         <key>signingStyle</key>
         <string>automatic</string>
 
-        <!-- Your Team ID (ស្វែងរកពី Apple Developer) -->
         <key>teamID</key>
-        <string>YOUR_TEAM_ID_HERE</string>
+        <string>YUKK89TARL</string>
 
-        <!-- Provisioning Profiles (សម្រាប់ manual signing) -->
-        <key>provisioningProfiles</key>
-        <dict>
-            <key>com.sesan.app</key>
-            <string>YOUR_APP_STORE_PROFILE_NAME</string>
-        </dict>
+        <!-- លុបផ្នែក provisioningProfiles ចេញ! -->
 
-        <!-- Strip Swift Symbols -->
         <key>stripSwiftSymbols</key>
         <true/>
 
-        <!-- Bitcode (បិទសម្រាប់ Xcode 14+) -->
         <key>uploadBitcode</key>
         <false/>
+
         <key>compileBitcode</key>
         <false/>
 
-        <!-- Export Destination -->
         <key>destination</key>
         <string>export</string>
 
-        <!-- Upload Symbols for Crash Reporting -->
         <key>uploadSymbols</key>
         <true/>
-
-        <!-- Include Manifest (សម្រាប់ Ad-Hoc/Development) -->
-        <key>includeManifest</key>
-        <false/>
-
-        <!-- Keep Archive after export -->
-        <key>archive</key>
-        <false/>
-
-        <!-- Export Format -->
-        <key>exportFormat</key>
-        <string>ipa</string>
     </dict>
 </plist>
