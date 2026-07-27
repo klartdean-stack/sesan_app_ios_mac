@@ -5,20 +5,26 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
+      cocoapods: default
 
     scripts:
       - name: Get Flutter packages
         script: |
+          flutter clean
           flutter pub get
 
       - name: Install CocoaPods
         script: |
           cd ios
+          pod deintegrate || true
+          rm -rf Pods Podfile.lock
           pod install --repo-update
+          cd ..
 
       - name: Build IPA
         script: |
-          flutter build ipa --release
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
