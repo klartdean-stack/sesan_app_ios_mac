@@ -1,18 +1,19 @@
 workflows:
   ios-workflow:
-    name: iOS Build
-    max_build_duration: 120
+    name: iOS Workflow
     environment:
       flutter: stable
-      cocoapods: default
+      xcode: latest
     scripts:
-      - name: Get Flutter packages & generate config
+      - name: Get Flutter packages
         script: |
           flutter pub get
-          cd ios && pod install
+      - name: Install pods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
       - name: Build IPA
         script: |
-          flutter build ipa --release --no-codesign
+          flutter build ipa --release
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
