@@ -14,8 +14,6 @@ workflows:
           echo "===== FLUTTER ====="
           which flutter
           flutter --version
-          echo "===== DART ====="
-          dart --version
 
       - name: Get Flutter packages
         script: |
