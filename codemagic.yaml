@@ -2,12 +2,6 @@ workflows:
   ios-workflow:
     name: iOS Workflow
 
-    integrations:
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-
     environment:
       flutter: 3.19.1
       xcode: 16.2
@@ -15,19 +9,46 @@ workflows:
         - appstore_credentials
 
     scripts:
+      - name: Check Flutter and Dart version
+        script: |
+          echo "===== FLUTTER ====="
+          which flutter
+          flutter --version
+          echo "===== DART ====="
+          dart --version
+
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          rm -rf Pods
+          rm -f Podfile.lock
+          pod install --repo-update
+          cd ..
+
       - name: Build IPA for App Store
         script: |
-          # Build with provisioning updates
+          flutter clean
           flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --codesign
+            --export-options-plist=ios/ExportOptions.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
 
     publishing:
+      email:
+        recipients:
+          - klartdean@gmail.com
+        notify:
+          success: true
+          failure: true
       app_store_connect:
-        auth: integration
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
         beta_groups:
           - "Internal Testers"
