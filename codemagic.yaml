@@ -8,51 +8,32 @@ workflows:
 
     scripts:
 
-      # ========================================
-      # 1. Get Flutter packages
-      # ========================================
-      - name: Flutter pub get
+      - name: Flutter Clean
         script: |
           set -e
+          flutter clean
 
-          echo "========================================"
-          echo "Flutter version"
-          echo "========================================"
-          flutter --version
-
-          echo "========================================"
-          echo "Flutter pub get"
-          echo "========================================"
+      - name: Flutter Pub Get
+        script: |
+          set -e
 
           flutter pub get
-
-      # ========================================
-      # 2. Verify Generated.xcconfig
-      # ========================================
-      - name: Verify Generated.xcconfig
-        script: |
-          set -e
 
           echo "========================================"
           echo "Checking Generated.xcconfig"
           echo "========================================"
 
+          ls -la ios/Flutter || true
+
           if [ ! -f "ios/Flutter/Generated.xcconfig" ]; then
             echo "ERROR: ios/Flutter/Generated.xcconfig NOT FOUND"
-            echo ""
-            echo "Files in ios/Flutter:"
-            ls -la ios/Flutter || true
             exit 1
           fi
 
-          echo "SUCCESS: Generated.xcconfig exists"
+          echo "Generated.xcconfig FOUND"
 
-          grep "FLUTTER_ROOT" \
-            ios/Flutter/Generated.xcconfig || true
+          grep "FLUTTER_ROOT" ios/Flutter/Generated.xcconfig || true
 
-      # ========================================
-      # 3. Install CocoaPods
-      # ========================================
       - name: Install CocoaPods
         script: |
           set -e
@@ -60,33 +41,43 @@ workflows:
           cd ios
 
           echo "========================================"
-          echo "Installing CocoaPods"
+          echo "Checking Podfile"
           echo "========================================"
+
+          pwd
+
+          echo "========================================"
+          echo "Checking Generated.xcconfig"
+          echo "========================================"
+
+          ls -la Flutter/
 
           if [ ! -f "Flutter/Generated.xcconfig" ]; then
             echo "ERROR: Flutter/Generated.xcconfig NOT FOUND"
             exit 1
           fi
 
+          echo "Generated.xcconfig exists"
+
+          echo "========================================"
+          echo "Installing CocoaPods"
+          echo "========================================"
+
+          pod deintegrate || true
+          rm -rf Pods
+          rm -f Podfile.lock
+
           pod install --repo-update
 
-      # ========================================
-      # 4. Build IPA
-      # ========================================
       - name: Build IPA
         script: |
           set -e
 
-          echo "========================================"
-          echo "Building IPA"
-          echo "========================================"
+          cd "$CM_BUILD_DIR"
 
           flutter build ipa \
-            --release
-
-          echo "========================================"
-          echo "IPA BUILD COMPLETED"
-          echo "========================================"
+            --release \
+            --export-options-plist=ios/ExportOptions.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
