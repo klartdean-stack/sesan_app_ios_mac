@@ -36,7 +36,19 @@ workflows:
 
       - name: Build IPA
         script: |
-          flutter build ipa --release --no-codesign
+          # ពិនិត្យមើលថា ExportOptions.plist មាន
+          if [ ! -f "ios/ExportOptions.plist" ]; then
+            echo "⚠️ Warning: ExportOptions.plist not found in ios directory"
+            echo "📦 Building with --no-codesign for testing"
+            flutter build ipa --release --no-codesign
+          else
+            echo "✅ ExportOptions.plist found, building with codesign"
+            flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          fi
+          
+          # បង្ហាញលទ្ធផល
+          echo "📁 Build output:"
+          ls -la build/ios/ipa/ || echo "No IPA found"
 
     artifacts:
       - build/ios/ipa/*.ipa

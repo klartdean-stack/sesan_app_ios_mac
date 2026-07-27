@@ -1,23 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>app-store</string>
+    <dict>
+        <key>method</key>
+        <string>app-store</string>
 
-    <key>signingStyle</key>
-    <string>automatic</string>
+        <key>signingStyle</key>
+        <string>automatic</string>
 
-    <key>stripSwiftSymbols</key>
-    <true/>
+        <key>teamID</key>
+        <string>YOUR_TEAM_ID_HERE</string>
 
-    <key>uploadBitcode</key>
-    <false/>
+        <key>provisioningProfiles</key>
+        <dict>
+            <key>com.sesan.app</key>
+            <string>YOUR_PROVISIONING_PROFILE_NAME</string>
+        </dict>
 
-    <key>compileBitcode</key>
-    <false/>
+        <key>stripSwiftSymbols</key>
+        <true/>
 
-    <key>destination</key>
-    <string>export</string>
-</dict>
+        <key>uploadBitcode</key>
+        <false/>
+
+        <key>compileBitcode</key>
+        <false/>
+
+        <key>destination</key>
+        <string>export</string>
+
+        <key>uploadSymbols</key>
+        <true/>
+
+        <key>includeManifest</key>
+        <false/>
+
+        <key>archive</key>
+        <false/>
+    </dict>
 </plist>
