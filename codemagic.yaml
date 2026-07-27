@@ -7,9 +7,23 @@ workflows:
       xcode: 16.2
 
     scripts:
+      - name: Check Flutter and Dart version
+        script: |
+          echo "===== FLUTTER VERSION ====="
+          which flutter
+          flutter --version
+
+          echo "===== DART VERSION ====="
+          dart --version
+
+          echo "===== WIN32 ====="
+          flutter pub deps | grep -A5 -B5 "win32" || true
+
+          echo "===== SCREENSHOT ====="
+          flutter pub deps | grep -A5 -B5 "screenshot" || true
+
       - name: Get Flutter packages
         script: |
-          flutter --version
           flutter pub get
 
       - name: Install CocoaPods
