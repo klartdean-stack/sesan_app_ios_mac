@@ -1,4 +1,4 @@
-wworkflows:
+workflows:
   ios-workflow:
     name: iOS Build
     max_build_duration: 120
