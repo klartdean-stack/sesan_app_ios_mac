@@ -7,77 +7,18 @@ workflows:
       xcode: latest
 
     scripts:
-
-      - name: Flutter Clean
+      - name: Get Flutter packages
         script: |
-          set -e
-          flutter clean
-
-      - name: Flutter Pub Get
-        script: |
-          set -e
-
           flutter pub get
-
-          echo "========================================"
-          echo "Checking Generated.xcconfig"
-          echo "========================================"
-
-          ls -la ios/Flutter || true
-
-          if [ ! -f "ios/Flutter/Generated.xcconfig" ]; then
-            echo "ERROR: ios/Flutter/Generated.xcconfig NOT FOUND"
-            exit 1
-          fi
-
-          echo "Generated.xcconfig FOUND"
-
-          grep "FLUTTER_ROOT" ios/Flutter/Generated.xcconfig || true
 
       - name: Install CocoaPods
         script: |
-          set -e
-
           cd ios
-
-          echo "========================================"
-          echo "Checking Podfile"
-          echo "========================================"
-
-          pwd
-
-          echo "========================================"
-          echo "Checking Generated.xcconfig"
-          echo "========================================"
-
-          ls -la Flutter/
-
-          if [ ! -f "Flutter/Generated.xcconfig" ]; then
-            echo "ERROR: Flutter/Generated.xcconfig NOT FOUND"
-            exit 1
-          fi
-
-          echo "Generated.xcconfig exists"
-
-          echo "========================================"
-          echo "Installing CocoaPods"
-          echo "========================================"
-
-          pod deintegrate || true
-          rm -rf Pods
-          rm -f Podfile.lock
-
           pod install --repo-update
 
       - name: Build IPA
         script: |
-          set -e
-
-          cd "$CM_BUILD_DIR"
-
-          flutter build ipa \
-            --release \
-            --export-options-plist=ios/ExportOptions.plist
+          flutter build ipa --release
 
     artifacts:
       - build/ios/ipa/*.ipa
