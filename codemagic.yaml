@@ -3,8 +3,8 @@ workflows:
     name: iOS Workflow
 
     environment:
-      flutter: 3.19.1
-      xcode: 14.2
+      flutter: stable
+      xcode: 16.2
 
     scripts:
       - name: Get Flutter packages
