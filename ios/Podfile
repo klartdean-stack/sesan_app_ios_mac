@@ -45,6 +45,7 @@ target 'Runner' do
     inherit! :search_paths
   end
 end
+
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
@@ -53,16 +54,26 @@ post_install do |installer|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
 
-      # Fix BoringSSL-GRPC unsupported -G option
+      # Fix BoringSSL-GRPC unsupported -G compiler option
       if target.name == 'BoringSSL-GRPC'
-        config.build_settings['OTHER_CFLAGS'] = ''
-        config.build_settings['OTHER_CPLUSPLUSFLAGS'] = ''
+        ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |key|
+          flags = config.build_settings[key]
+
+          if flags.is_a?(String)
+            flags = flags.gsub(/\s-G(?=\s|$)/, '')
+            flags = flags.gsub(/^-G(?=\s|$)/, '')
+            config.build_settings[key] = flags
+          elsif flags.is_a?(Array)
+            config.build_settings[key] = flags.reject { |flag| flag == '-G' }
+          end
+        end
       end
 
       # Flutter framework search paths
       config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= '$(inherited)'
       config.build_settings['FRAMEWORK_SEARCH_PATHS'] << ' "${PODS_CONFIGURATION_BUILD_DIR}/Flutter"'
 
+      # Header search paths
       config.build_settings['HEADER_SEARCH_PATHS'] ||= '$(inherited)'
       config.build_settings['HEADER_SEARCH_PATHS'] << ' "${PODS_ROOT}/Headers/Public"'
     end
