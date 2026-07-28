@@ -26,7 +26,8 @@ workflows:
         script: |
           flutter clean
           flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist
+            --export-options-plist=ios/ExportOptions.plist \
+            --codesign
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:

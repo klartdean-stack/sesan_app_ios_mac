@@ -11,7 +11,7 @@
         <key>provisioningProfiles</key>
         <dict>
             <key>com.sesan.app</key>
-            <string>sesan_app_profile</string>
+            <string>profile.mobileprovision</string>
         </dict>
         <key>stripSwiftSymbols</key>
         <true/>
