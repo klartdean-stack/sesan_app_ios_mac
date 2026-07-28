@@ -497,7 +497,6 @@
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = YUKK89TARL;
-                                PROVISIONING_PROFILE_SPECIFIER = "SesanDistribution";
                                 PROVISIONING_PROFILE = "8affa781-4ce5-48a7-b8e3-99485ec6cb4a";
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
