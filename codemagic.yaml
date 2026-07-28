@@ -25,9 +25,9 @@ workflows:
       - name: Build IPA for App Store
         script: |
           flutter clean
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --codesign
+          # បន្ទាត់សំខាន់៖ យើងត្រូវដក --codesign ចេញ 
+          # ព្រោះយើងបានធ្វើ Manual Signing ហើយ ហើយ export-options-plist ក៏មិនបាច់ដែរ
+          flutter build ipa --release
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
