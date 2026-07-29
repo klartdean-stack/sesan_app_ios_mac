@@ -3,7 +3,7 @@ workflows:
     name: iOS Workflow
     environment:
       flutter: 3.19.1
-      xcode: 16.2
+      xcode: 15.0
       groups:
         - appstore_credentials
     scripts:
