@@ -25,7 +25,7 @@ workflows:
       - name: Build IPA for App Store
         script: |
           flutter clean
-          flutter build ipa --release --allowProvisioningUpdates
+          flutter build ipa --release --verbose
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
